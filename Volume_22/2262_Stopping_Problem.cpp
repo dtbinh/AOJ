@@ -40,13 +40,13 @@ public:
   State(int memory,int x,int y) : mMemory(memory),mX(x),mY(y) {}
 };
 struct DIR_MEM{
-  int mDir;
+  int mDirBits;
   int mMemory;
 };
 
 struct DIR_MEM ReadCommand(char _command,int _memory,int _dir){
   int memory=_memory;
-  int dir=_dir;
+  int dir=(1<<_dir);
   switch(_command){
   case '<':// '<' … 実行の向きを左にする．
     dir = (1<<3);//U:=0,R:=1,D:=2,L:=3
@@ -72,6 +72,7 @@ struct DIR_MEM ReadCommand(char _command,int _memory,int _dir){
   case '.':// '.' … 何もしない．
     break;
   case '@':// '@' … プログラムの実行を停止する．
+    dir = 0;
     break;
   case '0':case '1':case '2':// '0' - '9' … メモリの値を指定の数値にする．
   case '3':case '4':case '5':
@@ -93,11 +94,15 @@ struct DIR_MEM ReadCommand(char _command,int _memory,int _dir){
 }
 
 
-bool isClear(bool visited[21][21][16][4],int gx,int gy){
-  if(gx == -1 && gy == -1)return false;
-  for(int mem=0;mem<=15;mem++){
-    for(int dir=0;dir<4;dir++){
-      if(visited[gx][gy][mem][dir]) return true;
+bool isClear(bool visited[21][21][16][4],const vector<P>& goals){
+  if(goals.size() == 0) return false;
+  for(int i = 0; i < goals.size();i++){
+    for(int mem=0;mem<=15;mem++){
+      for(int dir=0;dir<4;dir++){
+	int gx = goals[i].first;
+	int gy = goals[i].second;
+	if(visited[gx][gy][mem][dir]) return true;
+      }
     }
   }
   return false;
@@ -109,19 +114,16 @@ int main(){
   bool visited[21][21][16][4];
 
   while(~scanf("%d %d",&H,&W)){
-    int gx=-1;
-    int gy=-1;
-
     memset(visited,0,sizeof(visited));
 
+    vector<P> goals;
     for(int y=0;y<H;y++){
       char buf[21];
       scanf("%s",buf);
       for(int x=0;x<W;x++){
 	commands[y][x] = buf[x];
 	if(buf[x] == '@'){
-	  gx = x;
-	  gy = y;
+	  goals.push_back(P(x,y));
 	}
       }
     }
@@ -130,7 +132,8 @@ int main(){
     
     //dir,memory,x,y
     //U:=0,R:=1,D:=2,L:=3
-    que.push(State((1<<1),0,0,0));
+    que.push(State(1,0,0,0));
+
     visited[0][0][0][1] = true;
 
     while(!que.empty()){
@@ -139,31 +142,26 @@ int main(){
       int x = s.mX;
       int y = s.mY;
       char command = commands[y][x];
-      struct DIR_MEM dm = ReadCommand(command,s.mMemory,s.mDir);
+      struct DIR_MEM next_dir_mem = ReadCommand(command,s.mMemory,s.mDir);
       // printf("mem %d x:%d y:%d command:%c\n",s.mMemory,x,y,command);
 
       for(int dir=0;dir<4;dir++){
-	if(!(dm.mDir & (1<<dir))) continue;
-	int dx = tx[dir] + x;
-	int dy = ty[dir] + y;
+	if(!(next_dir_mem.mDirBits & (1<<dir))) continue;
+	int dx = (tx[dir] + x + W) % W;
+	int dy = (ty[dir] + y + H) % H;
 
-	if(dx < 0) dx = W-1;
-	if(dx >= W) dx = 0;
-	if(dy < 0) dy = H-1;
-	if(dy >= H) dy = 0;
-
-	if(visited[dx][dy][dm.mMemory][dir]) continue;
+	if(visited[dx][dy][next_dir_mem.mMemory][dir]) continue;
 
 	//dir,memory,x,y
-	State next((1<<dir),dm.mMemory,dx,dy);
+	State next(dir,next_dir_mem.mMemory,dx,dy);
 
 	//[x][y][memory]
-	visited[dx][dy][dm.mMemory][dir] = true;
+	visited[dx][dy][next_dir_mem.mMemory][dir] = true;
 
 	que.push(next);
       }
     }
     // printf("%d %d\n",gx,gy);
-    printf("%s\n",isClear(visited,gx,gy) ? "YES" : "NO");
+    printf("%s\n",isClear(visited,goals) ? "YES" : "NO");
   }
 }
