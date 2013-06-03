@@ -31,16 +31,10 @@ static const double EPS = 1e-8;
 int tx[] = {0,1,0,-1};
 int ty[] = {-1,0,1,0};
 
-  // ~~(~A|B);
-  // ~(~C&~D);
-  // ~(~A|~~D);
-  // ~((~A)&(~~B)|~~D);
-
-  // FORMULA = INVS EQUA | EQUA
-  // EQUA = ELEM | (ELEM&ELEM) | (ELEM|ELEM)
-  // ELEM = INVS LETTER
-  // INVS = INVS INV
-  // INV = ~
+  // EQUA = FACT | FACT (& FACT)* | FACT (| FACT)*
+  // FACT = INVS TERM
+  // TERM = (EQUA) | LETTERS
+  // INVS = INVS INV | eps
   // LETTER = A | B | ... | Z
 
 class Data {
@@ -140,13 +134,14 @@ struct Data letters(int pos,const string& str){
   return res;
 }
 
-void UpdateTable(map<string,bool>& table,int bits){
+void UpdateTable(map<string,bool>& table){
   // cout << table.size() << endl;
   for(map<string,bool>::iterator it = table.begin();
       it != table.end();
       it++){
-    it->second = (bool)(bits % 2);
-    bits >>= 1;
+
+    bool flag = rand() % 2;
+    it->second = flag;
   }
 }
 
@@ -171,7 +166,8 @@ int main(){
       cin >> str;
       commands.push_back(str);
     }
-    
+
+    map<int,vector<string> > vals;
     for(int i=0;i<commands.size();i++){
       //      cout << commands[i] << endl;
       string str = "";
@@ -182,6 +178,7 @@ int main(){
 	else{
 	  if(str.size() >= 1){
 	    //	    cout << str << endl;
+	    vals[i].push_back(str);
 	    table[str] = true;
 	  }
 	  str = "";
@@ -189,23 +186,36 @@ int main(){
       }
     }
 
-    while(1){
-      bits = rand() % 1<<(table.size())
-    for(int bits=0;bits <= 1<<(table.size() - 1); bits++){
-      //printf("table size: %d\n",table.size());
-      UpdateTable(table,bits);
-      bool isok = true;
+    const int UPPER_ROUND = 20;
+    bool satisfied = false;
 
-      PrintTable(table);      
-      for(int i=0;i<commands.size();i++){
-	Data d = equation(0,commands[i]);
-	printf("command=%s d.val = %s\n",commands[i].c_str(),d.val ? "true" : "false");
-    	if(d.val == false){
-    	  isok = false;
-    	  break;
-    	}
+    for(int round=1;round < UPPER_ROUND; round++){
+
+      UpdateTable(table);
+
+      for(int walk_num=1,size = table.size();walk_num <= 2 * size;walk_num++){
+	bool isok = true;
+	int clause_idx;
+	for(int i=0;i<commands.size();i++){
+	  Data d = equation(0,commands[i]);
+	  if(d.val == false) {
+	    clause_idx = i;
+	    isok = false;
+	    break;
+	  }
+	}
+
+	if(isok){
+	  satisfied = true;
+	  goto found;
+	}
+
+	int inv_val_idx = rand() % vals[clause_idx].size();
+	string key = vals[clause_idx][inv_val_idx];
+	table[key] = !table[key];
       }
-      if(isok) break;
     }
+  found:;
+    printf("%s\n",satisfied ? "accept" : "reject");
   }
 }
