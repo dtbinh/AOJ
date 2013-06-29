@@ -30,7 +30,7 @@ static const double EPS = 1e-8;
   
 static const int tx[] = {0,1,0,-1};
 static const int ty[] = {-1,0,1,0};
-static const int MAX_V = 1000;
+static const int MAX_V = 1024;
 
 int V = 1000;
 vector<int> G[MAX_V];
@@ -231,6 +231,7 @@ bool OR_Operation(const string& command,
   int node2 = keyidx[key2]*2;
   int inv_node2 = keyidx[key2]*2+1;
 
+  bool isok = false;
   for(int i=0;i<=1;i++){
     table[key1] = (bool)i;  
     for(int j=0;j<=1;j++){
@@ -238,10 +239,14 @@ bool OR_Operation(const string& command,
       table[key2] = (bool)j;  
       Data d = equation(0,command,table);      
       if(d.val == false){
+	isok = true;
 	if(i==0 && j==0){
 	  //a|b
 	  add_edge(inv_node2,node1);
-	  add_edge(inv_node1,node2);
+
+	  if(key1 != key2){
+	    add_edge(inv_node1,node2);
+	  }
 	}
 	else if(i==0 && j==1){
 	  //a|~b
@@ -256,12 +261,23 @@ bool OR_Operation(const string& command,
 	else if(i==1 && j==1){
 	  //~a|~b
 	  add_edge(node2,inv_node1);
-	  add_edge(node1,inv_node2);
+	  if(key1 != key2){
+	    add_edge(node1,inv_node2);
+	  }
 	}
 	goto found_false;
       }
     }
   }
+  
+  if(!isok){
+    //(~a|a)
+    if(key1 == key2){
+      add_edge(node1,inv_node1);
+      add_edge(inv_node1,node1);
+    }
+  }
+
  found_false:;
 }
 
@@ -280,7 +296,7 @@ bool AND_Operation(const string& command ,
   for(int i=0;i<=1;i++){
     table[key1] = (bool)i;  
     for(int j=0;j<=1;j++){
-      if(key1 == key2 && i!=j) continue;
+      if(key1 == key2 && i != j) continue;
       table[key2] = (bool)j;  
       Data d = equation(0,command,table);      
       if(d.val == true) {
@@ -288,7 +304,9 @@ bool AND_Operation(const string& command ,
 	if(i==0 && j==0){
 	  //~a&~b -> (~a|~a) & (~b|~b)
 	  add_edge(node1,inv_node1);
-	  add_edge(node2,inv_node2);
+	  if(key1!=key2){
+	    add_edge(node2,inv_node2);
+	  }
 	}
 	else if(i==0 && j==1){
 	  //~a&b -> (~a|~a) & (b|b)
@@ -303,12 +321,15 @@ bool AND_Operation(const string& command ,
 	else if(i==1 && j==1){
 	  //a&b -> (a|a) & (b|b)
 	  add_edge(inv_node1,node1);
-	  add_edge(inv_node2,node2);
+	  if(key1!=key2){
+	    add_edge(inv_node2,node2);
+	  }
 	}
 	goto found_true;
       }
     }
   }
+  
   if(!isok){
     // a&~a -> (a|a) & (~a|~a)
     if(key1==key2){
@@ -384,7 +405,7 @@ int main(){
     map<string,int> keyidx;
     map<int,vector<string> > has_vals;
     SetTable(table,commands,has_vals);
-    V = table.size() * 2;
+    V = val_num * 2;
 
     int idx = 0;
     for(map<string,bool>::iterator it = table.begin(); it != table.end(); it++){
