@@ -234,6 +234,7 @@ bool OR_Operation(const string& command,
   for(int i=0;i<=1;i++){
     table[key1] = (bool)i;  
     for(int j=0;j<=1;j++){
+      if(key1 == key2 && i!=j) continue;
       table[key2] = (bool)j;  
       Data d = equation(0,command,table);      
       if(d.val == false){
@@ -275,12 +276,15 @@ bool AND_Operation(const string& command ,
   int node2 = keyidx[key2]*2;
   int inv_node2 = keyidx[key2]*2+1;
 
+  bool isok = false;
   for(int i=0;i<=1;i++){
     table[key1] = (bool)i;  
     for(int j=0;j<=1;j++){
+      if(key1 == key2 && i!=j) continue;
       table[key2] = (bool)j;  
       Data d = equation(0,command,table);      
       if(d.val == true) {
+	isok = true;
 	if(i==0 && j==0){
 	  //~a&~b -> (~a|~a) & (~b|~b)
 	  add_edge(node1,inv_node1);
@@ -305,6 +309,14 @@ bool AND_Operation(const string& command ,
       }
     }
   }
+  if(!isok){
+    // a&~a -> (a|a) & (~a|~a)
+    if(key1==key2){
+      add_edge(inv_node1,node1);
+      add_edge(node1,inv_node1);
+    }
+  }
+
  found_true:;
 }
 
