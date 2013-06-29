@@ -271,11 +271,8 @@ bool OR_Operation(const string& command,
   }
   
   if(!isok){
-    //(~a|a)
-    if(key1 == key2){
-      add_edge(node1,inv_node1);
-      add_edge(inv_node1,node1);
-    }
+    //~(~a|a)
+    //nothing to do
   }
 
  found_false:;
