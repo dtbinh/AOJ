@@ -484,9 +484,9 @@ bool Diff_Val_AND_Operation(const string& command ,
 	  add_edge(inv_node1,inv_node2);
 	}
 	else if(i==1 && j==0){
-	  //~(a&~b) -> (a|~b)
-	  add_edge(node2,node1);
-	  add_edge(inv_node1,inv_node2);
+	  //~(a&~b) -> (~a|b)
+	  add_edge(inv_node2,inv_node1);
+	  add_edge(node1,node2);
 	}
 	else if(i==1 && j==1){
 	  //~(a&b) -> (~a|~b)
