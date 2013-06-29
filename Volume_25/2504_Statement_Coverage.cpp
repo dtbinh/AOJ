@@ -39,6 +39,7 @@ vector<int> vs;
 bool used[MAX_V];
 int cmp[MAX_V];
 
+
 void add_edge(int from,int to){
   G[from].push_back(to);
   rG[to].push_back(from);
@@ -159,7 +160,7 @@ Data term(int pos,const string& str,map<string,bool>& table){
 struct Data letters(int pos,const string& str,map<string,bool>& table){
   string key = "";
   int last_pos = pos;
-  while(isalpha(str[last_pos])){
+  while(last_pos < str.size() && isalpha(str[last_pos])){
     key.push_back(str[last_pos]);
     last_pos++;
   }
@@ -210,17 +211,23 @@ void SetTable(map<string,bool>& table,
       }
       else{
 	if(str.size() >= 1){
-	  //	    cout << str << endl;
+	  // cout << str << endl;
 	  has_vals[i].push_back(str);
 	  table[str] = true;
 	}
-	str = "";
+	str.clear();
       }
+    }
+
+    if(str.size() >= 1){
+      // cout << str << endl;
+      has_vals[i].push_back(str);
+      table[str] = true;
     }
   }
 }
 
-bool OR_Operation(const string& command,
+void Diff_Val_OR_Operation(const string& command,
 		  const vector<string>& keys,
 		  map<string,bool>& table,
 		  map<string,int>& keyidx) {
@@ -231,22 +238,27 @@ bool OR_Operation(const string& command,
   int node2 = keyidx[key2]*2;
   int inv_node2 = keyidx[key2]*2+1;
 
-  bool isok = false;
+  int true_count = 0;
   for(int i=0;i<=1;i++){
     table[key1] = (bool)i;  
     for(int j=0;j<=1;j++){
-      if(key1 == key2 && i!=j) continue;
+      table[key2] = (bool)j;  
+      Data d = equation(0,command,table);
+      if(d.val){
+	true_count++;
+      }
+    }
+  }
+  for(int i=0;i<=1;i++){
+    table[key1] = (bool)i;  
+    for(int j=0;j<=1;j++){
       table[key2] = (bool)j;  
       Data d = equation(0,command,table);      
-      if(d.val == false){
-	isok = true;
+      if(true_count == 3 && d.val == false){
 	if(i==0 && j==0){
 	  //a|b
 	  add_edge(inv_node2,node1);
-
-	  if(key1 != key2){
-	    add_edge(inv_node1,node2);
-	  }
+	  add_edge(inv_node1,node2);
 	}
 	else if(i==0 && j==1){
 	  //a|~b
@@ -260,28 +272,158 @@ bool OR_Operation(const string& command,
 	}
 	else if(i==1 && j==1){
 	  //~a|~b
+	  // printf("%d %d\n",node2,inv_node1);
 	  add_edge(node2,inv_node1);
-	  if(key1 != key2){
-	    add_edge(node1,inv_node2);
-	  }
+	  add_edge(node1,inv_node2);
+	}
+	goto found_false;
+      }
+
+      else if(true_count == 1 && d.val == true){
+	// printf("true_count:%d\n",true_count);
+	if(i==0 && j==0){
+	  //~(a|b) -> (~a&~b) -> (~a|~a) & (~b|~b)
+	  // printf("%d %d\n",inv_node2,inv_node1);
+	  add_edge(node1,inv_node1);
+	  add_edge(node2,inv_node2);
+	}
+	else if(i==0 && j==1){
+	  //~(a|~b)-> (~a&b) -> (~a|~a) & (b|b)
+	  add_edge(node1,inv_node1);
+	  add_edge(inv_node2,node2);
+	}
+	else if(i==1 && j==0){
+	  //~(~a|b) -> (a&~b) -> (a|a) & (~b|~b)
+	  add_edge(inv_node1,node1);
+	  add_edge(node2,inv_node2);
+	}
+	else if(i==1 && j==1){
+	  //~(~a|~b) -> (a&b) -> (a|a) & (b|b)
+	  add_edge(inv_node1,node1);
+	  add_edge(inv_node2,node2);
 	}
 	goto found_false;
       }
     }
   }
-  
-  if(!isok){
-    //~(~a|a)
-    //nothing to do
-  }
 
  found_false:;
+  
 }
 
-bool AND_Operation(const string& command ,
+void Same_Val_OR_Operation(const string& command,
+		  const vector<string>& keys,
+		  map<string,bool>& table,
+		  map<string,int>& keyidx) {
+  string key1 = keys[0];
+  int node1 = keyidx[key1]*2;
+  int inv_node1 = keyidx[key1]*2+1;
+
+  int true_count = 0;
+  for(int i=0;i<=1;i++){
+    table[key1] = (bool)i;  
+    Data d = equation(0,command,table);
+
+    if(d.val){
+      true_count++;
+    }
+  }
+
+  table[key1] = true;  
+  Data d = equation(0,command,table);
+  if(d.val == true && true_count == 2){
+    //~a|a tc2
+    //a|~a tc2
+
+    //meaning less?
+    //add_edge(inv_node1,inv_node1);
+    //add_edge(node1,node1);
+  }
+  else if(true_count == 1 && d.val == true){
+    //~(~a|~a) -> (a&a) -> (a|a) tc1    
+    //a|a tc1
+    add_edge(inv_node1,node1);
+  }
+  else if(true_count == 1 && d.val == false){
+    //~(a|a) -> (~a&~a) -> (~a|~a) tc1
+    //~a|~a tc1
+    add_edge(node1,inv_node1);
+  }
+  else if(true_count == 0){
+    //~(~a|a) -> (a&~a) -> (~a|~a) & (a|a) tc0
+    //~(a|~a) -> (a&~a) -> (~a|~a) & (a|a) tc0
+    add_edge(node1,inv_node1);
+    add_edge(inv_node1,node1);
+  }
+}
+
+void OR_Operation(const string& command,
+		  const vector<string>& keys,
+		  map<string,bool>& table,
+		  map<string,int>& keyidx) {
+  // printf("%s\n",command.c_str());
+  string key1 = keys[0];
+  string key2 = keys[1];
+
+  if(key1 == key2){
+    Same_Val_OR_Operation(command,keys,table,keyidx);
+  }
+  else{
+    Diff_Val_OR_Operation(command,keys,table,keyidx);
+  }
+}
+
+bool Same_Val_AND_Operation(const string& command ,
 		   const vector<string>& keys,
 		   map<string,bool>& table,
 		   map<string,int>& keyidx) {
+  string key1 = keys[0];
+  int node1 = keyidx[key1]*2;
+  int inv_node1 = keyidx[key1]*2+1;
+
+  int true_count = 0;
+  for(int i=0;i<=1;i++){
+    table[key1] = (bool)i;  
+    Data d = equation(0,command,table);
+
+    if(d.val){
+      true_count++;
+    }
+  }
+  table[key1] = true;
+  Data d = equation(0,command,table);
+  if(true_count == 0){
+    //a&~a tc0 -> (~a|~a) & (a|a)
+    //~a&a tc0 -> (~a|~a) & (a|a)
+    add_edge(node1,inv_node1);
+    add_edge(inv_node1,node1);
+  }
+  else if(true_count == 1 && d.val == true){
+    //~(~a&~a) tc1 -> (a|a)
+    //a&a tc1 -> (a|a)
+    add_edge(inv_node1,node1);
+  }
+  else if(true_count == 1 && d.val == false){
+    //~(a&a) tc1 -> (~a|~a)
+    //~a&~a tc1 -> (~a|~a)
+    add_edge(node1,inv_node1);
+  }
+  
+  else if(true_count == 2){
+    //~(a&~a) tc2 -> (~a|a)
+    //~(~a&a) tc2 -> (a|~a)
+
+    //meaning less?
+    // add_edge(inv_node1,inv_node1);
+    // add_edge(node1,node1);
+  }
+}
+
+bool Diff_Val_AND_Operation(const string& command ,
+		   const vector<string>& keys,
+		   map<string,bool>& table,
+		   map<string,int>& keyidx) {
+
   string key1 = keys[0];
   string key2 = keys[1];
   int node1 = keyidx[key1]*2;
@@ -289,21 +431,28 @@ bool AND_Operation(const string& command ,
   int node2 = keyidx[key2]*2;
   int inv_node2 = keyidx[key2]*2+1;
 
-  bool isok = false;
+  int true_count = 0;
   for(int i=0;i<=1;i++){
     table[key1] = (bool)i;  
     for(int j=0;j<=1;j++){
-      if(key1 == key2 && i != j) continue;
       table[key2] = (bool)j;  
+      Data d = equation(0,command,table);
+      if(d.val){
+	true_count++;
+      }
+    }
+  }
+
+  for(int i=0;i<=1;i++){
+    table[key1] = (bool)i;  
+    for(int j=0;j<=1;j++){
+      table[key2] = (bool)j;
       Data d = equation(0,command,table);      
-      if(d.val == true) {
-	isok = true;
+      if(true_count ==1 && d.val == true) {
 	if(i==0 && j==0){
 	  //~a&~b -> (~a|~a) & (~b|~b)
 	  add_edge(node1,inv_node1);
-	  if(key1!=key2){
-	    add_edge(node2,inv_node2);
-	  }
+	  add_edge(node2,inv_node2);
 	}
 	else if(i==0 && j==1){
 	  //~a&b -> (~a|~a) & (b|b)
@@ -318,24 +467,54 @@ bool AND_Operation(const string& command ,
 	else if(i==1 && j==1){
 	  //a&b -> (a|a) & (b|b)
 	  add_edge(inv_node1,node1);
-	  if(key1!=key2){
-	    add_edge(inv_node2,node2);
-	  }
+	  add_edge(inv_node2,node2);
 	}
 	goto found_true;
       }
-    }
-  }
-  
-  if(!isok){
-    // a&~a -> (a|a) & (~a|~a)
-    if(key1==key2){
-      add_edge(inv_node1,node1);
-      add_edge(node1,inv_node1);
+
+      else if(true_count ==3 && d.val == false) {
+	if(i==0 && j==0){
+	  //~(~a&~b) -> (a|b)
+	  add_edge(inv_node2,node1);
+	  add_edge(inv_node1,node2);
+	}
+	else if(i==0 && j==1){
+	  //~(~a&b) -> (a|~b)
+	  add_edge(node2,node1);
+	  add_edge(inv_node1,inv_node2);
+	}
+	else if(i==1 && j==0){
+	  //~(a&~b) -> (a|~b)
+	  add_edge(node2,node1);
+	  add_edge(inv_node1,inv_node2);
+	}
+	else if(i==1 && j==1){
+	  //~(a&b) -> (~a|~b)
+	  add_edge(node2,inv_node1);
+	  add_edge(node1,inv_node2);
+	}
+	goto found_true;
+      }
+
     }
   }
 
  found_true:;
+
+}
+
+bool AND_Operation(const string& command ,
+		   const vector<string>& keys,
+		   map<string,bool>& table,
+		   map<string,int>& keyidx) {
+  string key1 = keys[0];
+  string key2 = keys[1];
+  if(key1 == key2){
+    Same_Val_AND_Operation(command,keys,table,keyidx);
+  }
+  else{
+    Diff_Val_AND_Operation(command,keys,table,keyidx);
+  }
 }
 
 void Without_Operand_Operation(const string& command,
@@ -398,9 +577,11 @@ int main(){
       commands.push_back(str);
     }
 
-    map<string,bool> table;
+
     map<string,int> keyidx;
     map<int,vector<string> > has_vals;
+    map<string,bool> table;
+
     SetTable(table,commands,has_vals);
     V = val_num * 2;
 
