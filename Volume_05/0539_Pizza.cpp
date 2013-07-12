@@ -38,25 +38,6 @@ int compute_dist(int dist,int lhs,int rhs){
   return min(dist-abs(lhs-rhs),abs(lhs-rhs));
 }
 
-void make_bucket(const vector<int>& store){
-  int n = floor(sqrt(store.size())+EPS);
-
-  int bucket_num = 0;
-  vector<int> nums;
-  for(int i=0;i<store.size();i++){
-    if(i != 0 && i % n == 0){
-      bucket_num++;
-    }
-    bucket[bucket_num].push_back(store[i]);
-  }
-}
-
-void clear_bucket(){
-  for(int i=0;i<MAX_BUCKET;i++){
-    bucket[i].clear();
-  }
-}
-
 int main(){
   int total_dist,store_num,order_num;
   while(~scanf("%d",&total_dist)){
@@ -72,40 +53,19 @@ int main(){
       store.push_back(num);
     }
     sort(store.begin(),store.end());
-    
-    clear_bucket();
-    make_bucket(store);
-    int b_num = floor(sqrt(store.size()) + EPS);
-    
+
     int cost = 0;
     for(int i=0;i<order_num;i++){
       int num;
       scanf("%d",&num);
-      int minv = numeric_limits<int>::max();
-      vector<int> min_bucket_idx;
 
-      for(int j=0;j<store.size()/b_num;j++){
-	int dist = min(compute_dist(total_dist,num,bucket[j][0]),
-		       compute_dist(total_dist,num,bucket[j][bucket[j].size()-1]));
-	if(dist < minv){
-	  minv = dist;
-	  min_bucket_idx.clear();
-	  min_bucket_idx.push_back(j);
-	}
-	else if(dist == minv){
-	  min_bucket_idx.push_back(j);
-	}
+      int idx = lower_bound(store.begin(),store.end(),num) - store.begin();
+      int min_dist = compute_dist(total_dist,store[idx],num);
+      
+      for(int j=idx-1;j>=0;j--){
+	min_dist = min(min_dist,compute_dist(total_dist,store[j],num));
       }
-
-      for(int j=0;j<min_bucket_idx.size();j++){
-	int idx = min_bucket_idx[j];
-	for(int k=0;k<bucket[idx].size();k++){
-	  // cout << "store" << bucket[idx][k] << endl;
-	  int dist = compute_dist(total_dist,num,bucket[idx][k]);
-	  minv = min(minv,dist);
-	}
-      }
-      cost += minv;
+      cost += min_dist;
     }
     printf("%d\n",cost);
   }
