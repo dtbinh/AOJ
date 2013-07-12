@@ -59,12 +59,11 @@ int main(){
       int num;
       scanf("%d",&num);
 
-      int idx = lower_bound(store.begin(),store.end(),num) - store.begin();
-      int min_dist = compute_dist(total_dist,store[idx],num);
+      int idx1 = lower_bound(store.begin(),store.end(),num) - store.begin();
+      int idx2 = (idx1 + store.size() - 1) % store.size();
+      int min_dist = min(compute_dist(total_dist,store[idx1],num),
+			 compute_dist(total_dist,store[idx2],num));
       
-      for(int j=idx-1;j>=0;j--){
-	min_dist = min(min_dist,compute_dist(total_dist,store[j],num));
-      }
       cost += min_dist;
     }
     printf("%d\n",cost);
