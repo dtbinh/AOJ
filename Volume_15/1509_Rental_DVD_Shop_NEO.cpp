@@ -31,6 +31,37 @@ static const double EPS = 1e-8;
 static const int tx[] = {0,1,0,-1};
 static const int ty[] = {-1,0,1,0};
 
+int ComputePrice(
+  int old_film_num,
+  int semi_new_film_num,
+  int new_film_num,
+  int num_threshold,
+  int price_threshold,
+  int old_film_price,
+  int semi_new_film_price,
+  int new_film_price){
+
+  int total_price = old_film_num * old_film_price 
+    + semi_new_film_num * semi_new_film_price
+    + new_film_num * new_film_price;
+
+  int res = total_price;
+
+  if(num_threshold <= old_film_num + semi_new_film_num + new_film_num
+     && total_price > (old_film_num + semi_new_film_num + new_film_num) * price_threshold){
+    res = (old_film_num + semi_new_film_num + new_film_num) * price_threshold;
+  }
+  else if(num_threshold > old_film_num + semi_new_film_num + new_film_num
+	  && total_price > num_threshold * price_threshold
+  ){
+    res = num_threshold * price_threshold;
+  }
+  else{
+    //nothing to do
+  }
+  return res;
+}
+
 int main(){
   int old_film_price,semi_new_film_price,new_film_price;
   int num_threshold,price_threshold;
@@ -39,25 +70,45 @@ int main(){
   while(~scanf("%d %d %d %d %d",
 	       &old_film_price,&semi_new_film_price,&new_film_price,
 	       &num_threshold,&price_threshold)){
+    if(num_threshold == 0) break;
     scanf("%d %d %d",&old_film_num,&semi_new_film_num,&new_film_num);
-    
-    int total_price = old_film_num * old_film_price 
-      + semi_new_film_num * semi_new_film_price 
-      + new_film_num * new_film_price;
-    
-    int res = total_price;
-    if(num_threshold <= old_film_num + semi_new_film_num + new_film_num
-       && total_price >= (old_film_num + semi_new_film_num + new_film_num) * price_threshold){
-      res = (old_film_num + semi_new_film_num + new_film_num) * price_threshold;
-    }
-    else if(num_threshold > old_film_num + semi_new_film_num + new_film_num
-	    && total_price > num_threshold * price_threshold
-    ){
-      res = num_threshold * price_threshold;
-    }
-    else{
-      //nothing to do
-    }
+
+
+    int res = INF;
+
+    // a,b... normal price ||| c... threshold_price * num    
+    int p1 = ComputePrice(
+      old_film_num,
+      semi_new_film_num,
+      0, /*new_film_num*/
+      num_threshold,
+      price_threshold,
+      old_film_price,
+      semi_new_film_price,
+      new_film_price);
+
+    int p2 = ComputePrice(
+      0,/*old_film_num*/
+      0,/*semi_new_film_num*/
+      new_film_num,
+      num_threshold,
+      price_threshold,
+      old_film_price,
+      semi_new_film_price,
+      new_film_price);
+
+    // a,b,c... threshold_price * num    
+    int p3 = ComputePrice(
+      old_film_num,
+      semi_new_film_num,
+      new_film_num,
+      num_threshold,
+      price_threshold,
+      old_film_price,
+      semi_new_film_price,
+      new_film_price);
+
+    res = min(p1+p2,p3);
     printf("%d\n",res);
   }
 }
