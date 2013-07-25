@@ -48,11 +48,11 @@ int ComputePrice(
   int res = total_price;
 
   if(num_threshold <= old_film_num + semi_new_film_num + new_film_num
-     && total_price > (old_film_num + semi_new_film_num + new_film_num) * price_threshold){
+     && total_price >= (old_film_num + semi_new_film_num + new_film_num) * price_threshold){
     res = (old_film_num + semi_new_film_num + new_film_num) * price_threshold;
   }
   else if(num_threshold > old_film_num + semi_new_film_num + new_film_num
-	  && total_price > num_threshold * price_threshold
+	  && total_price >= num_threshold * price_threshold
   ){
     res = num_threshold * price_threshold;
   }
@@ -73,33 +73,28 @@ int main(){
     if(num_threshold == 0) break;
     scanf("%d %d %d",&old_film_num,&semi_new_film_num,&new_film_num);
 
-    int res = INF;
-    for(int bit=0;bit<=(1<<3)-1;bit++){
-      bool f1 = (bit & (1<<0));
-      bool f2 = (bit & (1<<1));
-      bool f3 = (bit & (1<<2));
+    int res = old_film_num * old_film_price
+      + semi_new_film_num * semi_new_film_price
+      + new_film_num * new_film_price;
 
-      int p1 = ComputePrice(
-	old_film_num * f1,
-	semi_new_film_num  * f2,
-	new_film_num  * f3,
-	num_threshold,
-	price_threshold,
-	old_film_price,
-	semi_new_film_price,
-	new_film_price);
+    for(int i=0;i<=old_film_num + semi_new_film_num;i++){
+      int b = min(semi_new_film_num,i);
+      int a = i - b;
+      //      printf("a:%d b:%d\n",a,b);
+      int p1 = (old_film_num - a) * old_film_price 
+	+ (semi_new_film_num - b) * semi_new_film_price;
 
       int p2 = ComputePrice(
-	old_film_num * !f1,
-	semi_new_film_num  * !f2,
-	new_film_num  * !f3,
+	a,
+	b,
+	new_film_num,
 	num_threshold,
 	price_threshold,
 	old_film_price,
 	semi_new_film_price,
 	new_film_price);
 
-        res = min(p1+p2,res);
+      res = min(p1+p2,res);
     }
     printf("%d\n",res);
   }
