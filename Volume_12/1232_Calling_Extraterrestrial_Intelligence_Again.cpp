@@ -42,10 +42,13 @@ int main(){
 
   for(int i=2;i*i<=100000;i++){
     if(!isPrime[i]) continue;
-    primes.push_back(i);
-    for(int j=i+i;j<=100000;j+=i){
+    for(int j=i*i;j<=100000;j+=i){
       isPrime[j] = false;
     }
+  }
+
+  for(int i=2;i<=100000;i++){
+    if(isPrime[i]) primes.push_back(i);
   }
 
   while(~scanf("%ld %ld %ld",&m,&a,&b)){
@@ -55,17 +58,24 @@ int main(){
     ll opt_p = 0;
     ll opt_q = 0;
     for(int i=0;i<primes.size();i++){
+      if(primes[i] > m) break;
       for(int j=i;j<primes.size();j++){
+	if(primes[i] * primes[j] > m) break;
 
-	if(primes[i] * primes[j] <= m){
-	  ll p = primes[i];
-	  ll q = primes[j];
-	  if(a*q <= b*p && p <= q){
-	    if(opt_area < p*q){
-	      opt_area = p*q;
-	      opt_p = p;
-	      opt_q = q;
-	    }
+	ll p = primes[i];
+	ll q = primes[j];
+	//a/b <= p/q <= 1.0
+	//q*a/b <= q*p/q
+	//-> b*q*a/b <= b*q*p/q
+	//-> q*a <= b*p
+	// p/q <= 1
+	//-> q*p/q <= q
+	//-> p <= q
+	if(a*q <= b*p && p <= q){
+	  if(opt_area < p*q){
+	    opt_area = p*q;
+	    opt_p = p;
+	    opt_q = q;
 	  }
 	}
       }
