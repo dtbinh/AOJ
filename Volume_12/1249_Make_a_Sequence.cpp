@@ -94,7 +94,7 @@ int search_horizontal_y(int sx,int sy,int sz,
 
 int search_diagonal(int sx,int sy,int sz,
 		     int stage[10][10][10],int WH,int seq_num){
-  //x,y,z++
+  //x++,y++,z++
   int sum1 = 0;
   for(int x=sx,y=sy,z=sz;
       x<sx+seq_num && x < WH 
@@ -105,26 +105,98 @@ int search_diagonal(int sx,int sy,int sz,
   }
   if(abs(sum1) == seq_num) return sum1;
   
-  //y,z++
+  //y++,z++
   int sum2 = 0;
-  for(int y=sy,z=sz;y<sy+seq_num && y < WH && z<sz+seq_num && z < WH;y++,z++){
+  for(int y=sy,z=sz;
+      y<sy+seq_num && y < WH
+	&& z<sz+seq_num && z < WH;
+      y++,z++){
     sum2 += stage[sx][y][z];
   }
   if(abs(sum2) == seq_num) return sum2;
+
+  //y++,z--
+  int sum2_a = 0;
+  for(int y=sy,z=sz;
+      y<sy+seq_num && y < WH
+	&& z >= 0;
+      y++,z--){
+    sum2_a += stage[sx][y][z];
+  }
+  if(abs(sum2_a) == seq_num) return sum2_a;
   
-  //z,x++
+  //z++,x++
   int sum3 = 0;
-  for(int x=sx,z=sz;x<sx+seq_num && x < WH && z<sz+seq_num && z < WH;x++,z++){
+  for(int x=sx,z=sz;
+      x<sx+seq_num && x < WH
+	&& z<sz+seq_num && z < WH;
+      x++,z++){
     sum3 += stage[x][sy][z];
   }
   if(abs(sum3) == seq_num) return sum3;
 
-  //x,y++
+  //z++,x--
+  int sum3_a = 0;
+  for(int x=sx,z=sz;
+      x >= 0
+	&& z<sz+seq_num && z < WH;
+      x--,z++){
+    sum3_a += stage[x][sy][z];
+  }
+  if(abs(sum3_a) == seq_num) return sum3_a;
+
+  //x++,y++
   int sum4 = 0;
-  for(int x=sx,y=sy;x<sx+seq_num && x < WH && y<sy+seq_num && y < WH;x++,y++){
+  for(int x=sx,y=sy;
+      x<sx+seq_num && x < WH
+	&& y<sy+seq_num && y < WH;
+      x++,y++){
     sum4 += stage[x][y][sz];
   }
   if(abs(sum4) == seq_num) return sum4;
+
+  //x++,y--
+  int sum4_a = 0;
+  for(int x=sx,y=sy;
+      x<sx+seq_num && x < WH
+	&& y >= 0;
+      x++,y--){
+    sum4_a += stage[x][y][sz];
+  }
+  if(abs(sum4_a) == seq_num) return sum4_a;
+
+  //x--,y--,z++
+  int sum5 = 0;
+  for(int x=sx,y=sy,z=sz;
+      x >= 0 
+	&& y >= 0
+	&& z<sz+seq_num && z < WH;
+      x--,y--,z++){
+	sum5 += stage[x][y][z];
+  }
+  if(abs(sum5) == seq_num) return sum5;
+
+  //x--,y++,z++
+  int sum6 = 0;
+  for(int x=sx,y=sy,z=sz;
+      x >= 0
+	&& y<sy+seq_num && y < WH
+	&& z<sz+seq_num && z < WH;
+      x--,y++,z++){
+	sum6 += stage[x][y][z];
+  }
+  if(abs(sum6) == seq_num) return sum6;
+
+  //x++,y--,z++
+  int sum7 = 0;
+  for(int x=sx,y=sy,z=sz;
+      x<sx+seq_num && x < WH 
+	&& y >= 0
+	&& z<sz+seq_num && z < WH;
+      x++,y--,z++){
+	sum7 += stage[x][y][z];
+  }
+  if(abs(sum7) == seq_num) return sum7;
   
   return 0;
 }
