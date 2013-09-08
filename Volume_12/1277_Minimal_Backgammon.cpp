@@ -54,31 +54,37 @@ int main(){
     //dp[pos][turn][stop_flag]
     dp[0][0][0] = 1.0;
     for(int turn=1;turn<=T;turn++){
-      for(int spots = 1; spots<=6;spots++){
-	for(int from=0;from<N;from++){
-	  int to = (from + spots >= N ? 2*N - from - spots : from+spots);
-	  if(stage[to] == 'B') to = 0;
+      for(int from=0;from<N;from++){
+	for(int spots=1; spots<=6;spots++){
+	  int to = (from + spots > N ? 
+		    N - (from + spots - N) 
+		    : from+spots);
+
+	  if(stage[to] == 'B'){
+	     dp[0][turn][0]
+	       += dp[from][turn-1][0] * 1.0/6.0;
+	  }
 	  
-	  if(stage[to] == 'L'){
+	  else if(stage[to] == 'L'){
 	    //rest
 	    dp[to][turn][1]
-	      += dp[from][turn-1][0] * 1.0/6;
+	      += dp[from][turn-1][0] * 1.0/6.0;
 	  }
-	  else {
+	  else if(stage[to] == '.'){
 	    dp[to][turn][0]
-	      += dp[from][turn-1][0] * 1.0/6;
-
-	    dp[from][turn][0]
-	      += dp[from][turn-1][1];
+	      += dp[from][turn-1][0] * 1.0/6.0;
 	  }
 	}
+	dp[from][turn][0]
+	  += dp[from][turn-1][1];
       }
     }
-    
-    for(int pos=0;pos<=N;pos++){
-      printf("pos:%d stop:0 ...%lf\n",pos,dp[pos][T][0]);
-      printf("pos:%d stop:1 ...%lf\n",pos,dp[pos][T][1]);
+
+    double sum = 0;
+    for(int turn=1;turn<=T;turn++){
+      sum += dp[N][turn][0];
+      sum += dp[N][turn][1];
     }
-    printf("\n");
+    printf("%.7lf\n",sum);
   }
 }
