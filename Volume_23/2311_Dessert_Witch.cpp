@@ -120,9 +120,11 @@ void FlipStones(ChooseHand ch,char stone){
 
   for(int t_idx=0;t_idx<8;t_idx++){
     if(!(ch.dir & (1<<t_idx))) continue;
-    for(int dist=1;dist <= ch.get_stone_num; dist++){
+    for(int dist=1;dist <= 8; dist++){
       int dx = ch.pos_x + tx[t_idx] * dist;
       int dy = ch.pos_y + ty[t_idx] * dist;
+      if(stage[dy][dx] == stone
+	 || stage[dy][dx] == '.') break;
       stage[dy][dx] = stone;
     }
   }
@@ -135,7 +137,6 @@ void PrintStage(){
     }
     printf("\n");
   }
-  printf("\n");
 }
 
 int main(){
@@ -149,17 +150,28 @@ int main(){
       }
     }
 
+    int is_end = 0; 
     while(1){
       ChooseHand ch;
       //first player: mami o upper -> left
       ch = SearchForMami('o');
-      if(ch.get_stone_num == 0) break;
-      FlipStones(ch,'o');
+      if(ch.get_stone_num != 0){
+	FlipStones(ch,'o');
+      }
+      else{
+	is_end |= (1<<0);
+      }
 
       //second player: witch x lower -> right
       ch = SearchForWitch('x');
-      if(ch.get_stone_num == 0) break;
-      FlipStones(ch,'x');
+      if(ch.get_stone_num != 0){
+	FlipStones(ch,'x');
+      }
+      else{
+	is_end |= (1<<1);
+      }
+      
+      if(is_end == (1<<2) - 1) break;
     }
     
     PrintStage();
