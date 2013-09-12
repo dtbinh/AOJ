@@ -43,27 +43,43 @@ int main(){
       }
     }
 
-    int sx = W/2;
-    int sy = H/2;
+    string res = "";
+    vector<string> spells;
+    map<string,int> freq;
+    
+    for(int y=0;y<H;y++){
+      for(int x=0;x<W;x++){
+	int sx = x;
+	int sy = y;
 
-    for(int dir=0;dir<8;dir++){
-      string spell = "";
-      spell.push_back(stage[sy][sx]);
-      int dx = sx;
-      int dy = sy;
-      for(int i=0;i<10000;i++){
-	dx = tx[dir] + dx;
-	dy = ty[dir] + dy;
-	if(dx < 0) dx = W-1;
-	if(dx >= W) dx = 0;
-	if(dy < 0) dy = H-1;
-	if(dy >= H) dy = 0;
+	for(int dir=0;dir<8;dir++){
+	  string spell = "";
+	  spell.push_back(stage[sy][sx]);
+	  int dx = sx;
+	  int dy = sy;
+	  for(int i=0;i<1000;i++){
+	    dx = tx[dir] + dx;
+	    dy = ty[dir] + dy;
+	    if(dx < 0) dx = W-1;
+	    if(dx >= W) dx = 0;
+	    if(dy < 0) dy = H-1;
+	    if(dy >= H) dy = 0;
 
-	if(dy == sy && dx == sx) break;
-	spell.push_back(stage[dy][dx]);
+	    if(dy == sy && dx == sx) break;
+	    spell.push_back(stage[dy][dx]);
+	    freq[spell]++;
+	    if(freq[spell] >= 2){
+	      if(res.size() < spell.size()
+		 || (res.size() == spell.size() && res > spell)){
+		res = spell;
+	      }
+	    }
+	  }
+	  spells.push_back(spell);
+	  // cout << spell << endl;
+	}
       }
-
-      cout << spell << endl;
     }
+    printf("%s\n",res != "" ? res.c_str() : "0");
   }
 }
