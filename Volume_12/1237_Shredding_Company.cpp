@@ -28,6 +28,46 @@ typedef pair <int,P > PP;
 const static int tx[] = {0,1,1,1,0,-1,-1,-1};
 const static int ty[] = {-1,-1,0,1,1,1,0,-1};
 
+class Node{
+private:
+  vector<string> constituents;
+  int score;
+public:
+  
+  int get_score() const { return score; }
+  void print_result() {
+    
+    printf("%d ",score);
+    for(int i=0;i<constituents.size();i++){
+      if(i==0){
+	cout << constituents[i];
+      }
+      else{
+	cout << " " <<constituents[i];
+      }
+    }
+    printf("\n");
+  }
+  Node(const string& _c) {
+    constituents.push_back(_c);
+    score = atoi(_c.c_str());
+  }
+  
+  Node(const string& _c,int _s) : score(_s) {
+    constituents.push_back(_c);
+  }
+  
+  void cat(const string& _c,int _s){
+    constituents.push_back(_c);
+    score = score + _s;
+  }
+  void erase_last (int last_score){
+    score -= last_score;
+    constituents.pop_back();
+  }
+  
+};
+
 int main(){
   int target_num;
   string card;
@@ -35,42 +75,44 @@ int main(){
     if(target_num == 0 && card == "0") break;
 
     //1 ^(1) 2 ^(2) 2 ^(3) 4 ^(4)
-    vector<int> dp[100];
+    vector<Node> dp[100];
     for(int i=0;i<card.size();i++){
-      dp[i].push_back(atoi(card.substr(0,i+1).c_str()));
+      dp[i].push_back(Node(card.substr(0,i+1)));
       for(int j=0;j<i;j++){
 	//0->j j->i
 	for(int k=0;k<dp[j].size();k++){
 	  int rear = atoi(card.substr(j+1,i-j).c_str());
-	  dp[i].push_back(dp[j][k] + rear);
+	  dp[j][k].cat(card.substr(j+1,i-j),rear);
+	  dp[i].push_back(dp[j][k]);
+	  dp[j][k].erase_last(rear);
 	  // printf("%d %d\n",dp[j][k],rear);
 	}
       }
     }
 
-    int res = -1;
+    Node res("",-1);
     bool reject = false;
     for(int i=0;i<dp[card.size()-1].size();i++){
-      if(target_num >= dp[card.size()-1][i]){
-	if(res < dp[card.size()-1][i]){
+      if(target_num >= dp[card.size()-1][i].get_score()){
+	if(res.get_score() < dp[card.size()-1][i].get_score()){
 	  res = dp[card.size()-1][i];
 	  reject = false;
 	}
-	else if(res == dp[card.size()-1][i]){
+	else if(res.get_score() == dp[card.size()-1][i].get_score()){
 	  reject = true;
 	}
       }
       // printf("%d\n",dp[card.size()-1][i]);
     }
     
-    if(res == -1){
+    if(res.get_score() == -1){
       printf("error\n");
     }
     else if(reject){
       printf("rejected\n");
     }
     else{
-      printf("%d\n",res);
+      res.print_result();
     }
   }
 }
