@@ -44,12 +44,12 @@ int main(){
 	ll mask = (1LL<<i);
 	ll sum = 0;
 	for(int j=0;j<8;j++) sum += bits[j] ^ key;
-	if(sum & mask != bits[8] & mask){
+	if((sum & mask) != (bits[8] & mask)){
 	    key |= mask;
 	}
       }
 
-      printf("result:%x\n",key);
+      printf("%x\n",key);
     }
   }
 }
