@@ -46,5 +46,43 @@ int main(){
       }
       inheritance[i] = mask;
     }
+
+
+    bool visited_day[31];
+    bool visited_inheritance[50];
+    memset(visited_day,false,sizeof(visited_day));
+    memset(visited_inheritance,false,sizeof(visited_inheritance));
+
+    int res = 0;
+    for(int round=0;round<N;round++){
+      int opt_freq = 0;
+      int opt_day = 0;
+      for(int day=1;day<=30;day++){
+	if(visited_day[day]) continue;
+	int freq = 0;
+	for(int j=0;j<N;j++){
+	  if(visited_inheritance[j]) continue;
+	  if(inheritance[j] & (1<<day)){
+	    freq++;
+	  }
+	}
+	
+	if(opt_freq < freq){
+	  opt_freq = freq;
+	  opt_day = day;
+	}
+      }
+
+      if(opt_day == 0) break;
+      visited_day[opt_day] = true;
+      for(int j=0;j<N;j++){
+	if(inheritance[j] & (1<<opt_day)){
+	  visited_inheritance[j] = true;
+	}
+      }
+      res++;
+    }
+
+    printf("%d\n",res <= 30 ? res : -1);
   }
 }
