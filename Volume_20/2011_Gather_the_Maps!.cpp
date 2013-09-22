@@ -33,7 +33,12 @@ int main(){
   
   while(~scanf("%d",&N)){
     if(N==0) break;
-    int inheritance[50];
+    int inheritance_schedule[50];
+    ll inheritance_belongings[50];
+    memset(inheritance_schedule,0,sizeof(inheritance_schedule));
+    memset(inheritance_belongings,0,sizeof(inheritance_belongings));
+    
+    for(int i=0;i<N;i++) inheritance_belongings[i] = (1LL<<i);
     for(int i=0;i<N;i++){
       int total_days;
       scanf("%d",&total_days);
@@ -44,45 +49,30 @@ int main(){
 	scanf("%d",&day);
 	mask |= (1<<day);
       }
-      inheritance[i] = mask;
+      inheritance_schedule[i] = mask;
     }
 
-
-    bool visited_day[31];
-    bool visited_inheritance[50];
-    memset(visited_day,false,sizeof(visited_day));
-    memset(visited_inheritance,false,sizeof(visited_inheritance));
-
-    int res = 0;
-    for(int round=0;round<N;round++){
-      int opt_freq = 0;
-      int opt_day = 0;
-      for(int day=1;day<=30;day++){
-	if(visited_day[day]) continue;
-	int freq = 0;
-	for(int j=0;j<N;j++){
-	  if(visited_inheritance[j]) continue;
-	  if(inheritance[j] & (1<<day)){
-	    freq++;
+    int res = -1;
+    for(int day=1;day<=30;day++){
+      for(int from=0;from<N;from++){
+	for(int to=0;to<N;to++){
+	  int both_suit_schedule
+	    = inheritance_schedule[from] & inheritance_schedule[to];
+	
+	  if(both_suit_schedule & (1<<day)){
+	    inheritance_belongings[to] |= inheritance_belongings[from];
 	  }
 	}
-	
-	if(opt_freq < freq){
-	  opt_freq = freq;
-	  opt_day = day;
-	}
       }
 
-      if(opt_day == 0) break;
-      visited_day[opt_day] = true;
-      for(int j=0;j<N;j++){
-	if(inheritance[j] & (1<<opt_day)){
-	  visited_inheritance[j] = true;
+      for(int i=0;i<N;i++){
+	if(inheritance_belongings[i] == ((1LL<<N) - 1LL) ){
+	  res = day;
+	  goto found;
 	}
       }
-      res++;
     }
-
-    printf("%d\n",res <= 30 ? res : -1);
+  found:;
+    printf("%d\n",res);
   }
 }
