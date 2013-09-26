@@ -36,22 +36,37 @@ public:
   int left,right,upper,lower;
 };
 
+
+bool check(char hypothesis[50][50],char stage[50][50],int W,int H){
+  for(int y=0;y<H;y++){
+    for(int x=0;x<W;x++){
+      if(hypothesis[y][x] != stage[y][x]) return false;
+    }
+  }
+  return true;
+}
+
 int main(){
   int N;
   while(~scanf("%d",&N)){
     for(int stage_idx = 0; stage_idx < N; stage_idx++){
       int H,W;
-      char stage[50*50];
-      memset(stage,'.',sizeof(stage));
       
       scanf("%d %d",&H,&W);
+
+      char stage[50][50];
+      char hypothesis[50][50];
+
+      memset(stage,'.',sizeof(stage));
+
       map<char,Belongings> layer;
-    
+
       for(int y=0;y<H;y++){
 	char line[51];
 	scanf("%s",line);
 	for(int x=0;x<W;x++){
-	  stage[y*W+x] = line[x];
+	  stage[y][x] = line[x];
+	  if(line[x] == '.') continue;
 	  //x:0->...
 	  //y:0
 	  //  |
@@ -60,16 +75,16 @@ int main(){
 	  //  upper
 	  //left right
 	  //  lower
-	  char c = stage[y*W+x];
-	  layer[c].left = min(layer[c].left,x);
-	  layer[c].right = max(layer[c].right,x);
-	  layer[c].upper = min(layer[c].upper,y);
-	  layer[c].lower = max(layer[c].lower,y);
+	  Belongings& be = layer[stage[y][x]];
+	  be.left = min(be.left,x);
+	  be.right = max(be.right,x);
+	  be.upper = min(be.upper,y);
+	  be.lower = max(be.lower,y);
 	}
       }
 
-      string res = "SUSPICIOUS";
-    
+      bool is_safe = false;
+
       vector<char> order;
       for(map<char,Belongings>::iterator it = layer.begin();
 	  it != layer.end();
@@ -77,27 +92,29 @@ int main(){
 	order.push_back(it->first);
       }
       sort(order.begin(),order.end());
-      char hypothesis[50*50];
+
 
       do{
 	memset(hypothesis,'.',sizeof(hypothesis));
 
 	for(int i=0;i<order.size();i++){
-	  int c = order[i];
-	  Belongings& it = layer[c];
-	  for(int y=it.upper; y<=it.lower; y++){
-	    for(int x=it.left; x<=it.right; x++){
-	      hypothesis[y*W+x] = c;
+	  char c = order[i];
+	  Belongings& be = layer[c];
+	  for(int y=be.upper; y<=be.lower; y++){
+	    for(int x=be.left; x<=be.right; x++){
+	      hypothesis[y][x] = c;
 	    }
 	  }
 	}
 
-	if(strcmp(hypothesis,stage) == 0){
-	  res = "SAFE";
+	if(check(hypothesis,stage,W,H)){
+	  is_safe = true;
 	  break;
 	}
       }while(next_permutation(order.begin(),order.end()));
-      cout << res << "\n";
+      printf("%s\n",is_safe ? "SAFE" : "SUSPICIOUS");
+      
     }
   }
+  return 0;
 }
