@@ -32,16 +32,20 @@ class Link{
 public:
   Link() : parent("") {}
   string parent;
-  vector<string> childlen;
+  vector<string> children;
 };
 
-int dfs(map<string,Link>& nodes,const string& node_name){
-  if(nodes[node_name].childlen.size() == 0){
+int dfs(map<string,Link>& nodes,const string& node_name,map<string,bool>& visited){
+  vector<string>& children = nodes[node_name].children;
+  if(children.size() == 0){
     return 1;
   }
   int res = 0;
-  for(int i=0;i<nodes[node_name].childlen.size();i++){
-    res += dfs(nodes,nodes[node_name].childlen[i]);
+  for(int i=0;i<children.size();i++){
+    if(visited.find(children[i]) == visited.end()){
+      res += dfs(nodes,children[i],visited);
+      visited[children[i]] = true;
+    }
   }
   return res;
 }
@@ -49,6 +53,8 @@ int dfs(map<string,Link>& nodes,const string& node_name){
 int main(){
   int N;
   while(~scanf("%d",&N)){
+    if(N==0) break;
+
     string str;
     map<string,Link> nodes;
     string first_group = "";
@@ -68,7 +74,7 @@ int main(){
 	if(str[scan_idx] == ','
 	|| str[scan_idx] == '.'){
 	  nodes[child].parent = parent;
-	  nodes[parent].childlen.push_back(child);
+	  nodes[parent].children.push_back(child);
 	  // cout << child << "\n";
 	  child = "";
 	  continue;
@@ -77,6 +83,7 @@ int main(){
       }
     }
 
-    printf("%d\n",dfs(nodes,first_group));
+    map<string,bool> visited;
+    printf("%d\n",dfs(nodes,first_group,visited));
   }
 }
