@@ -36,6 +36,8 @@ struct Data {
 int main(){
   int N;
   while(~scanf("%d",&N)){
+    if(N==0) break;
+
     struct Data stage[41];
     for(int i=1;i<=N;i++){
       int pos,time;
@@ -53,16 +55,18 @@ int main(){
     for(int dst_idx=1;dst_idx<=N;dst_idx++){
 
       int now = stage[dst_idx-1].time;
-      for(int have_balloon_num=0;have_balloon_num<3;have_balloon_num++){
+      
+      for(int have_balloon_num=0;have_balloon_num<=3;have_balloon_num++){
 	//go straight
-	int time_straight = (stage[dst_idx].pos - stage[dst_idx-1].pos) 
+	int time_straight = abs(stage[dst_idx].pos - stage[dst_idx-1].pos)
 	  * (have_balloon_num + 1);
 
 	//go back home once and ge to the dst
 	int time_back_once = stage[dst_idx-1].pos * (have_balloon_num + 1)
 	  + stage[dst_idx].pos;
-
-	if(now + time_straight <= stage[dst_idx].time){
+	
+	if(now + time_straight <= stage[dst_idx].time
+	   && have_balloon_num < 3){
 	  dp[dst_idx][have_balloon_num + 1] = 
 	    min(dp[dst_idx][have_balloon_num + 1],
 		dp[dst_idx-1][have_balloon_num] + abs(stage[dst_idx].pos-stage[dst_idx-1].pos));
@@ -70,15 +74,40 @@ int main(){
 	if(now + time_back_once <= stage[dst_idx].time){
 	  dp[dst_idx][1] = 
 	    min(dp[dst_idx][1],
-		dp[dst_idx-1][have_balloon_num] + abs(stage[dst_idx].pos-stage[dst_idx-1].pos) + 2 * abs(stage[dst_idx-1].pos));
+		dp[dst_idx-1][have_balloon_num]
+		+ stage[dst_idx-1].pos + stage[dst_idx].pos
+	    );
 	}
+
+	// printf("dp[%d][%d]=%d\n",dst_idx,have_balloon_num,dp[dst_idx][have_balloon_num]);
+
       }
     }
 
     int min_dist = INF;
+    
     for(int have_balloon_num=0;have_balloon_num<=3;have_balloon_num++){
       min_dist = min(min_dist,dp[N][have_balloon_num] + stage[N].pos);
     }
-    printf("%d\n",min_dist);
+    if(min_dist < INF){
+      printf("OK %d\n",min_dist);
+    }
+    else{
+      int stop_idx = 0;
+      for(int dst_idx=1;dst_idx<=N;dst_idx++){
+	bool isok = false;
+	for(int have_balloon_num = 0; have_balloon_num <= 3; have_balloon_num++){
+	  if(dp[dst_idx][have_balloon_num] < INF){
+	    isok = true;
+	    break;
+	  }
+	}
+	if(!isok){
+	  stop_idx = dst_idx;
+	  break;
+	}
+      }
+      printf("NG %d\n",stop_idx);
+    }
   }
 }
