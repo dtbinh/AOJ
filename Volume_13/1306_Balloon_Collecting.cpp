@@ -49,32 +49,36 @@ int main(){
     int dp[41][41];//dp[pos][balloonn_num] := min_cost
     memset(dp,0x3f,sizeof(dp));
     dp[0][0] = 0;
-    for(int dst_idx=1;dst_idx<=N;dst_idx++){
-      for(int have_balloon_num=0;have_balloon_num<3;have_balloon_num++){
 
+    for(int dst_idx=1;dst_idx<=N;dst_idx++){
+
+      int now = stage[dst_idx-1].time;
+      for(int have_balloon_num=0;have_balloon_num<3;have_balloon_num++){
 	//go straight
-	int cost_straight = (stage[dst_idx].pos - stage[dst_idx-1].pos) * (have_balloon_num + 1);
-	
+	int time_straight = (stage[dst_idx].pos - stage[dst_idx-1].pos) 
+	  * (have_balloon_num + 1);
+
 	//go back home once and ge to the dst
-	int cost_back_once = stage[dst_idx-1].pos * (have_balloon_num + 1)
+	int time_back_once = stage[dst_idx-1].pos * (have_balloon_num + 1)
 	  + stage[dst_idx].pos;
 
-	printf("cost_straight:%d\n",cost_straight);
-	printf("cost_back_once:%d\n",cost_back_once);
-	dp[dst_idx][1]
-	  = min(dp[dst_idx][1],
-		cost_back_once + dp[dst_idx-1][have_balloon_num]);
-
-	printf("dp[%d][1]:%d\n",dst_idx,dp[dst_idx][1]);
-	dp[dst_idx][have_balloon_num+1]
-	  = min(dp[dst_idx][have_balloon_num+1],
-		cost_straight + dp[dst_idx-1][have_balloon_num]);
-
-	printf("dp[%d][%d]:%d\n",
-	       dst_idx,have_balloon_num+1,dp[dst_idx][have_balloon_num+1]);
+	if(now + time_straight <= stage[dst_idx].time){
+	  dp[dst_idx][have_balloon_num + 1] = 
+	    min(dp[dst_idx][have_balloon_num + 1],
+		dp[dst_idx-1][have_balloon_num] + abs(stage[dst_idx].pos-stage[dst_idx-1].pos));
+	}
+	if(now + time_back_once <= stage[dst_idx].time){
+	  dp[dst_idx][1] = 
+	    min(dp[dst_idx][1],
+		dp[dst_idx-1][have_balloon_num] + abs(stage[dst_idx].pos-stage[dst_idx-1].pos) + 2 * abs(stage[dst_idx-1].pos));
+	}
       }
     }
 
-    printf("%d\n",dp[0][N]);
+    int min_dist = INF;
+    for(int have_balloon_num=0;have_balloon_num<=3;have_balloon_num++){
+      min_dist = min(min_dist,dp[N][have_balloon_num] + stage[N].pos);
+    }
+    printf("%d\n",min_dist);
   }
 }
