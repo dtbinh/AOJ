@@ -30,6 +30,35 @@ const static int ty[] = {-1,-1,0,1,1,1,0,-1};
  
 static const double EPS = 1e-8;
 
+int gPos = 0;
+
+void parse_CAT(const string& str){
+  if(gPos >= str.size()) return;
+
+  if(gPos < str.size() && str[gPos++] != 'm'){
+    gPos--;
+    return;
+  }
+  parse_CAT(str);
+  if(gPos < str.size() && str[gPos++] != 'e'){
+    gPos--;
+    return;
+  }
+
+  parse_CAT(str);
+  if(gPos < str.size() && str[gPos++] != 'w'){
+    gPos--;
+    return;
+  }
+
+  return;
+}
+
 int main(){
-  
+  string str;
+  while(cin >> str){
+    gPos = 0;
+    parse_CAT(str);
+    printf("%s\n",(gPos != str.size()) ? "Rabbit" : "Cat");
+  }
 }
