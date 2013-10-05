@@ -33,11 +33,12 @@ static const int ty[] = {-1,0,1,0};
 
 int main(){
   int cycle_length,interview_num;
-  int cycle[100];
-  map<int,vector<int> > interview;
-
   while(~scanf("%d",&cycle_length)){
     if(cycle_length == 0) break;
+
+    int cycle[100];
+    map<int,vector<int> > interview;
+    
     for(int i=0;i<cycle_length;i++){
       scanf("%d",cycle+i);
     }
@@ -57,20 +58,19 @@ int main(){
 
     //init
     dp[1][0] = 0;
-    for(int i=0;i<cycle_length;i++){
-      dp[0][i] = 0;
-    }
 
     for(int day=1;day<=last_day;day++){
       for(int cycle_idx=0;cycle_idx < cycle_length; cycle_idx++){
+	int min_start_hour = INF;
 	for(int hour_idx=0;hour_idx<interview[day].size();hour_idx++){
 	  int start_hour = interview[day][hour_idx];
-	  if(cycle[(cycle_idx+1)%cycle_length] <= start_hour){
-	    dp[day][(cycle_idx+1)%cycle_length]
-	      = min(dp[day-1][cycle_idx],dp[day][(cycle_idx+1)%cycle_length]);
-	  }
-	  dp[day][0] = min(dp[day-1][cycle_idx]+1,dp[day][0]);
+	  min_start_hour = min(min_start_hour,start_hour);
 	}
+	if(cycle[(cycle_idx+1)%cycle_length] <= min_start_hour){
+	  dp[day][(cycle_idx+1)%cycle_length]
+	    = min(dp[day-1][cycle_idx],dp[day][(cycle_idx+1)%cycle_length]);
+	}
+	dp[day][0] = min(dp[day-1][cycle_idx]+1,dp[day][0]);
       }
     }
   
