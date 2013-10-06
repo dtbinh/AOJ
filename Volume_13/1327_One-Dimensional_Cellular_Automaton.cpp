@@ -166,19 +166,17 @@ int main(){
       x++;
     }
 
-    Matrix2D<int> base = mat2d;
-    for(int i=0;i<T-1;i++){
-      mat2d = mat2d * base;
-    }
+    Matrix2D<int> A = mat2d;
 
-    Matrix1D<int> res;
-    if(T <= 0){
-      res = mat1d;
+    // A.print_mat();
+    int n = T-1;
+    while(n > 0){
+      if(n & 1) A = A * mat2d;
+      mat2d = mat2d * mat2d;
+      n >>= 1;
     }
-    else{
-      res = mat2d*mat1d;
-    }
-
+    
+    Matrix1D<int> res = (T >= 1 ? A*mat1d : mat1d);
     res.print_mat();
   }
 }
