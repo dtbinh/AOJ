@@ -104,7 +104,7 @@ public:
 	int mat1d_y = x;
 	sum += matrix2d[y][x] * matrix1d[mat1d_y] % modulo;
       }
-      res[y] = sum;
+      res[y] = sum % modulo;
     }
     return res;
   }
@@ -117,6 +117,7 @@ public:
 	  int src_col_idx = dst_row_idx;
 	  res[src_row_idx][dst_col_idx] 
 	    += matrix2d[src_row_idx][src_col_idx] * _matrix2d[dst_row_idx][dst_col_idx] % modulo;
+	  res[src_row_idx][dst_col_idx] %= modulo;
 	}
       }
     }
@@ -165,15 +166,18 @@ int main(){
       x++;
     }
 
-    mat2d.print_mat();
-    mat1d.print_mat();
-    // Matrix1D<int> res = mat2d * mat1d;
-    // Matrix2D<int> prev = mat2d;
-    // for(int i=0;i<T;i++){
-    //   mat2d = prev * mat2d;
-    //   prev = mat2d;
-    // }
-    Matrix1D<int> res = mat2d*mat1d;
+    Matrix2D<int> base = mat2d;
+    for(int i=0;i<T-1;i++){
+      mat2d = mat2d * base;
+    }
+
+    Matrix1D<int> res;
+    if(T <= 0){
+      res = mat1d;
+    }
+    else{
+      res = mat2d*mat1d;
+    }
 
     res.print_mat();
   }
