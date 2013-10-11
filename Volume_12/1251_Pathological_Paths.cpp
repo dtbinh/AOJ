@@ -30,66 +30,12 @@ int ty[] = {-1,0,1,0};
  
 static const double EPS = 1e-8;
 
-class Node{
-public:
-  Node(string _n,string _p) : name(_n),parent(_p),id(0){}
-  string name;
-  string parent;
-  int id;
-};
-
-void str2node(const string& str,
-	      map<string,vector<Node> >& tree){
-		
-  string name="";
-  string parent="root";
-  for(int i=0;i<str.size();i++){
-    if(str[i] == '/'){
-      if(name != ""){
-	tree[parent].push_back(Node(name,parent));
-	parent = name;
-      }
-      name="";
-      continue;
-    }
-    name.push_back(str[i]);
+void make_set(const vector<string>& tok,set<string>& dirs){
+  string dir = "";
+  for(int i=0;i<tok.size();i++){
+    dir += tok[i];
+    dirs.insert(dir);
   }
-  if(name != ""){
-    tree[parent].push_back(Node(name,parent));
-  }
-}
-  
-int find_tree(vector<string> operation,map<string,vector<Node> >& tree){
-    string current_dir = "root";
-    int pos = 0;
-    while(pos < operation.size()){
-      if(operation[pos]=="/"){
-	if(pos+1 < operation.size()){
-	  bool is_found = false;
-	  for(int j=0;j<tree[current_dir].size();j++){
-	    if(tree[current_dir][j].name == operation[pos+1]){
-	      current_dir = operation[pos+1];
-	      pos+=2;
-	      is_found = true;
-	      break;
-	    }
-	  }
-
-	  if(!is_found){
-	    return -1;
-	  }
-	}
-	else{
-	  return -1;
-	  //?
-	}
-      }
-      else{
-	//?
-      }
-      
-    }
-    return -1;
 }
 
 vector<string> tokenize(const string& str){
@@ -99,6 +45,7 @@ vector<string> tokenize(const string& str){
     if(str[i]=='/'){
       if(name != "") res.push_back(name);
       res.push_back("/");
+      name="";
     }
     else{
       name.push_back(str[i]);
@@ -110,17 +57,49 @@ vector<string> tokenize(const string& str){
   return res;
 }
 
+string tok2str(const vector<string>& tok){
+  string res = "";
+  for(int i=0;i<tok.size();i++){
+    res += tok[i];
+  }
+  return res;
+}
+
+bool tok2dir(const vector<string>& tok,vector<string>& res,
+	     const set<string>& dirs){
+  
+  for(int i=0;i<tok.size();i++){
+    if(tok[i] == ".."){
+      if(res.size() < 3) return false;
+      res.pop_back();
+      res.pop_back();
+      res.pop_back();
+    }
+    else if(tok[i] == "."){
+      if(res.size() < 1) return false;
+      res.pop_back();
+    }
+    else{
+      res.push_back(tok[i]);
+      string key = tok2str(res);
+      if(dirs.find(key) == dirs.end()) return false;
+    }
+  }
+  return true;
+}
+
 int main(){
   int total_reference;
   int total_suspicious;
   while(~scanf("%d %d",&total_reference,&total_suspicious)){
     if(total_reference == 0 && total_suspicious == 0) break;
     
-    map<string,vector<Node> > tree;
+    set<string> dirs;
     for(int i=0;i<total_reference;i++){
       string url;
       cin >> url;
-      str2node(url,tree);
+      vector<string> tok = tokenize(url);
+      make_set(tok,dirs);
     }
     for(int i=0;i<total_suspicious;i++){
       string url1,url2;
@@ -128,9 +107,24 @@ int main(){
       cin >> url2;
       vector<string> tok1 = tokenize(url1);
       vector<string> tok2 = tokenize(url2);
-      int id1 = find_tree(tok1,tree);
-      int id2 = find_tree(tok2,tree);
-      printf("%d %d\n",id1,id2);
+      vector<string> res1;
+      vector<string> res2;
+      bool isok1 = tok2dir(tok1,res1,dirs);
+      bool isok2 = tok2dir(tok2,res2,dirs);
+      string url1_dir = tok2str(res1);
+      string url2_dir = tok2str(res2);
+      
+      if(isok1 && isok2){
+	if(url1_dir == url2_dir){
+	  printf("yes\n");
+	}
+	else{
+	  printf("no\n");
+	}
+      }
+      else{
+	printf("not found\n");
+      }
     }
   }
 }
