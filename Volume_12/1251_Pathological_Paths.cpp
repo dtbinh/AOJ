@@ -30,16 +30,27 @@ int ty[] = {-1,0,1,0};
  
 static const double EPS = 1e-8;
 
-void make_set(const vector<string>& tok,set<string>& dirs){
+string tok2str(const deque<string>& tok);
+
+void make_set(deque<string> tok,
+	      set<string>& dirs,
+	      set<string>& web_pages){
   string dir = "";
   for(int i=0;i<tok.size();i++){
     dir += tok[i];
     dirs.insert(dir);
   }
+  
+
+  if(tok[tok.size()-1] == "index.html"){
+    tok.pop_back();
+    tok.pop_back();
+  }
+  web_pages.insert(tok2str(tok));
 }
 
-vector<string> tokenize(const string& str){
-  vector<string> res;
+deque<string> tokenize(const string& str){
+  deque<string> res;
   string name = "";
   for(int i=0;i<str.size();i++){
     if(str[i]=='/'){
@@ -57,7 +68,7 @@ vector<string> tokenize(const string& str){
   return res;
 }
 
-string tok2str(const vector<string>& tok){
+string tok2str(const deque<string>& tok){
   string res = "";
   for(int i=0;i<tok.size();i++){
     res += tok[i];
@@ -65,7 +76,7 @@ string tok2str(const vector<string>& tok){
   return res;
 }
 
-bool tok2dir(const vector<string>& tok,vector<string>& res,
+bool tok2dir(const deque<string>& tok,deque<string>& res,
 	     const set<string>& dirs){
   
   for(int i=0;i<tok.size();i++){
@@ -85,7 +96,22 @@ bool tok2dir(const vector<string>& tok,vector<string>& res,
       if(dirs.find(key) == dirs.end()) return false;
     }
   }
+
   return true;
+}
+
+void shrink(deque<string>& tok,const set<string>& dirs){
+  string key = tok2str(tok);
+  if(tok[tok.size()-1] == "/"){
+    tok.pop_back();
+    return;
+  }
+  else if(tok[tok.size()-1] == "index.html"
+	  && dirs.find(key + "/") == dirs.end()){
+    tok.pop_back();
+    tok.pop_back();
+    return;
+  }
 }
 
 int main(){
@@ -95,31 +121,48 @@ int main(){
     if(total_reference == 0 && total_suspicious == 0) break;
     
     set<string> dirs;
+    set<string> web_pages;
     for(int i=0;i<total_reference;i++){
       string url;
       cin >> url;
-      vector<string> tok = tokenize(url);
-      make_set(tok,dirs);
+      deque<string> tok = tokenize(url);
+      make_set(tok,dirs,web_pages);
     }
     for(int i=0;i<total_suspicious;i++){
       string url1,url2;
       cin >> url1;
       cin >> url2;
-      vector<string> tok1 = tokenize(url1);
-      vector<string> tok2 = tokenize(url2);
-      vector<string> res1;
-      vector<string> res2;
+      deque<string> tok1 = tokenize(url1);
+      deque<string> tok2 = tokenize(url2);
+      deque<string> res1;
+      deque<string> res2;
       bool isok1 = tok2dir(tok1,res1,dirs);
       bool isok2 = tok2dir(tok2,res2,dirs);
+      shrink(res1,dirs);
+      shrink(res2,dirs);
       string url1_dir = tok2str(res1);
       string url2_dir = tok2str(res2);
-      
+
+      // cout << "url1:" << url1_dir << endl;
+      // cout << "url2:" << url2_dir << endl;
+      //search -> same -> web_dir
       if(isok1 && isok2){
 	if(url1_dir == url2_dir){
-	  printf("yes\n");
+	  if(web_pages.find(url1_dir) != web_pages.end()){
+	    printf("yes\n");
+	  }
+	  else{
+	    printf("not found\n");
+	  }
 	}
 	else{
-	  printf("no\n");
+	  if(web_pages.find(url1_dir) == web_pages.end()
+	     || web_pages.find(url2_dir) == web_pages.end()){
+	    printf("not found\n");
+	  }
+	  else{
+	    printf("no\n");
+	  }
 	}
       }
       else{
