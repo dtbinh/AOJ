@@ -102,11 +102,12 @@ bool tok2dir(const deque<string>& tok,deque<string>& res,
 
 void shrink(deque<string>& tok,const set<string>& dirs){
   string key = tok2str(tok);
-  if(tok[tok.size()-1] == "/"){
+  if(tok.size() >= 1 && tok[tok.size()-1] == "/"){
     tok.pop_back();
     return;
   }
-  else if(tok[tok.size()-1] == "index.html"
+  else if(tok.size() >= 2
+	  && tok[tok.size()-1] == "index.html"
 	  && dirs.find(key + "/") == dirs.end()){
     tok.pop_back();
     tok.pop_back();
