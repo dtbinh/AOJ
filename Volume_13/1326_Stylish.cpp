@@ -29,9 +29,9 @@ const char brackets[] = {'(','{','[',')','}',']'};
 
 int ComputeIndents(int R,int C,int S,int freq[11][256],int i){
   int white_space
-    = R * (freq[i][brackets[0]]-freq[i][brackets[3]])
-    + C * (freq[i][brackets[1]]-freq[i][brackets[4]])
-    + S * (freq[i][brackets[2]]-freq[i][brackets[5]]);
+    = R * (freq[i-1][brackets[0]]-freq[i-1][brackets[3]])
+    + C * (freq[i-1][brackets[1]]-freq[i-1][brackets[4]])
+    + S * (freq[i-1][brackets[2]]-freq[i-1][brackets[5]]);
 
   return white_space;
 }
@@ -134,10 +134,10 @@ int main(){
       }
       
       if(indents.size() == 0 || indents.size() > 1){
-	printf("-1 ");
+	printf("%s-1",i==1 ? "" : " ");
       }
       else{
-	printf("%d ",*indents.begin());
+	printf("%s%d",i==1 ? "" : " ",*indents.begin());
       }
     }
 
