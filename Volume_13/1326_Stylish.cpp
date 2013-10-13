@@ -27,29 +27,45 @@ typedef pair <int,P > PP;
 
 const char brackets[] = {'(','{','[',')','}',']'};
 
-class Bracket {
+int ComputeIndents(int R,int C,int S,int freq[11][256],int i){
+  int white_space
+    = R * (freq[i][brackets[0]]-freq[i][brackets[3]])
+    + C * (freq[i][brackets[1]]-freq[i][brackets[4]])
+    + S * (freq[i][brackets[2]]-freq[i][brackets[5]]);
+
+  return white_space;
+}
+
+class RCS{
 public:
-  int round_bracket_left;
-  int round_bracket_right;
-  int curly_bracket_left;
-  int curly_bracket_right;
-  int square_bracket_left;
-  int square_bracket_right;
+  RCS(int _r,int _c,int _s) : R(_r),C(_c),S(_s){}
+  int R;
+  int C;
+  int S;
 };
 
 int main(){
   int P,Q;
   while(~scanf("%d %d",&P,&Q)){
+    if(P == 0 && Q == 0) break;
 
-    int indented_freq[10][256];
-    int suspicious_freq[10][256];
+    vector<RCS> candidates;
+    int indented_freq[11][256];
+    int suspicious_freq[11][256];
     memset(indented_freq,0,sizeof(indented_freq));
     memset(suspicious_freq,0,sizeof(suspicious_freq));
 
-    for(int i=0;i<P;i++){
+    for(int i=1;i<=P;i++){
       string line;
       cin >> line;
       bool found_char = false;
+
+      //add previous freq
+      for(int bracket_idx = 0;bracket_idx<6;bracket_idx++){
+	indented_freq[i][brackets[bracket_idx]]
+	  = indented_freq[i-1][brackets[bracket_idx]];
+      }
+
       for(int pos=0;pos<line.size();pos++){
 	if(!found_char && line[pos] == '.'){
 	  indented_freq[i]['.']++;
@@ -67,16 +83,65 @@ int main(){
       }
     }
 
-    for(int i=0;i<Q;i++){
+    for(int i=1;i<=Q;i++){
       string line;
       cin >> line;
+
+      //add previous freq
+      for(int bracket_idx = 0;bracket_idx<6;bracket_idx++){
+	suspicious_freq[i][brackets[bracket_idx]]
+	  = suspicious_freq[i-1][brackets[bracket_idx]];
+      }
+
       for(int pos=0;pos<line.size();pos++){
 	for(int bracket_idx = 0;bracket_idx<6;bracket_idx++){
 	  if(line[pos] == brackets[bracket_idx]){
-	    indented_freq[i][brackets[bracket_idx]]++;
+	    suspicious_freq[i][brackets[bracket_idx]]++;
 	  }
 	}
       }
     }
+
+    
+    for(int R=1;R<=20;R++){
+      for(int C=1;C<=20;C++){
+	for(int S=1;S<=20;S++){
+	  bool isok = true;
+	  for(int i=1;i<=P;i++){
+	    int white_space
+	      = ComputeIndents(R,C,S,indented_freq,i);
+	    if(white_space != indented_freq[i]['.']){
+	      isok = false;
+	      break;
+	    }
+	  }
+
+	  if(isok){
+	    candidates.push_back(RCS(R,C,S));
+	  }
+	}
+      }
+    }
+    
+    for(int i=1;i<=Q;i++){
+      set<int> indents;
+      for(int candidate_idx = 0; candidate_idx < candidates.size(); candidate_idx++){
+	int R = candidates[candidate_idx].R;
+	int C = candidates[candidate_idx].C;
+	int S = candidates[candidate_idx].S;
+	int white_space = ComputeIndents(R,C,S,suspicious_freq,i);
+	indents.insert(white_space);
+      }
+      
+      if(indents.size() == 0 || indents.size() > 1){
+	printf("-1 ");
+      }
+      else{
+	printf("%d ",*indents.begin());
+      }
+    }
+
+    printf("\n");
   }
 }
+
