@@ -112,72 +112,93 @@ public:
   }
 };
 
+deque<int> stage[250][250];
+
+void dfs(Dice dice,int sx,int sy){
+  //check stage
+  //1 2
+  // 0
+  //3 4
+  bool isok = false;
+
+  for(int num=6;num>=4;num--){
+    if(dice.surface[FRONT] == num){
+      int dx = sx;
+      int dy = sy - 1;
+      if(stage[dy][dx].size() < stage[sy][sx].size()){
+	dice.pitch(3);
+	dfs(dice,dx,dy);
+	isok = true;
+	goto found;
+      }
+    }
+    else if(dice.surface[REAR] == num){
+      int dx = sx;
+      int dy = sy + 1;
+      if(stage[dy][dx].size() < stage[sy][sx].size()){
+	dice.pitch(1);
+	dfs(dice,dx,dy);
+	isok = true;
+	goto found;
+      }
+    }
+    else if(dice.surface[LEFT] == num){
+      int dx = sx - 1;
+      int dy = sy;
+      if(stage[dy][dx].size() < stage[sy][sx].size()){
+	dice.roll(3);
+	dfs(dice,dx,dy);
+	isok = true;
+	goto found;
+	      
+      }
+    }
+    else if(dice.surface[RIGHT] == num){
+      int dx = sx + 1;
+      int dy = sy;
+      if(stage[dy][dx].size() < stage[sy][sx].size()){
+	dice.roll(1);
+	dfs(dice,dx,dy);
+	isok = true;
+	goto found;
+      }
+    }
+  }
+ found:;
+  if(!isok){
+    stage[sy][sx].push_back(dice.surface[TOP]);
+  }
+}
 
 int main(){
   int n;
   while(~scanf("%d",&n)){
     if(n==0) break;
 
-    deque<int> stage[5];
+    int sx = 250/2;
+    int sy = 250/2;
+
+    for(int y=0;y<250;y++){
+      for(int x=0;x<250;x++){
+	stage[y][x].clear();
+      }
+    }
 
     for(int i=0;i<n;i++){
       int top,front;
       scanf("%d %d",&top,&front);
       Dice dice(top,front);
-      
-      if(i==0){
-	stage[0].push_back(dice.surface[TOP]);
-	continue;
-      }
-
-      //check stage
-      //1 2
-      // 0
-      //3 4
-      bool isok = false;
-      for(int num=6;num>=4;num--){
-	if(dice.surface[FRONT] == num){
-	  if(stage[3].size() < stage[0].size()){
-	    stage[3].push_back(dice.surface[REAR]);
-	    isok = true;
-	    goto found;
-	  }
-	}
-	else if(dice.surface[REAR] == num){
-	  if(stage[2].size() < stage[0].size()){
-	    stage[2].push_back(dice.surface[TOP]);
-	    isok = true;
-	    goto found;
-	  }
-	}
-	else if(dice.surface[LEFT] == num){
-	  if(stage[4].size() < stage[0].size()){
-	    stage[4].push_back(dice.surface[RIGHT]);
-	    isok = true;
-	    goto found;
-	      
-	  }
-	}
-	else if(dice.surface[RIGHT] == num){
-	  if(stage[1].size() < stage[0].size()){
-	    stage[1].push_back(dice.surface[LEFT]);
-	    isok = true;
-	    goto found;
-	  }
-	}
-      }
-    found:;
-      if(!isok){
-	stage[0].push_back(dice.surface[TOP]);
-      }
+      dfs(dice,sx,sy);
     }
 
     int freq[7];
     memset(freq,0,sizeof(freq));
     
-    for(int i=0;i<5;i++){
-      if(stage[i].size() > 0){
-	freq[stage[i][stage[i].size()-1]]++;
+    for(int y=0;y<250;y++){
+      for(int x=0;x<250;x++){
+	if(stage[y][x].size() > 0){
+	  freq[stage[y][x][stage[y][x].size()-1]]++;
+	}
       }
     }
 
