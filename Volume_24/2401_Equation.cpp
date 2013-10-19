@@ -119,7 +119,7 @@ int main(){
 
     int idx = 0;
     bool isok = true;
-    for(int S=0;S<=(1<<(char_set.size()-1));S++){
+    for(int S=0;S<=(1<<char_set.size())-1;S++){
       for(set<char>::iterator it = char_set.begin();
 	  it != char_set.end();
 	  it++){
