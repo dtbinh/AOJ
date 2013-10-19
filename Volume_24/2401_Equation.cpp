@@ -61,7 +61,7 @@ ParseInfo parse_formula(int pos, const string& str){
 
   else if(str[pos] == '-'){
     ParseInfo pi = parse_formula(pos+1,str);
-    pi.val = ~pi.val;
+    pi.val = !pi.val;
     return pi;
   }
 
@@ -86,7 +86,7 @@ ParseInfo parse_formula(int pos, const string& str){
     else if(str[pi1.pos] == '-'
 	    && str[pi1.pos+1] == '>'){
       ParseInfo pi2 = parse_formula(pi1.pos+2,str);
-      pi2.val = (~pi1.val || pi2.val);
+      pi2.val = (!pi1.val || pi2.val);
 
       //skip ')'
       pi2.pos++;
@@ -100,7 +100,7 @@ ParseInfo parse_equation(int pos, const string& str){
   
   //skip '='
   ParseInfo pi2 = parse_formula(pi1.pos+1,str);
-  pi2.val = (pi1.val == pi2.val) ? true : false;
+  pi2.val = (pi1.val == pi2.val ? true : false);
   return pi2;
 }
 
@@ -110,13 +110,12 @@ int main(){
   while(cin >> str){
     if(str == "#") break;
 
-
+    char_set.clear();
     for(int i=0;i<str.size();i++){
       if('a' <= str[i] && str[i] <= 'k'){
 	char_set.insert(str[i]);
       }
     }
-
 
     bool isok = true;
     for(int S=0;S<=(1<<char_set.size())-1;S++){
