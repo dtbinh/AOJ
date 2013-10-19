@@ -42,7 +42,7 @@ bool char_table[256];
 ParseInfo parse_formula(int pos, const string& str){
 
   if('a' <= str[pos] && str[pos] <= 'k'){
-    bool val = false;
+    bool val = char_table[str[pos]];
     ParseInfo pi = {pos+1,val};
     return pi;
   }
