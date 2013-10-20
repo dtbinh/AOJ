@@ -34,9 +34,9 @@ static const int ty_r[] = {-1,0,1,0};
 static const int tx_l[] = {0,-1,0,1};
 static const int ty_l[] = {-1,0,1,0};
 
-bool visited[50][50][50][50];
-char stage_Len[50][50];
-char stage_Rin[50][50];
+bool visited[51][51][51][51];
+char stage_Len[51][51];
+char stage_Rin[51][51];
 
 bool can_reach;
 int W,H;
@@ -48,17 +48,21 @@ void dfs(int Rin_x,int Rin_y,int Len_x,int Len_y){
 
     int Len_dx = Len_x + tx_l[i];
     int Len_dy = Len_y + ty_l[i];
+    cout << Rin_dx << " " << Rin_dy << " " << Len_dx << " " << Len_dy << endl;
     if(Rin_dx < 0 || Rin_dx >= W || Rin_dy < 0 || Rin_dy >= H){
-	continue;
-    }
-    if(Len_dx < 0 || Len_dx >= W || Len_dy < 0 || Len_dy >= H){
-	continue;
-    }
-    if(stage_Rin[Rin_dy][Rin_dx] == '#'){
       Rin_dy = Rin_y;
       Rin_dx = Rin_x;
     }
-    if(stage_Len[Len_dy][Len_dx] == '#'){
+    else if(stage_Rin[Rin_dy][Rin_dx] == '#'){
+      Rin_dy = Rin_y;
+      Rin_dx = Rin_x;
+    }
+
+    if(Len_dx < 0 || Len_dx >= W || Len_dy < 0 || Len_dy >= H){
+      Len_dy = Len_y;
+      Len_dx = Len_x;
+    }
+    else if(stage_Len[Len_dy][Len_dx] == '#'){
       Len_dy = Len_y;
       Len_dx = Len_x;
     }
@@ -107,8 +111,8 @@ int main(){
       string str_Len,str_Rin;
       cin >> str_Len >> str_Rin;
       
-      // cout << str_Len << endl;
-      // cout << str_Rin << endl;
+      cout << str_Len << endl;
+      cout << str_Rin << endl;
 
       for(int x=0;x<W;x++){
 	stage_Len[y][x] = str_Len[x];
@@ -125,6 +129,7 @@ int main(){
       }
     }
 
+    visited[Rin_start_x][Rin_start_y][Len_start_x][Len_start_y] = true;
     dfs(Rin_start_x,Rin_start_y,Len_start_x,Len_start_y);
     printf("%s\n",can_reach ? "Yes" : "No");
   }
