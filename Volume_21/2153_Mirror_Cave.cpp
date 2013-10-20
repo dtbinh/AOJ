@@ -34,56 +34,21 @@ static const int ty_r[] = {-1,0,1,0};
 static const int tx_l[] = {0,-1,0,1};
 static const int ty_l[] = {-1,0,1,0};
 
+class PosInfo {
+public:
+  int Rin_x;
+  int Rin_y;
+  int Len_x;
+  int Len_y;
+  PosInfo(int a,int b,int c,int d) : Rin_x(a),Rin_y(b),Len_x(c),Len_y(d) {}
+};
+
 bool visited[51][51][51][51];
 char stage_Len[51][51];
 char stage_Rin[51][51];
 
 bool can_reach;
 int W,H;
-
-void dfs(int Rin_x,int Rin_y,int Len_x,int Len_y){
-  for(int i=0;i<4;i++){
-    int Rin_dx = Rin_x + tx_r[i];
-    int Rin_dy = Rin_y + ty_r[i];
-
-    int Len_dx = Len_x + tx_l[i];
-    int Len_dy = Len_y + ty_l[i];
-    cout << Rin_dx << " " << Rin_dy << " " << Len_dx << " " << Len_dy << endl;
-    if(Rin_dx < 0 || Rin_dx >= W || Rin_dy < 0 || Rin_dy >= H){
-      Rin_dy = Rin_y;
-      Rin_dx = Rin_x;
-    }
-    else if(stage_Rin[Rin_dy][Rin_dx] == '#'){
-      Rin_dy = Rin_y;
-      Rin_dx = Rin_x;
-    }
-
-    if(Len_dx < 0 || Len_dx >= W || Len_dy < 0 || Len_dy >= H){
-      Len_dy = Len_y;
-      Len_dx = Len_x;
-    }
-    else if(stage_Len[Len_dy][Len_dx] == '#'){
-      Len_dy = Len_y;
-      Len_dx = Len_x;
-    }
-
-    if(visited[Rin_dx][Rin_dy][Len_dx][Len_dy]){
-      continue;
-    }
-
-    if(stage_Len[Len_dy][Len_dx] == '%'
-       && stage_Rin[Rin_dy][Rin_dx] == '%'){
-      can_reach = true;
-      return;
-    }
-
-    if(stage_Len[Len_dy][Len_dx] != '%'
-       && stage_Rin[Rin_dy][Rin_dx] != '%'){
-      visited[Rin_dx][Rin_dy][Len_dx][Len_dy] = true;
-      dfs(Rin_dx,Rin_dy,Len_dx,Len_dy);
-    }
-  }
-}
 
 int main(){
 
@@ -111,8 +76,8 @@ int main(){
       string str_Len,str_Rin;
       cin >> str_Len >> str_Rin;
       
-      cout << str_Len << endl;
-      cout << str_Rin << endl;
+      // cout << str_Len << endl;
+      // cout << str_Rin << endl;
 
       for(int x=0;x<W;x++){
 	stage_Len[y][x] = str_Len[x];
@@ -128,9 +93,58 @@ int main(){
 	}
       }
     }
-
+    
+    queue<PosInfo> que;
+    que.push(PosInfo(Rin_start_x,Rin_start_y,Len_start_x,Len_start_y));
     visited[Rin_start_x][Rin_start_y][Len_start_x][Len_start_y] = true;
-    dfs(Rin_start_x,Rin_start_y,Len_start_x,Len_start_y);
+    
+    while(!que.empty()){
+      PosInfo pi = que.front();
+      que.pop();
+
+      for(int i=0;i<4;i++){
+	int Rin_dx = pi.Rin_x + tx_r[i];
+	int Rin_dy = pi.Rin_y + ty_r[i];
+
+	int Len_dx = pi.Len_x + tx_l[i];
+	int Len_dy = pi.Len_y + ty_l[i];
+
+	if(Rin_dx < 0 || Rin_dx >= W || Rin_dy < 0 || Rin_dy >= H){
+	  Rin_dy = pi.Rin_y;
+	  Rin_dx = pi.Rin_x;
+	}
+	else if(stage_Rin[Rin_dy][Rin_dx] == '#'){
+	  Rin_dy = pi.Rin_y;
+	  Rin_dx = pi.Rin_x;
+	}
+
+	if(Len_dx < 0 || Len_dx >= W || Len_dy < 0 || Len_dy >= H){
+	  Len_dy = pi.Len_y;
+	  Len_dx = pi.Len_x;
+	}
+	else if(stage_Len[Len_dy][Len_dx] == '#'){
+	  Len_dy = pi.Len_y;
+	  Len_dx = pi.Len_x;
+	}
+
+	if(visited[Rin_dx][Rin_dy][Len_dx][Len_dy]){
+	  continue;
+	}
+
+	if(stage_Len[Len_dy][Len_dx] == '%'
+	   && stage_Rin[Rin_dy][Rin_dx] == '%'){
+	  can_reach = true;
+	  break;
+	}
+
+	if(stage_Len[Len_dy][Len_dx] != '%'
+	   && stage_Rin[Rin_dy][Rin_dx] != '%'){
+	  visited[Rin_dx][Rin_dy][Len_dx][Len_dy] = true;
+	  que.push(PosInfo(Rin_dx,Rin_dy,Len_dx,Len_dy));
+	}
+      }
+    }
+
     printf("%s\n",can_reach ? "Yes" : "No");
   }
 }
