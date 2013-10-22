@@ -18,6 +18,7 @@
 #include <list>
 #include <cctype>
 #include <utility>
+#include <complex>
  
 using namespace std;
  
@@ -28,41 +29,42 @@ typedef pair <int,P > PP;
 int tx[] = {0,1,0,-1};
 int ty[] = {-1,0,1,0};
  
-static const double EPS = 1e-8;
+static const double EPS = 1e-10;
 
-struct Point {
-  double x;
-  double y;
-};
+typedef complex<double> Point;
 
-bool compute_intersection(const Point& p1,
-	       const Point& p2,
-	       const Point& p3,
-	       const Point& p4,
-	       Point& intersection){
-  double ksi, eta, delta;
-  double ramda, mu;
+double dot(const Point& p,const Point& q){
+  return real(conj(p)*q);
+}
 
-  ksi = ( p4.y-p3.y )*( p4.x-p1.x ) - 
-    ( p4.x-p3.x )*( p4.y-p1.y );
+double det(const Point& p,const Point& q){
+  return imag(conj(p)*q);
+}
 
-  eta = ( p2.x-p1.x )*( p4.y-p1.y ) -
-    ( p2.y-p1.y )*( p4.x-p1.x );
+bool on_seg(const Point& p1,const Point&p2,
+	    const Point& q){
+  return abs(det(p1-q,p2-q)) <= EPS && dot(p1-q,p2-q) <= 0;
+}
 
-  delta = ( p2.x-p1.x )*( p4.y-p3.y ) -
-    ( p2.y-p1.y )*( p4.x-p3.x );
+double compute_scale(const Point& p1,const Point& p2,
+	     const Point& q1,const Point& q2) {
+  return det(q2-q1,q1-p1) / det(q2-q1,p2-p1);
+}
 
-  ramda = ksi / delta;
-  mu = eta / delta;
+Point compute_intersection(const Point& p1,const Point& p2,
+			   const Point& q1,const Point& q2) {
+  return p1 + (p2-p1) * det(q2-q1,q1-p1) / det(q2-q1,p2-p1);
+}
 
-  if ( ( ramda >= 0 && ramda <= 1 ) && ( mu >= 0 && mu <= 1 ) )
-    {
-      intersection.x = p1.x + ramda*( p2.x-p1.x );
-      intersection.y = p1.y + ramda*( p2.y-p1.y );
-      return true;
-    }
-
-  return false;
+int compute_location(int owner,int location){
+  //owner 1:me 0:other
+  //location 1:high way 0:under ground
+  if(owner == 1){
+    return location;
+  }
+  else if(owner == 0){
+    return !location;
+  }
 }
 
 int main(){
@@ -71,20 +73,37 @@ int main(){
     for(int dataset_idx=0;dataset_idx<total_dataset;dataset_idx++){
       int xa,ya,xb,yb;
       scanf("%d %d %d %d",&xa,&ya,&xb,&yb);
-      Point p1 = {xa,ya};
-      Point p2 = {xb,yb};
+      Point p1(xa,ya);
+      Point p2(xb,yb);
 
       int n;
       scanf("%d",&n);
+	
+      vector<pair<double,int> > intersections;
       for(int i=0;i<n;i++){
 	int xs,ys,xt,yt,owner,location;
 	scanf("%d %d %d %d %d %d",&xs,&ys,&xt,&yt,&owner,&location);
-	Point p3 = {xs,ys};
-	Point p4 = {xt,yt};
-	Point intersection;
-	compute_intersection(p1,p2,p3,p4,intersection);
-	printf("%lf %lf\n",intersection.x,intersection.y);
+	Point p3(xs,ys);
+	Point p4(xt,yt);
+	Point intersection = compute_intersection(p1,p2,p3,p4);
+	
+	if(!on_seg(p1,p2,intersection)) continue;
+	double scale = compute_scale(p1,p2,p3,p4);
+	int next_location = compute_location(owner,location);
+
+	pair<double,int> tmp(scale,next_location);
+	intersections.push_back(tmp);
       }
+
+      sort(intersections.begin(),intersections.end());
+      int prev = -1;
+      int res = -1;
+      for(int i=0;i<intersections.size();i++){
+	if(prev != intersections[i].second) res++;
+	prev = intersections[i].second;
+      }
+      printf("%d\n",res);
+
     }
   }
 }
