@@ -43,17 +43,33 @@ double det(const Point& p,const Point& q){
 
 bool on_seg(const Point& p1,const Point&p2,
 	    const Point& q){
-  return abs(det(p1-q,p2-q)) <= EPS && dot(p1-q,p2-q) <= 0;
-}
-
-double compute_scale(const Point& p1,const Point& p2,
-	     const Point& q1,const Point& q2) {
-  return det(q2-q1,q1-p1) / det(q2-q1,p2-p1);
+  return abs(det(p1-q,p2-q)) <= EPS && dot(p1-q,p2-q) < EPS;
 }
 
 Point compute_intersection(const Point& p1,const Point& p2,
 			   const Point& q1,const Point& q2) {
   return p1 + (p2-p1) * det(q2-q1,q1-p1) / det(q2-q1,p2-p1);
+}
+
+int ccw(Point a,Point b,Point c) {
+  b -= a; c -= a;
+  if (det(b, c) > 0)   return +1;       // counter clockwise
+  if (det(b, c) < 0)   return -1;       // clockwise
+  if (dot(b, c) < 0)     return +2;       // c--a--b on line
+  if (norm(b) < norm(c)) return -2;       // a--b--c on line
+  return 0;
+}
+
+bool intersectSS(const Point& p1, const Point& p2,
+		 const Point& q1, const Point& q2) {
+  return (ccw(p1,p2,q1) *
+	  ccw(p1,p2,q2) <= 0 &&
+	  ccw(q1,q2,p1) *
+	  ccw(q1,q2,p2) <= 0);
+}
+
+double compute_distance(const Point& p,const Point &q){
+  return abs(q-p);
 }
 
 int compute_location(int owner,int location){
@@ -85,20 +101,21 @@ int main(){
 	scanf("%d %d %d %d %d %d",&xs,&ys,&xt,&yt,&owner,&location);
 	Point p3(xs,ys);
 	Point p4(xt,yt);
+
+	if(!intersectSS(p1,p2,p3,p4)) continue;
+
 	Point intersection = compute_intersection(p1,p2,p3,p4);
-	
-	if(!on_seg(p1,p2,intersection)) continue;
-	double scale = compute_scale(p1,p2,p3,p4);
+	double dist = compute_distance(p1,intersection);
 	int next_location = compute_location(owner,location);
 
-	pair<double,int> tmp(scale,next_location);
+	pair<double,int> tmp(dist,next_location);
 	intersections.push_back(tmp);
       }
 
       sort(intersections.begin(),intersections.end());
-      int prev = -1;
-      int res = -1;
-      for(int i=0;i<intersections.size();i++){
+      int prev = intersections.size() == 0 ? -1 : intersections[0].second;
+      int res = 0;
+      for(int i=1;i<intersections.size();i++){
 	if(prev != intersections[i].second) res++;
 	prev = intersections[i].second;
       }
