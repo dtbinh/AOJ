@@ -31,53 +31,100 @@ int ty[] = {-1,0,1,0};
  
 static const double EPS = 1e-10;
 
+struct Edge{
+  int start,end;
+  int cost;
+  Edge(int _s,int _e,int _c) : start(_s),end(_e),cost(_c){}
+  bool operator<(const Edge& e) const{
+    return cost < e.cost;
+  }
+};
+
+class UnionFindTree {
+private:
+  int* par;
+  int* rank;
+  int* weight;
+public:
+  UnionFindTree(int n){
+    par = new int[n]();
+    rank = new int[n]();
+    weight = new int[n]();
+    for(int i=0;i<n;i++){
+      par[i] = i;
+      rank[i] = 0;
+      weight[i] = 1;
+    }
+  }
+
+  ~UnionFindTree(){
+    delete[] rank;
+    delete[] par;
+    delete[] weight;
+  }
+
+  int find(int x){
+    if(par[x] == x){
+      return x;
+    } else {
+      return par[x] = find(par[x]);
+    }
+  }
+
+  void unite(int x,int y){
+    x = find(x);
+    y = find(y);
+    if (x == y) return;
+
+    if(rank[x] < rank[y]){
+      par[x] = y;
+      weight[y] += weight[x];
+    } else {
+      par[y] = x;
+      weight[x] += weight[y];
+      if (rank[x] == rank[y]) rank[x]++;
+    }
+  }
+
+  int count(int x){
+    return weight[find(x)];
+  }
+  bool same(int x,int y){
+    return find(x) == find(y);
+  }
+};
+
 int main(){
   int total_nodes,total_edges;
-  int nodes[101][101];
+  int nodes[100][100];
   memset(nodes,0x3f,sizeof(nodes));
 
   while(~scanf("%d %d",&total_nodes,&total_edges)){
     if(total_nodes == 0) break;
 
+    vector<Edge> edges;
     for(int edge_idx = 0; edge_idx < total_edges; edge_idx++){
       int from,to,cost;
       scanf("%d %d %d",&from,&to,&cost);
-      nodes[from][to] = cost;
-      nodes[to][from] = cost;
+      nodes[from-1][to-1] = cost;
+      nodes[to-1][from-1] = cost;
+      edges.push_back(Edge(from-1,to-1,cost));
     }
+   
+    sort(edges.begin(),edges.end());
 
-    bool used[101];
-    memset(used,false,sizeof(used));
+    int opt_cost = INF;
+    for(int i=0;i<total_edges;i++){
+      UnionFindTree union_find(total_nodes);
 
-    used[1] = true;
-    int max_weight = -1;
-    int min_weight = INF;
-    bool isok = true;
-    for(int round = 1;round <= total_nodes-1; round++){
-      int cost = INF;
-      int next = -1;
-      for(int from_idx = 1; from_idx <= total_nodes; from_idx++){
-	if(used[from_idx]) continue;
-	for(int to_idx = 1; to_idx <= total_nodes; to_idx++){
-	  if((from_idx == to_idx) || !used[to_idx]) continue;
-
-	  if(cost > nodes[from_idx][to_idx]){
-	    cost = nodes[from_idx][to_idx];
-	    next = from_idx;
-	  }
+      for(int j=i;j<total_edges;j++){
+	union_find.unite(edges[j].start,edges[j].end);
+	if(union_find.count(edges[j].start) == total_nodes){
+	  opt_cost = min(opt_cost,edges[j].cost-edges[i].cost);
+	  break;
 	}
       }
-
-      if(next == -1){
-	isok = false;
-	break;
-      }
-
-      max_weight = max(cost,max_weight);
-      min_weight = min(cost,min_weight);
-      used[next] = true;
     }
-
-    printf("%d\n",isok ? max_weight - min_weight : -1);
+    printf("%d\n",opt_cost == INF ? -1 : opt_cost);
   }
 }
