@@ -36,7 +36,15 @@ enum dir {
   NORTH
 };
 
+struct PosInfo{
+  int x;
+  int y;
+  int dir;
+  PosInfo(int _x,int _y,int _dir) : x(_x),y(_y),dir(_dir) {}
+};
+
 static const double EPS = 1e-8;
+
 
 void printStage(char stage[100][100],int H,int W,
 		int current_x,int current_y,int current_dir){
@@ -73,8 +81,9 @@ void printStage(char stage[100][100],int H,int W,
 }
 
 int main(){
-  int H,W,L;
-  while(~scanf("%d %d %d",&H,&W,&L)){
+  int H,W;
+  ll L;
+  while(~scanf("%d %d %ld",&H,&W,&L)){
     if(H == 0 && W == 0 && L == 0) break;
 
     char stage[100][100];
@@ -111,25 +120,66 @@ int main(){
       }
     }
 
-    while(L-- > 0){
-      int dx = current_x + tx[current_dir];
-      int dy = current_y + ty[current_dir];
+    int dp[4][100][100];
+    for(int i=0;i<4;i++){
+      memset(dp[i],-1,sizeof(dp[i]));
+    }
 
+    ll round = 0;
+    for(;round < L;round++){
+      if(dp[current_dir][current_x][current_y] >= 0) break;
+      
+      dp[current_dir][current_x][current_y]=round;
       // printStage(stage,H,W,current_x,current_y,current_dir);
       // cout << dx << " " << dy << " " << endl;
-      if(dy < 0 || dy >= H || dx < 0 || dx >= W){
-	current_dir = (current_dir + 1) % 4;
-	L++;
-	continue;
+
+      for(int i=0;i<4;i++){
+	//i==0 : not rotating
+	int next_dir = (current_dir + i) % 4;
+	int dx = current_x + tx[next_dir];
+	int dy = current_y + ty[next_dir];
+
+	if(dy < 0 || dy >= H || dx < 0 || dx >= W){
+	  continue;
+	}
+	else if(stage[dy][dx] == '#'){
+	  continue;
+	}
+
+	current_dir = next_dir;
+	current_x = dx;
+	current_y = dy;
+	break;
       }
-      else if(stage[dy][dx] == '#'){
-	current_dir = (current_dir + 1) % 4;
-	L++;
-	continue;
-      }
-      current_x = dx;
-      current_y = dy;
     }
-    printf("%d %d %c\n",current_y+1,current_x+1,dir_char[current_dir]);
+
+    int res_x = current_x;
+    int res_y = current_y;
+    int res_dir = current_dir;
+
+    //start:0 3 6 9 ... start:96
+    ll last_round = round;
+    ll cycle_begining_round = dp[current_dir][current_x][current_y];
+
+    if(last_round < L){
+      ll cycle_length = last_round - cycle_begining_round;
+      ll cycle_relative_pos = (L - cycle_begining_round) % cycle_length;
+      ll cycle_abs_pos = cycle_relative_pos + cycle_begining_round;
+
+      for(int i=0;i<4;i++){
+	for(int x=0;x<W;x++){
+	  for(int y=0;y<H;y++){
+	    // printf("i:%d x:%d y:%d %d\n",i,x,y,dp[i][x][y]);
+	    if(dp[i][x][y] == cycle_abs_pos){
+	      res_x = x;
+	      res_y = y;
+	      res_dir = i;
+	    }
+	  }
+	}
+      }
+    }
+
+    printf("%d %d %c\n",res_y+1,res_x+1,dir_char[res_dir]);
   }
 }
