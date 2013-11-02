@@ -37,16 +37,19 @@ public:
   int x;
   int y;
   bool has_head;
+  bool has_leg;
   Cell(){}
-  Cell(int _id,int _x,int _y) : id(_id), x(_x), y(_y),has_head(false) {}
+  Cell(int _id,int _x,int _y) : id(_id), x(_x), y(_y),has_head(false),has_leg(false) {}
 };
 
 class Bed{
 public:
   Cell head;
   Cell tail;
+  bool has_head;
+
   Bed() {}
-  Bed (Cell _c1, Cell _c2) : head(_c1),tail(_c2){}
+  Bed (Cell _c1, Cell _c2) : head(_c1),tail(_c2),has_head(false){}
   Cell* getCell(int x,int y){
     if(head.x == x && head.y == y){
       return &head;
@@ -56,6 +59,27 @@ public:
       return &tail;
     }
   }
+
+  Cell* getCellOtherSide(int x,int y){
+    if(head.x == x && head.y == y){
+      return &tail;
+    }
+
+    else if(tail.x == x && tail.y == y){
+      return &head;
+    }
+  }
+
+  bool is_used(){
+    return (head.has_head || tail.has_head || head.has_leg || tail.has_leg);
+  }
+
+  bool is_same_bed(int x,int y){
+    if((head.x == x && head.y == y) || (tail.x == x && tail.y == y)){
+      return true;
+    }
+    return false;
+  }
 };
 
 void dfs(map<P,Bed*>& stage, map<P,Bed*>::iterator it, bool used[20000]){
@@ -64,39 +88,115 @@ void dfs(map<P,Bed*>& stage, map<P,Bed*>::iterator it, bool used[20000]){
 
   int head_x = it->second->head.x;
   int head_y = it->second->head.y;
+  bool is_head_leg = it->second->head.has_leg;
+  bool is_head_head = it->second->head.has_head;
 
   int tail_x = it->second->tail.x;
   int tail_y = it->second->tail.y;
+  bool is_tail_leg = it->second->tail.has_leg;
+  bool is_tail_head = it->second->tail.has_head;
 
   map<P,Bed*>::iterator dst_bed;
   for(int i=0;i<4;i++){
     int dx = head_x + tx[i];
     int dy = head_y + ty[i];
-    if(it->second->getCell(head_x,head_y)->has_head) break;
 
-    if((dst_bed = stage.find(P(dx,dy))) != stage.end()){
-      if(dst_bed->second->getCell(dx,dy)->has_head){
-	continue;
+    if(is_head_head){
+      if((dst_bed = stage.find(P(dx,dy))) != stage.end()){
+	if(dst_bed->second->is_used()) continue;
+
+	dst_bed->second->getCell(dx,dy)->has_head = true;
+	dst_bed->second->getCellOtherSide(dx,dy)->has_leg = true;
+	// printf("x:%d y:%d %s\n",dx,dy,"h");
+	dfs(stage,dst_bed,used);
       }
+    }
 
-      dst_bed->second->getCell(dx,dy)->has_head = true;
-      dfs(stage,dst_bed,used);
+    else if(is_head_leg){
+      if((dst_bed = stage.find(P(dx,dy))) != stage.end()){
+	if(dst_bed->second->is_used()) continue;
+
+	dst_bed->second->getCell(dx,dy)->has_leg = true;
+	dst_bed->second->getCellOtherSide(dx,dy)->has_head = true;
+	// printf("x:%d y:%d %s\n",dx,dy,"l");
+	dfs(stage,dst_bed,used);
+      }
     }
   }
   for(int i=0;i<4;i++){
     int dx = tail_x + tx[i];
     int dy = tail_y + ty[i];
-    if(it->second->getCell(tail_x,tail_y)->has_head) break;
+    
+    if(is_tail_leg){
+      if((dst_bed = stage.find(P(dx,dy))) != stage.end()){
+	if(dst_bed->second->is_used()) continue;
 
-    if((dst_bed = stage.find(P(dx,dy))) != stage.end()){
-      if(dst_bed->second->getCell(dx,dy)->has_head){
-	continue;
+	dst_bed->second->getCell(dx,dy)->has_leg = true;
+	dst_bed->second->getCellOtherSide(dx,dy)->has_head = true;
+	// printf("x:%d y:%d %s\n",dx,dy,"l");
+	dfs(stage,dst_bed,used);
       }
+    }
 
-      dst_bed->second->getCell(dx,dy)->has_head = true;
-      dfs(stage,dst_bed,used);
+    else if(is_tail_head){
+      if((dst_bed = stage.find(P(dx,dy))) != stage.end()){
+	if(dst_bed->second->is_used()) continue;
+
+	dst_bed->second->getCell(dx,dy)->has_head = true;
+	dst_bed->second->getCellOtherSide(dx,dy)->has_leg = true;
+	// printf("x:%d y:%d %s\n",dx,dy,"h");
+	dfs(stage,dst_bed,used);
+      }
     }
   }
+}
+
+bool checkStage(map<P,Bed*>& stage){
+  for(map<P,Bed*>::iterator it = stage.begin();
+    	it != stage.end();
+    	it++){
+    int id = it->second->head.id;
+
+    int head_x = it->second->head.x;
+    int head_y = it->second->head.y;
+    bool is_head_leg = it->second->head.has_leg;
+    bool is_head_head = it->second->head.has_head;
+
+    int tail_x = it->second->tail.x;
+    int tail_y = it->second->tail.y;
+    bool is_tail_leg = it->second->tail.has_leg;
+    bool is_tail_head = it->second->tail.has_head;
+
+    map<P,Bed*>::iterator dst_bed;
+    for(int i=0;i<4;i++){
+      int dx = head_x + tx[i];
+      int dy = head_y + ty[i];
+      if(it->second->is_same_bed(dx,dy)) continue;
+      if((dst_bed = stage.find(P(dx,dy))) != stage.end()){
+	if(is_head_leg){
+	  if(dst_bed->second->getCell(dx,dy)->has_head) return false;
+	}
+	else if(is_head_head){
+	  if(dst_bed->second->getCell(dx,dy)->has_leg) return false;
+	}
+      }
+    }
+
+    for(int i=0;i<4;i++){
+      int dx = tail_x + tx[i];
+      int dy = tail_y + ty[i];
+      if(it->second->is_same_bed(dx,dy)) continue;
+      if((dst_bed = stage.find(P(dx,dy))) != stage.end()){
+	if(is_tail_leg){
+	  if(dst_bed->second->getCell(dx,dy)->has_head) return false;
+	}
+	else if(is_tail_head){
+	  if(dst_bed->second->getCell(dx,dy)->has_leg) return false;
+	}
+      }
+    }
+  }
+  return true;
 }
 
 int main(){
@@ -138,16 +238,14 @@ int main(){
     	it++){
       int id = it->second->head.id;
       if(used[id]) continue;
-      
+
+      // printf("x:%d y:%d %s\n",it->second->head.x,it->second->head.y,"h");
       it->second->head.has_head = true;
+      it->second->tail.has_leg = true;
       dfs(stage,it,used);
     }
 
-    bool isok = true;
-    for(int bed_idx=0;bed_idx<=total_beds;bed_idx++){
-      if(!used[bed_idx]) isok = false;
-    }
-
+    bool isok = checkStage(stage);
     printf("%s\n",isok ? "Yes" : "No");
   }
 }
