@@ -47,31 +47,54 @@ public:
   Cell tail;
   Bed() {}
   Bed (Cell _c1, Cell _c2) : head(_c1),tail(_c2){}
+  Cell* getCell(int x,int y){
+    if(head.x == x && head.y == y){
+      return &head;
+    }
+
+    else if(tail.x == x && tail.y == y){
+      return &tail;
+    }
+  }
 };
 
 void dfs(map<P,Bed*>& stage, map<P,Bed*>::iterator it, bool used[20000]){
   int id = it->second->head.id;
   used[id] = true;
 
-  int x = it->second->head.x;
-  int y = it->second->head.y;
+  int head_x = it->second->head.x;
+  int head_y = it->second->head.y;
 
-  int next_x = it->second->tail.x;
-  int next_y = it->second->tail.y;
+  int tail_x = it->second->tail.x;
+  int tail_y = it->second->tail.y;
 
-  map<P,Bed*>::iterator dst_it;
+  map<P,Bed*>::iterator dst_bed;
   for(int i=0;i<4;i++){
-    int dx = x + tx[i];
-    int dy = y + ty[i];
-    if((dst_it = stage.find(P(dx,dy))) != stage.end()){
-      dfs(stage,dst_it,used);
+    int dx = head_x + tx[i];
+    int dy = head_y + ty[i];
+    if(it->second->getCell(head_x,head_y)->has_head) break;
+
+    if((dst_bed = stage.find(P(dx,dy))) != stage.end()){
+      if(dst_bed->second->getCell(dx,dy)->has_head){
+	continue;
+      }
+
+      dst_bed->second->getCell(dx,dy)->has_head = true;
+      dfs(stage,dst_bed,used);
     }
   }
   for(int i=0;i<4;i++){
-    int dx = next_x + tx[i];
-    int dy = next_y + ty[i];
-    if((dst_it = stage.find(P(dx,dy))) != stage.end()){
-      dfs(stage,dst_it,used);
+    int dx = tail_x + tx[i];
+    int dy = tail_y + ty[i];
+    if(it->second->getCell(tail_x,tail_y)->has_head) break;
+
+    if((dst_bed = stage.find(P(dx,dy))) != stage.end()){
+      if(dst_bed->second->getCell(dx,dy)->has_head){
+	continue;
+      }
+
+      dst_bed->second->getCell(dx,dy)->has_head = true;
+      dfs(stage,dst_bed,used);
     }
   }
 }
@@ -104,18 +127,27 @@ int main(){
       Cell head(bed_idx,x,y);
       Cell tail(bed_idx,dx,dy);
 
-      Bed bed(head,tail);
-      stage[P(x,y)] = &bed;
-      stage[P(dx,dy)] = &bed;
+      Bed* bed = new Bed(head,tail);
+
+      stage[P(x,y)] = bed;
+      stage[P(dx,dy)] = bed;
     }
 
     for(map<P,Bed*>::iterator it = stage.begin();
-	it != stage.end();
-	it++){
+    	it != stage.end();
+    	it++){
       int id = it->second->head.id;
       if(used[id]) continue;
       
+      it->second->head.has_head = true;
       dfs(stage,it,used);
     }
+
+    bool isok = true;
+    for(int bed_idx=0;bed_idx<=total_beds;bed_idx++){
+      if(!used[bed_idx]) isok = false;
+    }
+
+    printf("%s\n",isok ? "Yes" : "No");
   }
 }
