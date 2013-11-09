@@ -43,18 +43,18 @@ int check_paper(bitset<MAX_SIZE>* usagi_horizontal_flags,
   int usagi_sum = 0;
   int neko_sum = 0;
   for(int i=0;i<square_size;i++){
-    if(usagi_horizontal_flags[i].count() == square_size) usagi_sum++;
-    if(usagi_virtical_flags[i].count() == square_size) usagi_sum++;
+    if(usagi_horizontal_flags[i].none()) usagi_sum++;
+    if(usagi_virtical_flags[i].none()) usagi_sum++;
 
-    if(neko_horizontal_flags[i].count() == square_size) neko_sum++;
-    if(neko_virtical_flags[i].count() == square_size) neko_sum++;
+    if(neko_horizontal_flags[i].none()) neko_sum++;
+    if(neko_virtical_flags[i].none()) neko_sum++;
   }
 
-  if(usagi_diagonal_flags[0].count() == square_size) usagi_sum++;
-  if(usagi_diagonal_flags[1].count() == square_size) usagi_sum++;
+  if(usagi_diagonal_flags[0].none()) usagi_sum++;
+  if(usagi_diagonal_flags[1].none()) usagi_sum++;
 
-  if(neko_diagonal_flags[0].count() == square_size) neko_sum++;
-  if(neko_diagonal_flags[1].count() == square_size) neko_sum++;
+  if(neko_diagonal_flags[0].none()) neko_sum++;
+  if(neko_diagonal_flags[1].none()) neko_sum++;
 
   if(square_size == 1){
     usagi_sum /= 3;
@@ -117,11 +117,27 @@ int main(){
     bitset<MAX_SIZE> neko_virtical_flags[square_size];
     bitset<MAX_SIZE> neko_diagonal_flags[2];
 
+    for(int pos=0;pos<square_size;pos++){
+      for(int bit_idx=0;bit_idx<square_size;bit_idx++){
+	usagi_horizontal_flags[pos][bit_idx] = true;
+	usagi_virtical_flags[pos][bit_idx] = true;
+	usagi_diagonal_flags[0][bit_idx] = true;
+	usagi_diagonal_flags[1][bit_idx] = true;
+
+	neko_horizontal_flags[pos][bit_idx] = true;
+	neko_virtical_flags[pos][bit_idx] = true;
+	neko_diagonal_flags[0][bit_idx] = true;
+	neko_diagonal_flags[1][bit_idx] = true;
+      }      
+    }
+
     const string status[] = {"DRAW","USAGI","NEKO"};
     int res = 0;
     for(int card_idx=0;card_idx<total_cards;card_idx++){
       int num;
       scanf("%d",&num);
+
+      if(usagi_paper[num] == -1 && neko_paper[num] == -1) continue;
 
       if(usagi_paper[num] != -1){
 	int usagi_x = usagi_paper[num] % square_size;
@@ -130,13 +146,13 @@ int main(){
 	//x:0 1 2 ... 3 4 ...
 	//  1
 	//  2
-	usagi_horizontal_flags[usagi_y][usagi_x] = true;
-	usagi_virtical_flags[usagi_x][usagi_y] = true;
+	usagi_horizontal_flags[usagi_y][usagi_x] = false;
+	usagi_virtical_flags[usagi_x][usagi_y] = false;
 	if(usagi_x==usagi_y){
-	  usagi_diagonal_flags[0][usagi_x] = true;
+	  usagi_diagonal_flags[0][usagi_x] = false;
 	}
 	if(((square_size - 1) - usagi_x) == usagi_y){
-	  usagi_diagonal_flags[1][usagi_x] = true;
+	  usagi_diagonal_flags[1][usagi_x] = false;
 	}
       }
 
@@ -147,13 +163,13 @@ int main(){
 	//x:0 1 2 ... 3 4 ...
 	//  1
 	//  2
-	neko_horizontal_flags[neko_y][neko_x] = true;
-	neko_virtical_flags[neko_x][neko_y] = true;
+	neko_horizontal_flags[neko_y][neko_x] = false;
+	neko_virtical_flags[neko_x][neko_y] = false;
 	if(neko_x==neko_y){
-	  neko_diagonal_flags[0][neko_x] = true;
+	  neko_diagonal_flags[0][neko_x] = false;
 	}
 	if(((square_size - 1) - neko_x) == neko_y){
-	  neko_diagonal_flags[1][neko_x] = true;
+	  neko_diagonal_flags[1][neko_x] = false;
 	}
       }
 
@@ -166,9 +182,9 @@ int main(){
 			       square_size,
 			       usagi_num,
 			       neko_num);
-      if(res == 0 && winner != -1) res = winner;
-    }
 
+      if(res == 0 && winner != -1 ) res = winner;
+    }
     printf("%s\n",status[res].c_str());
   }
 }
