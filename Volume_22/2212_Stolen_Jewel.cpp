@@ -33,62 +33,53 @@ const int ty[] = {0,0,1,1};
  
 static const double EPS = 1e-8;
 
-struct Response {
-  bool is_valid;
-  int last_pos;
+class Nodes {
+public:
+  class Nodes* children[256];
+  bool has_word;
+  Nodes() : has_word(false){
+    for(int i=0;i<256;i++){
+      children[i] = NULL;
+    }
+  }
 };
 
 class Trie {
 private:
-  int base[1024];
-  int check[1024];
-  bool dic[1024];
-
+  Nodes* root;
 public:
   Trie(){
-    memset(base,0,sizeof(base));
-    memset(check,0,sizeof(check));
-    memset(dic,false,sizeof(dic));
+    root = new Nodes();
   }
 
-  Response traverse(int n,int k){
-    int m = base[n] + k;
-    if (check[m] == n){
-      Response r = {true,m};
-      return r;
-    }
-    else{
-      //can't find
-      Response r = {false,m};
-      return r;
-    }
-  }
-
-  vector<int> common_prefix_search(const string& str) {
-    vector<int> result;
-    Response r = {true,0};
+  void insert(const string& str){
+    Nodes* current = root;
     for(int i=0;i<str.size();i++){
-      r = traverse(r.last_pos,str[i]);
-      if(!r.is_valid){
-	break;
+      char c = str[i];
+      if(current->children[c] == NULL){
+	current->children[c] = new Nodes();
       }
-
-      if(dic[r.last_pos]){
-	result.push_back(r.last_pos);
-      }
+      current = current->children[c];
     }
-
-    return result;
+    current->has_word = true;
   }
 
-  void init(vector<string> str_v,int pos = 0){
-    sort(str_v.begin(),str_v.end());
+  bool common_prefix_search(const string& str){
+    Nodes* current = root;
 
-    bool isok = true;
-    for(int v_idx = 0; v_idx < str_v.size(); v_idx++){
-      string str = str_v[v_idx];
-      common_prefix_search(str);
+    for(int i=0;i<str.size();i++){
+      char c = str[i];
+      if(current->children[c] != NULL){
+	current = current->children[c];
+      }
+      else{
+	return false;
+      }
+
+      if(current->has_word) return true;
     }
+
+    return false;
   }
 };
 
@@ -106,11 +97,13 @@ int main(){
     int total_prohibited_sequences;
     scanf("%d",&total_prohibited_sequences);
 
-
+    Trie trie;
     for(int sequence_idx=0;sequence_idx < total_prohibited_sequences;sequence_idx++){
-      char sequence[12];
-      scanf("%s",sequence);
+      string str;
+      cin >> str;
+      trie.insert(str);
     }
+
     
   }
 }
