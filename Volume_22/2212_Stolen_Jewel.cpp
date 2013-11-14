@@ -25,11 +25,8 @@ typedef long long ll;
 typedef pair <int,int> P;
 typedef pair <int,P > PP;
  
-//int tx[] = {0,1,0,-1};
-//int ty[] = {-1,a0,1,0};
- 
-const int tx[] = {0,1,1,0};
-const int ty[] = {0,0,1,1};
+int tx[] = {0,1,0,-1};//URDL
+int ty[] = {-1,0,1,0};
  
 static const double EPS = 1e-8;
 
@@ -83,27 +80,108 @@ public:
   }
 };
 
+//URDL
+const static char dir[4] = {'U','R','D','L'};
+const static string dir_str[4] = {"U","R","D","L"};
+
+class State{
+public:
+  int cost;
+  string route;
+  int x;
+  int y;
+  State(int _x,int _y,int _c,string _r) : cost(_c), route(_r),x(_x),y(_y){}
+  bool operator<(const State& s) const{
+    return cost < s.cost;
+  }
+  bool operator>(const State& s) const{
+    return cost > s.cost;
+  }
+};
+
 int main(){
-  char stage[50][50];
+
   int H,W;
   while(~scanf("%d %d",&H,&W)){
+    if(H==0 && W==0) break;
+
+    char stage[50][50];
+    int dp[256][50][50];
+
+    for(int i=0;i<256;i++){
+      memset(dp[i],0x3f,sizeof(dp[i]));
+    }
+
+    int sx = 0;
+    int sy = 0;
+    int gx = 0;
+    int gy = 0;
     for(int y=0;y<H;y++){
       char line[51];
       scanf("%s",line);
       for(int x=0;x<W;x++){
 	stage[y][x] = line[x];
+	if(line[x] == 'S'){
+	  sx = x;
+	  sy = y;
+	}
+	else if(line[x] == 'G'){
+	  gx = x;
+	  gy = y;
+	}
       }
     }
     int total_prohibited_sequences;
     scanf("%d",&total_prohibited_sequences);
 
     Trie trie;
-    for(int sequence_idx=0;sequence_idx < total_prohibited_sequences;sequence_idx++){
+    for(int sequence_idx=0;
+	sequence_idx < total_prohibited_sequences;
+	sequence_idx++){
       string str;
       cin >> str;
+      reverse(str.begin(),str.end());
       trie.insert(str);
     }
 
-    
+    priority_queue<State,vector<State>,greater<State> > que;
+    que.push(State(sx,sy,0,""));
+    int res = INF;
+    while(!que.empty()){
+      State s = que.top();
+      string route = s.route;
+      int cost = s.cost;
+      int sx = s.x;
+      int sy = s.y;
+
+      que.pop();
+      for(int i=0;i<4;i++){
+	int dx = sx + tx[i];
+	int dy = sy + ty[i];
+	if(dx < 0 || dx >= W
+	   || dy < 0 || dy >= H) continue;
+
+	if(stage[dy][dx] == '#') continue;
+
+	string next = dir_str[i] + route;
+	if(trie.common_prefix_search(next)){
+	  // cout << next << endl;
+	  continue;
+	}
+
+	// cout << "dy:" << dy << "dx:" << dx << endl;
+	// cout << dp[dir[i]][dy][dx] << endl;
+
+	if(stage[dy][dx] == 'G'){
+	  res = cost + 1;
+	  goto found;
+	}
+
+	que.push(State(dx,dy,cost+1,next));
+      }
+    }
+
+  found:;
+    printf("%d\n",res == INF ? -1 : res);
   }
 }
