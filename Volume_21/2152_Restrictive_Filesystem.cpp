@@ -32,56 +32,59 @@ static const int tx[] = {0,1,0,-1};
 static const int ty[] = {-1,0,1,0};
 
 struct Sector {
-  int start;
-  int last;
-  Sector(int _s,int _l) : start(_s), last(_l) {}
-};
-
-class File {
-public:
   int file_id;
-  vector<Sector> sectors;
+  int first;
+  int last;
+  Sector(int _f,int _s,int _l) : file_id(_f), first(_s), last(_l) {}
+  int size() {return last - first + 1;}
 };
 
 class FileSystem {
+private:
+  vector<Sector> sectors;
 public:
-  vector<File> files;
-
+  FileSystem(){
+    sectors.clear();
+    sectors.push_back(Sector(-1,0,1000000007));
+  }
   void write_sectors(int file_id,int required_sectors){
-    for(int i=0;i<files.size();i++){
-      if(files[i].file_id == -1){
-	files[i].file_id = file_id;
-	  for(int j=0;j<files[i].sectors.size();j++){
-	    int size = files[i].sectors[j].last - files[i].sectors[j].start + 1;
-	    if(required_sectors >= size){
-	      required_sectors -= size;
-	    }
-	    else{
-	      files[i].sectors[j].last
-		= files[i].sectors[j].start + (size - required_sectors);
-	      return;
-	    }
-	  }
+    for(vector<Sector>::iterator it = sectors.begin();
+	it != sectors.end();
+	it++){
+      if(it->file_id == -1){
+	it->file_id = file_id;
+	if(required_sectors < it->size()){
+	  int l = it->last;
+	  it->last = it->first + required_sectors - 1;
+	  int f = it->last + 1;
+	  it++;
+	  sectors.insert(it,1,Sector(-1,f,l));
+	  break;
+	}
+	else {
+	  required_sectors -= it->size();
+	}
       }
     }
   }
+
   void delete_sectors(int file_id){
-    for(int i=0;i<files.size();i++){
-      for(int j=0;j<files[i].sectors.size();j++){
-      }
-      if(file_id==files[i].file_id){
-	files[i].file_id = -1;
+    for(vector<Sector>::iterator it = sectors.begin();
+	it != sectors.end();
+	it++){
+      if(it->file_id == file_id){
+	it->file_id = -1;
       }
     }
   }
 
   int refer_file_id(int sector_id){
-    for(int i=0;i<files.size();i++){
-      for(int j=0;j<files[i].sectors.size();j++){
-	if(files[i].sectors[j].start <= sector_id 
-	   && sector_id <= files[i].sectors[j].last){
-	  return files[i].file_id;
-	}
+    for(vector<Sector>::iterator it = sectors.begin();
+	it != sectors.end();
+	it++){
+      if(it->first <= sector_id
+	 && sector_id <= it->last){
+	return it->file_id;
       }
     }
     return -1;
@@ -111,5 +114,6 @@ int main(){
 	cout << fs.refer_file_id(sector_id) << endl;
       }
     }
+    if(total_commands !=0) cout << "\n";
   }
 }
