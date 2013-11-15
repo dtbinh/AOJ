@@ -47,37 +47,59 @@ int main(){
       constituents.push_back(str);
     }
 
-    string res = "";
-    for(int i=0;i<=110;i++) res.push_back('z');
-    sort(order.begin(),order.end());
-    do{
+    string dp[n][1<<n];
 
-      string catstr = constituents[order[0]];
-      for(int i=1;i<order.size();i++){
-	int idx = order[i];
-	for(int smoothing = min(catstr.size(),constituents[idx].size());
-	    smoothing >= 0 ;
-	    smoothing--){
-	  string front = catstr.substr(catstr.size()-smoothing,smoothing);
-	  string rear = constituents[idx].substr(0,smoothing);
+    for(int S=0;S<=(1<<n)-1;S++){
+      for(int i=0;i<n;i++){
+	for(int j=0;j<=110;j++) dp[i][S].push_back('z');
+      }
+    }
 
-	  if(front == rear){
-	    catstr += constituents[idx].substr(smoothing,constituents[idx].size()-smoothing);
-	    break;
+    for(int i=0;i<n;i++) {
+      dp[i][(1<<i)] = constituents[i];
+    }
+
+    for(int S=0;S<=(1<<n)-1;S++){
+      for(int from=0;from < n; from++){
+	if((S & (1<<from)) == 0) continue;	     
+	for(int to=0;to < n; to++){
+	  if(from == to) continue;
+	  if(S & (1<<to)) continue;
+
+	  string catstr = dp[from][S];
+	  for(int smoothing = min(catstr.size(),constituents[to].size());
+	      smoothing >= 0 ;
+	      smoothing--){
+	    string front = catstr.substr(catstr.size()-smoothing,smoothing);
+	    string rear = constituents[to].substr(0,smoothing);
+
+	    if(front == rear){
+	      catstr += constituents[to].substr(smoothing,constituents[to].size()-smoothing);
+	      break;
+	    }
+	  }
+	  if(dp[to][S | (1<<to)].size() > catstr.size()){
+	    dp[to][S | (1<<to)] = catstr;
+	  }
+	  else if(dp[to][S | (1<<to)].size() == catstr.size() 
+		  && dp[to][S | (1<<to)] > catstr){
+	    dp[to][S | (1<<to)] = catstr;
 	  }
 	}
+      }
+    }
 
-	if(catstr.size() > res.size()) break;
-      }
+    string res = dp[0][(1<<n)-1];
 
-      if(res.size() > catstr.size()){
-	res = catstr;
+    for(int i=0;i<n;i++){
+      if(res.size() > dp[i][(1<<n)-1].size()){
+	res = dp[i][(1<<n)-1];
       }
-      else if(res.size() == catstr.size() 
-	      && res > catstr){
-	res = catstr;
+      else if(dp[i][(1<<n)-1].size() == res.size()
+	      && dp[i][(1<<n)-1] > res){
+	res = dp[i][(1<<n)-1];
       }
-    }while(next_permutation(order.begin(),order.end()));
+    }
     cout << res << endl;
   }
 }
