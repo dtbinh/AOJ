@@ -45,16 +45,39 @@ int main(){
 	       &power_up_speed,
 	       &goal_distance)){
 
-    int carrots[201];
+    bool carrots[10001];
+    memset(carrots,false,sizeof(carrots));
+
     for(int carrot_idx=0;carrot_idx< total_carrots; carrot_idx++){
       int distance;
       scanf("%d",&distance);
-      carrots[carrot_idx] = distance;
+      carrots[distance] = true;
     }
 
     int current_pos = 0;
-    for(int carrot_idx=0;carrot_idx< total_carrots; carrot_idx++){
+
+    int current_carrots = 0;
+    int life = 0;
+
+    int high_speed_interval =0;
+    for(int pos=0;pos< goal_distance; pos++,life--){
+      if(carrots[pos]){
+	current_carrots++;
+      }
+
+      if((life <= 0 && current_carrots > 0)
+	 || (current_carrots > carrot_store_ability)){
+	current_carrots--;
+	life = power_up_duration * power_up_speed;
+      }
+
+      if(life > 0){
+	high_speed_interval++;
+      }
     }
+
+    printf("%.9lf\n",(double)high_speed_interval/(double)power_up_speed
+	   + (double)(goal_distance - high_speed_interval)/(double)normal_speed);
   }
 
 }
