@@ -30,6 +30,44 @@ static const int ty[] = {-1,0,1,0};
  
 static const double EPS = 1e-8;
 
+string cat_string (const string& lhs,const string& rhs){
+
+  if(lhs.size() >= rhs.size()){
+    for(int i=0;i<lhs.size();i++){
+      if(lhs.size() < i+rhs.size()) break;
+      string candidate = lhs.substr(i,rhs.size());
+      
+      if(candidate == rhs){
+	return lhs;
+      }
+    }
+  }
+
+  for(int smoothing = min(lhs.size(),rhs.size());
+      smoothing >= 0 ;
+      smoothing--){
+    string front = lhs.substr(lhs.size()-smoothing,smoothing);
+    string rear = rhs.substr(0,smoothing);
+    
+    if(front == rear){
+      return lhs + rhs.substr(smoothing,rhs.size()-smoothing);
+    }
+  }
+  return lhs+rhs;
+}
+
+string compute_short_string(const string& lhs,const string& rhs){
+  if(lhs.size() < rhs.size()) {
+    return lhs;
+  }
+  else if(lhs.size() > rhs.size()) {
+    return rhs;
+  }
+  else if(lhs.size() == rhs.size()) {
+    return lhs < rhs ? lhs : rhs;
+  }
+}
+
 int main(){
   int n;
   while(~scanf("%d",&n)){
@@ -65,26 +103,8 @@ int main(){
 	for(int to=0;to < n; to++){
 	  if(from == to) continue;
 	  if(S & (1<<to)) continue;
-
-	  string catstr = dp[from][S];
-	  for(int smoothing = min(catstr.size(),constituents[to].size());
-	      smoothing >= 0 ;
-	      smoothing--){
-	    string front = catstr.substr(catstr.size()-smoothing,smoothing);
-	    string rear = constituents[to].substr(0,smoothing);
-
-	    if(front == rear){
-	      catstr += constituents[to].substr(smoothing,constituents[to].size()-smoothing);
-	      break;
-	    }
-	  }
-	  if(dp[to][S | (1<<to)].size() > catstr.size()){
-	    dp[to][S | (1<<to)] = catstr;
-	  }
-	  else if(dp[to][S | (1<<to)].size() == catstr.size() 
-		  && dp[to][S | (1<<to)] > catstr){
-	    dp[to][S | (1<<to)] = catstr;
-	  }
+	  dp[to][S | (1<<to)]
+	    = compute_short_string(cat_string(dp[from][S],constituents[to]),dp[to][S | (1<<to)]);
 	}
       }
     }
@@ -92,14 +112,9 @@ int main(){
     string res = dp[0][(1<<n)-1];
 
     for(int i=0;i<n;i++){
-      if(res.size() > dp[i][(1<<n)-1].size()){
-	res = dp[i][(1<<n)-1];
-      }
-      else if(dp[i][(1<<n)-1].size() == res.size()
-	      && dp[i][(1<<n)-1] > res){
-	res = dp[i][(1<<n)-1];
-      }
+      res = compute_short_string(res,dp[i][(1<<n) - 1]);
     }
     cout << res << endl;
   }
 }
+
