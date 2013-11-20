@@ -39,10 +39,10 @@ string cat_string (const string& lhs,const string& rhs){
     string rear = rhs.substr(0,smoothing);
     
     if(front == rear){
-      return lhs + rhs.substr(smoothing,rhs.size()-smoothing);
+      return rhs.substr(smoothing,rhs.size()-smoothing);
     }
   }
-  return lhs+rhs;
+  return rhs;
 }
 
 string compute_short_string(const string& lhs,const string& rhs){
@@ -67,13 +67,13 @@ int main(){
       tmp_constituents.push_back(str);
     }
     
-    sort(tmp_constituents.begin(),tmp_constituents.end());
-
     bool can_use[n];
     memset(can_use,true,sizeof(can_use));
 
     for(int i=0;i<n;i++){
-      for(int j=i+1;j<n;j++){
+      for(int j=0;j<n;j++){
+	if(i==j) continue;
+
 	if(tmp_constituents[i].size() <= tmp_constituents[j].size()){
 	  for(int idx=0;idx<tmp_constituents[j].size();idx++){
 	    if(tmp_constituents[j].size() < idx+tmp_constituents[i].size()) break;
@@ -86,13 +86,19 @@ int main(){
 	}
       }
     }
-
     vector<string> constituents;
     for(int i=0;i<tmp_constituents.size();i++){
       if(can_use[i]) constituents.push_back(tmp_constituents[i]);
     }
 
     n = constituents.size();
+
+    string edge[n][n];
+    for(int i=0;i<constituents.size();i++){
+      for(int j=0;j<constituents.size();j++){
+	edge[i][j] = cat_string(constituents[i],constituents[j]);
+      }
+    }
 
     string dp[n][1<<n];
 
@@ -108,11 +114,11 @@ int main(){
 	  if(S & (1<<to)) continue;
 	  if(dp[to][S | (1<<to)] == ""){
 	    dp[to][S | (1<<to)]
-	      =	cat_string(dp[from][S],constituents[to]);
+	      =	dp[from][S] + edge[from][to];
 	  }
 	  else{
 	    dp[to][S | (1<<to)]
-	      = compute_short_string(cat_string(dp[from][S],constituents[to]),dp[to][S | (1<<to)]);
+	      = compute_short_string(dp[from][S] + edge[from][to],dp[to][S | (1<<to)]);
 	  }
 	}
       }
