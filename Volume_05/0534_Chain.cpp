@@ -31,39 +31,40 @@ static const double EPS = 1e-8;
 static const int tx[] = {0,1,0,-1};
 static const int ty[] = {-1,0,1,0};
 
-class Block{
-public:
-  int color;
-  int size;
-  Block(int _c,int _s) : color(_c),size(_s){}
-};
+int compute_remaining_characters(const vector<int>& characters,int idx,int color){
+  int prev_lhs = idx;
+  int prev_rhs = idx - 1;
+  int lhs = idx;
+  int rhs = idx;
 
-int check_stage(deque<Block>& stage){
-
-  int res = 0;
-  int max_round = stage.size();
-  for(int round=0;round<max_round;round++){
-    bool update = false;
-    res = 0;
-    for(int i=0;i+1<stage.size();i++){
-      if(stage[i].color == stage[i+1].color){
-	Block b(stage[i].color,stage[i].size+stage[i+1].size);
-	stage.erase(stage.begin()+i,stage.begin()+i+2);
-	stage.insert(stage.begin()+i,b);
-	i--;
-	update = true;
+  for(int round = 0; round <= characters.size(); round++){
+    color = characters[lhs];
+    for(;lhs >= 0;lhs--){
+      if(characters[lhs] != color){
+	lhs++;
+	break;
       }
     }
-    for(int i=0;i<stage.size();i++){
-      res += stage[i].size;
-      if(stage[i].size >= 4){
-	stage.erase(stage.begin()+i);
-	update = true;
+    for(;rhs < characters.size();rhs++){
+      if(characters[rhs] != color){
+	rhs--;
+	break;
       }
     }
-    if(!update) break;
+    if(lhs < 0) lhs++;
+    if(rhs >= characters.size()) rhs--;
+    
+    if((rhs - lhs + 1)-(prev_rhs-prev_lhs + 1) < 4){
+      break;
+    }
+    prev_lhs = lhs;
+    prev_rhs = rhs;
+    
+    //next pos
+    lhs--;
+    rhs++;
   }
-  return res;
+  return characters.size() - (prev_rhs - prev_lhs + 1);
 }
 
 int main(){
@@ -71,42 +72,22 @@ int main(){
   while(~scanf("%d",&n)){
     if(n==0) break;
 
-    deque<Block> stage;
-    queue<int> que;
-    int prev = -1;
+    vector<int> characters;
     for(int i=0;i<n;i++){
       int color;
       scanf("%d",&color);
-
-      if(i==0 || color == prev){
-	que.push(color);
-      }
-      else{
-	stage.push_back(Block(prev,que.size()));
-	while(!que.empty()) que.pop();
-	que.push(color);
-      }
-      prev = color;
-    }
-
-    if(!que.empty()){
-      stage.push_back(Block(prev,que.size()));
+      characters.push_back(color);
     }
 
     int res = n;
-    for(int i=0;i<stage.size();i++){
-      if(stage[i].size != 1) continue;
-
-
+    for(int idx=0;idx<characters.size();idx++){
       for(int color=1;color<=3;color++){
-	if(stage[i].color == color) continue;
-
-	deque<Block> tmp = stage;
-	tmp[i].color = color;
-	res = min(res,check_stage(tmp));
+	vector<int> store = characters;
+	characters[idx] = color;
+	res = min(res,compute_remaining_characters(characters,idx,color));
+	characters = store;
       }
     }
-
     printf("%d\n",res);
   }
 }
