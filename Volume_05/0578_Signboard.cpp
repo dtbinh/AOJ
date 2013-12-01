@@ -44,15 +44,24 @@ int main(){
     for(int i=0;i<total_signboards;i++){
       string old_board;
       cin >> old_board;
-      for(int y=0;y<old_board.size();y++){
-	for(int x=0;x<target_board.size();x++){
-	  dp[y+1][x+1] = max(dp[y][x] + (old_board[y] == target_board[x]),
-			     max(dp[y+1][x],dp[y][x+1]));
+
+      for(int start_pos = 0;start_pos<old_board.size();start_pos++){
+	for(int distance = 1;distance<=old_board.size();distance++){
+	  string new_board="";
+	  new_board.push_back(old_board[start_pos]);
+	  int next_pos = start_pos+distance;
+	  
+	  while(next_pos < old_board.size()){
+	    new_board.push_back(old_board[next_pos]);
+	    next_pos += distance;
+	    if(target_board == new_board){
+	      res++;
+	      goto found;
+	    }
+	  }
 	}
       }
-      if(dp[old_board.size()][target_board.size()] == target_board.size()){
-	res++;
-      }
+    found:;
     }
     printf("%d\n",res);
   }
