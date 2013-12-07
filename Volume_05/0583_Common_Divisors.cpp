@@ -34,44 +34,23 @@ static const int ty[] = {-1,0,1,0};
 int main(){
   int n;
   while(~scanf("%d",&n)){
-    int num[3];
-    int max_num = 0;
+    map<int,int> freq;
     for(int i=0;i<n;i++){
-      scanf("%d",num+i);
-      max_num = max(max_num,num[i]);
-    }
-
-    vector<int> divisors;
-    for(int div=1;div*div<=1e9;div++){
-      bool isok = true;
-      vector<int> candidates;
-      for(int i=0;i<n;i++){
-	if(num[i] % div != 0) isok = false;
-	if(num[i] % div ==0) {
-	  candidates.push_back(num[i]/div);
-	}
-      }
-      if(isok){
-	divisors.push_back(div);
-
-	for(int i=0;i<candidates.size();i++){
-	  bool isok2 = true;
-	  for(int j=0;j<n;j++){
-	    if(num[j] % candidates[i] != 0) isok2 = false;
-	  }
-	  if(isok2){
-	    divisors.push_back(candidates[i]);
-	  }
+      int num;
+      scanf("%d",&num);
+      for(int div=1;div*div<=num;div++){
+	if(num % div == 0){
+	  freq[div]++;
+	  if(div != (num/div)) freq[num/div]++;
 	}
       }
     }
-
-    sort(divisors.begin(),divisors.end());
-    vector<int>::iterator it = unique (divisors.begin(), divisors.end());
-    divisors.resize(distance(divisors.begin(),it) );
-    
-    for(int i=0;i<divisors.size();i++){
-      printf("%d\n",divisors[i]);
+    for(map<int,int>::iterator it = freq.begin();
+	it != freq.end();
+	it++){
+      if(it->second >= n){
+	printf("%d\n",it->first);
+      }
     }
   }
 }
