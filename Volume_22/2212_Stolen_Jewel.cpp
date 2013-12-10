@@ -78,6 +78,25 @@ public:
 
     return false;
   }
+
+  bool exact_match(const string& str){
+    Nodes* current = root;
+
+    for(int i=0;i<str.size();i++){
+      char c = str[i];
+      if(current->children[c] != NULL){
+	current = current->children[c];
+      }
+      else{
+	return false;
+      }
+
+      if(i == str.size()-1
+	 && current->has_word) return true;
+    }
+
+    return false;
+  }
 };
 
 //URDL
@@ -99,18 +118,15 @@ public:
   }
 };
 
+char stage[50][50];
+Trie dp[50][50];
+Trie trie;
+
 int main(){
 
   int H,W;
   while(~scanf("%d %d",&H,&W)){
     if(H==0 && W==0) break;
-
-    char stage[50][50];
-    int dp[256][50][50];
-
-    for(int i=0;i<256;i++){
-      memset(dp[i],0x3f,sizeof(dp[i]));
-    }
 
     int sx = 0;
     int sy = 0;
@@ -134,7 +150,6 @@ int main(){
     int total_prohibited_sequences;
     scanf("%d",&total_prohibited_sequences);
 
-    Trie trie;
     for(int sequence_idx=0;
 	sequence_idx < total_prohibited_sequences;
 	sequence_idx++){
@@ -169,8 +184,9 @@ int main(){
 	  continue;
 	}
 
-	// cout << "dy:" << dy << "dx:" << dx << endl;
-	// cout << dp[dir[i]][dy][dx] << endl;
+	string recent10step = next.substr(0,10);
+	if(dp[dy][dx].exact_match(recent10step)) continue;
+	dp[dy][dx].insert(recent10step);
 
 	if(stage[dy][dx] == 'G'){
 	  res = cost + 1;
