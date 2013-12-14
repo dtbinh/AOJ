@@ -18,6 +18,7 @@
 #include <list>
 #include <cctype>
 #include <utility>
+#include <iterator>
  
 using namespace std;
  
@@ -29,7 +30,6 @@ int tx[] = {0,1,0,-1};//URDL
 int ty[] = {-1,0,1,0};
  
 static const double EPS = 1e-8;
-
 
 //URDL
 const static char dir[4] = {'U','R','D','L'};
@@ -81,7 +81,7 @@ public:
   }
 
   void add_transition(AhoCorasick::Node* node){
-    transitions[character] = node;
+    transitions[node->get_char()] = node;
     v_transitions.push_back(node);
   }
 
@@ -122,15 +122,12 @@ public:
     }
 
     vector<AhoCorasick::Node*> nodes;
-    vector<AhoCorasick::Node*> transitions = root->get_transitions();
-    for(int i=0;i<transitions.size();i++){
-      transitions[i]->set_failure(root);
-
-      vector<AhoCorasick::Node*> tmp_nodes(nodes.size()+transitions[i]->get_transitions().size());
-      merge(nodes.begin(),nodes.end(),
-	    transitions[i]->get_transitions().begin(),transitions[i]->get_transitions().end(),
-	    tmp_nodes.begin());
-      nodes = tmp_nodes;
+    for(int i=0;i<root->get_transitions().size();i++){
+      root->get_transitions()[i]->set_failure(root);
+      vector<AhoCorasick::Node*> tmp = root->get_transitions()[i]->get_transitions();
+      for(int j=0;j<tmp.size();j++){
+	nodes.push_back(tmp[j]);
+      }
     }
 
     while(nodes.size() > 0){
@@ -139,29 +136,32 @@ public:
 	AhoCorasick::Node* r = nodes[i]->get_parent()->get_failure();
 	char c = nodes[i]->get_char();
       
-	while(r != NULL && r->get_transition(c) != NULL){
+	while((r != NULL) && (r->get_transition(c) != NULL)){
 	  r = r->get_failure();
 	}
 
-	if(r != NULL){
+	if(r == NULL){
 	  nodes[i]->set_failure(root);
 	}
 	else{
 	  AhoCorasick::Node* tc = r->get_transition(c);
 	  nodes[i]->set_failure(tc);
 	  
-	  set<string> results = tc->get_results();
+	  set<string> results;
+	  if(tc != NULL) results = tc->get_results();
 	  for(set<string>::iterator it = results.begin();
 	      it != results.end();
 	      it++){
-	    transitions[i]->add_result(*it);
+	    nodes[i]->add_result(*it);
 	  }
 	}
-	vector<AhoCorasick::Node*> tmp_next(next_nodes.size()+nodes[i]->get_transitions().size());
-	merge(next_nodes.begin(),next_nodes.end(),
-	      nodes[i]->get_transitions().begin(),nodes[i]->get_transitions().end(),
-	      tmp_next.begin());
-	next_nodes = tmp_next;
+
+	vector<AhoCorasick::Node*> tmp_nodes;
+	tmp_nodes.reserve(next_nodes.size() + nodes[i]->get_transitions().size()); 
+	merge(next_nodes.begin(), next_nodes.end(),
+	      nodes[i]->get_transitions().begin(), nodes[i]->get_transitions().end(),
+	      back_inserter<vector<AhoCorasick::Node*> >(tmp_nodes));
+	next_nodes.swap(tmp_nodes);
       }
 
       nodes = next_nodes;
@@ -204,10 +204,10 @@ public:
 class State{
 public:
   int cost;
-  string route;
+  long route;
   int x;
   int y;
-  State(int _x,int _y,int _c,string _r) : cost(_c), route(_r),x(_x),y(_y){}
+  State(int _x,int _y,int _c,long _r) : cost(_c), route(_r),x(_x),y(_y){}
   bool operator<(const State& s) const{
     return cost < s.cost;
   }
@@ -217,42 +217,24 @@ public:
 };
 
 
-map<string,int> handle_all_func(int pos,const string& keyword){
-  cout << pos << endl;
+map<string,int> handle_first_func(int pos,const string& keyword){
   map<string,int> total;
   total[keyword] = pos;
   return total;
 }
 
-map<string,int> find_all(const string& text,const set<string>& keywords){
-  AhoCorasick::SearchMachine* m = new AhoCorasick::SearchMachine(keywords);
-  
-  map<string,int> (*handle_all)(int pos,const string& keyword) = handle_all_func;
-  map<string,int> rv = m->feed(text,handle_all);
+map<string,int> find_first(const string& text,AhoCorasick::SearchMachine* m){
+  map<string,int> (*handle_first)(int pos,const string& keyword) = handle_first_func;
+  map<string,int> rv = m->feed(text,handle_first);
   return rv;
 }
 
 int main(){
   int H,W;
 
-  string text = "jam";
-  set<string> keywords;
-  keywords.insert("batako");
-  keywords.insert("jam");
-  keywords.insert("man");
-
-  cout << text << endl;
-  map<string,int> res = find_all(text,keywords);
-  for(map<string,int>::iterator it = res.begin();
-      it != res.end();
-      it++){
-    cout << it->first << endl;
-  }
-
   while(~scanf("%d %d",&H,&W)){
     if(H==0 && W==0) break;
-    set<string> dp[50][50];
-
+    set<long> dp[50][50];
     char stage[50][50];
     
     int sx = 0;
@@ -283,20 +265,48 @@ int main(){
 	sequence_idx++){
       string str;
       cin >> str;
-      keywords.insert(str);
+      string num_str = "";
+      for(int i=0;i<str.size();i++){
+	if(str[i] == 'U'){
+	  num_str += "1";
+	}
+	else if(str[i] == 'R'){
+	  num_str += "2";
+	}
+	else if(str[i] == 'D'){
+	  num_str += "3";
+	}
+	else if(str[i] == 'L'){
+	  num_str += "4";
+	}
+      }
+      reverse(num_str.begin(),num_str.end());
+      keywords.insert(num_str);
     }
 
+    AhoCorasick::SearchMachine* sm = new AhoCorasick::SearchMachine(keywords);
+
     priority_queue<State,vector<State>,greater<State> > que;
-    que.push(State(sx,sy,0,""));
+    que.push(State(sx,sy,0,0));
+
     int res = INF;
     while(!que.empty()){
       State s = que.top();
-      string route = s.route;
+      long route = s.route;
       int cost = s.cost;
       int sx = s.x;
       int sy = s.y;
 
       que.pop();
+
+      string route_str;
+
+      stringstream ss;
+      ss << route;
+      ss >> route_str;
+
+      if(route_str == "0") route_str = "";
+
       for(int i=0;i<4;i++){
 	int dx = sx + tx[i];
 	int dy = sy + ty[i];
@@ -305,25 +315,27 @@ int main(){
 
 	if(stage[dy][dx] == '#') continue;
 
-	string next = dir_str[i] + route.substr(0,9);
-	// if(trie.common_prefix_search(next)){
-	//   // cout << next << endl;
-	//   continue;
-	// }
+	string front;
+	front = (char)((i+1) + '0');
+	string next =  front + route_str;
+	next = next.substr(0,10);
+	map<string,int> result = find_first(next,sm);
+	if((!result.empty())){
+	  cout << result.begin()->first << endl;
+	  cout << next << endl;
+	  continue;
+	}
 
-	// if(aho_corasick.feed(next,callback)){
-	//   cout << next << endl;
-	//   exit;
-	// }
-	if(dp[dy][dx].count(next)) continue;
-	dp[dy][dx].insert(next);
+	long next_num = atol(next.c_str());
+	if(dp[dy][dx].count(next_num)) continue;
+	dp[dy][dx].insert(next_num);
 
 	if(stage[dy][dx] == 'G'){
 	  res = cost + 1;
 	  goto found;
 	}
 
-	que.push(State(dx,dy,cost+1,next));
+	que.push(State(dx,dy,cost+1,next_num));
       }
     }
 
