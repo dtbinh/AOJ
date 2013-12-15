@@ -38,6 +38,10 @@ const static string dir_str[4] = {"U","R","D","L"};
 namespace AhoCorasick{
   class Node;
   class SearchMachine;
+  struct MatchingResult {
+    map<string,int> rv;
+    long long id;
+  };
 };
 
 class AhoCorasick::Node {
@@ -67,7 +71,7 @@ public:
     failure = _n;
   }
 
-  AhoCorasick::Node* get_transition(char c){
+  AhoCorasick::Node* get_transition(const char c){
     if(transitions.find(c) == transitions.end()) return NULL;
     return transitions[c];
   }
@@ -83,6 +87,10 @@ public:
   void add_transition(AhoCorasick::Node* node){
     transitions[node->get_char()] = node;
     v_transitions.push_back(node);
+  }
+
+  long long get_id() const{
+    return reinterpret_cast<long long>(this);
   }
 
   const vector<AhoCorasick::Node*>& get_transitions() const{
@@ -126,7 +134,7 @@ public:
       root->get_transitions()[i]->set_failure(root);
 
       vector<AhoCorasick::Node*> tmp_nodes;
-      tmp_nodes.reserve(nodes.size() + root->get_transitions()[i]->get_transitions().size()); 
+      tmp_nodes.reserve(nodes.size() + root->get_transitions()[i]->get_transitions().size() + 1); 
       merge(nodes.begin(), nodes.end(),
 	    root->get_transitions()[i]->get_transitions().begin(), root->get_transitions()[i]->get_transitions().end(),
 	    back_inserter<vector<AhoCorasick::Node*> >(tmp_nodes));
@@ -137,9 +145,9 @@ public:
       vector<AhoCorasick::Node*> next_nodes;
       for(int i=0;i<nodes.size();i++){
 	AhoCorasick::Node* r = nodes[i]->get_parent()->get_failure();
-	char c = nodes[i]->get_char();
+	const char c = nodes[i]->get_char();
       
-	while((r != NULL) && (r->get_transition(c) != NULL)){
+	while((r != NULL) && (r->get_transition(c) == NULL)){
 	  r = r->get_failure();
 	}
 
@@ -160,7 +168,7 @@ public:
 	}
 
 	vector<AhoCorasick::Node*> tmp_nodes;
-	tmp_nodes.reserve(next_nodes.size() + nodes[i]->get_transitions().size()); 
+	tmp_nodes.reserve(next_nodes.size() + nodes[i]->get_transitions().size() + 1); 
 	merge(next_nodes.begin(), next_nodes.end(),
 	      nodes[i]->get_transitions().begin(), nodes[i]->get_transitions().end(),
 	      back_inserter<vector<AhoCorasick::Node*> >(tmp_nodes));
@@ -174,12 +182,12 @@ public:
     state = root;
   }
 
-  map<string,int> feed(const string& text,map<string,int> (*callback)(int pos,const string& text)){
+  MatchingResult feed(const string& text){
+    MatchingResult mr;
     int index = 0;
-    map<string,int> rv;
     while(index < text.length()){
       AhoCorasick::Node* trans = NULL;
-      while(1){
+      while(state != NULL){
 	trans = state->get_transition(text[index]);
 	if(state == root || trans != NULL) break;
 	state = state->get_failure();
@@ -188,31 +196,29 @@ public:
       if(trans != NULL){
 	state = trans;
       }
-
-      set<string> results = state->get_results();
+      
+      set<string> results;
+      if(state != NULL) results = state->get_results();
       for(set<string>::iterator it = results.begin();
 	  it != results.end();
 	  it++){
-	rv = (*callback)(index - it->length() + 1,*it);
-	if(!rv.empty()){
-	  state = root;
-	  return rv;
-	}
+	mr.rv[*it] = index - it->length() + 1;
       }
       index++;
     }
+    mr.id = state->get_id();
     state = root;
-    return rv;
+    return mr;
   }
 };
 
 class State{
 public:
   int cost;
-  long route;
+  string route;
   int x;
   int y;
-  State(int _x,int _y,int _c,long _r) : cost(_c), route(_r),x(_x),y(_y){}
+  State(int _x,int _y,int _c,string _r) : cost(_c), route(_r),x(_x),y(_y){}
   bool operator<(const State& s) const{
     return cost < s.cost;
   }
@@ -221,27 +227,13 @@ public:
   }
 };
 
-
-map<string,int> handle_first_func(int pos,const string& keyword){
-  map<string,int> total;
-  total[keyword] = pos;
-  return total;
-}
-
-map<string,int> find_first(const string& text,AhoCorasick::SearchMachine* m){
-  map<string,int> (*handle_first)(int pos,const string& keyword) = handle_first_func;
-  map<string,int> rv = m->feed(text,handle_first);
-  return rv;
-}
-
 int main(){
   int H,W;
-
   while(~scanf("%d %d",&H,&W)){
     if(H==0 && W==0) break;
-    set<long> dp[50][50];
     char stage[50][50];
-    
+    set<ll> dp[50][50];
+
     int sx = 0;
     int sy = 0;
     int gx = 0;
@@ -270,47 +262,23 @@ int main(){
 	sequence_idx++){
       string str;
       cin >> str;
-      string num_str = "";
-      for(int i=0;i<str.size();i++){
-	if(str[i] == 'U'){
-	  num_str += "1";
-	}
-	else if(str[i] == 'R'){
-	  num_str += "2";
-	}
-	else if(str[i] == 'D'){
-	  num_str += "3";
-	}
-	else if(str[i] == 'L'){
-	  num_str += "4";
-	}
-      }
-      reverse(num_str.begin(),num_str.end());
-      keywords.insert(num_str);
+      keywords.insert(str);
     }
 
     AhoCorasick::SearchMachine* sm = new AhoCorasick::SearchMachine(keywords);
 
     priority_queue<State,vector<State>,greater<State> > que;
-    que.push(State(sx,sy,0,0));
+    que.push(State(sx,sy,0,""));
 
     int res = INF;
     while(!que.empty()){
       State s = que.top();
-      long route = s.route;
+      string route = s.route;
       int cost = s.cost;
       int sx = s.x;
       int sy = s.y;
 
       que.pop();
-
-      string route_str;
-
-      stringstream ss;
-      ss << route;
-      ss >> route_str;
-
-      if(route_str == "0") route_str = "";
 
       for(int i=0;i<4;i++){
 	int dx = sx + tx[i];
@@ -320,26 +288,25 @@ int main(){
 
 	if(stage[dy][dx] == '#') continue;
 
-	string front;
-	front = (char)((i+1) + '0');
-	string next =  front + route_str;
-	next = next.substr(0,10);
-	if((!find_first(next,sm).empty())){
-	  // cout << result.begin()->first << endl;
+	string next = route + dir_str[i];
+	if(next.size() > 10) next = next.substr(next.size()-10);
+	AhoCorasick::MatchingResult mr = sm->feed(next);
+
+	if((!mr.rv.empty())){
+	  // cout << mr.rv.begin()->first << endl;
 	  // cout << next << endl;
 	  continue;
 	}
 
-	long next_num = atol(next.c_str());
-	if(dp[dy][dx].count(next_num)) continue;
-	dp[dy][dx].insert(next_num);
+	if(dp[dy][dx].count(mr.id)) continue;
+	dp[dy][dx].insert(mr.id);
 
 	if(stage[dy][dx] == 'G'){
 	  res = cost + 1;
 	  goto found;
 	}
 
-	que.push(State(dx,dy,cost+1,next_num));
+	que.push(State(dx,dy,cost+1,next));
       }
     }
 
