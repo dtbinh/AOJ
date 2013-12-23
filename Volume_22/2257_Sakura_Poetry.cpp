@@ -29,6 +29,7 @@ int tx[] = {0,1,0,-1};
 int ty[] = {-1,0,1,0};
  
 static const double EPS = 1e-8;
+static const int MOD = 1000000009;
 
 namespace AhoCorasick{
   class Node;
@@ -290,18 +291,22 @@ int main(){
 		       mr.id);
 	    
 	    dp[from.size()][next]
-	      += dp[0][prev_state_it->first];
+	      += dp[0][prev_state_it->first] % MOD;
+	    dp[from.size()][next] %= MOD;
 	  }
 
 	  else if(from == prev_state_it->first.last_word){
 	    sm->set_state(prev_state_it->first.last_node_address);
 	    AhoCorasick::MatchingResult mr = sm->feed(to);
+
+	    //last_word,season_count,last_node
 	    State next(to, 
-		       prev_word_length + mr.rv.size(),
+		       prev_state_it->first.seasonword_count + mr.rv.size(),
 		       mr.id);
 	    
 	    dp[prev_word_length + to.size()][next]
-	      += dp[prev_word_length][prev_state_it->first];
+	      += dp[prev_word_length][prev_state_it->first] % MOD;
+	    dp[prev_word_length + to.size()][next] %= MOD;
 	  }
 	}
       }
