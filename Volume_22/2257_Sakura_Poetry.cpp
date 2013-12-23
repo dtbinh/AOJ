@@ -269,7 +269,7 @@ int main(){
     AhoCorasick::SearchMachine* sm = new AhoCorasick::SearchMachine(seasonwords);
     AhoCorasick::MatchingResult start = sm->feed("");
     //dp[word_length][State]
-    map<State,int> dp[501];
+    map<State,int> dp[600];
 
     //init
     for(map<string,vector<string> >::iterator it = connects.begin();
