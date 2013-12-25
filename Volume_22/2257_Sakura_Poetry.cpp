@@ -10,6 +10,7 @@
 #include <stack>
 #include <limits>
 #include <map>
+#include <functional>
 #include <string>
 #include <cstring>
 #include <set>
@@ -35,7 +36,7 @@ namespace AhoCorasick{
   class Node;
   class SearchMachine;
   struct MatchingResult {
-    map<string,int> rv;
+    multimap<string,int> rv;
     long long id;
   };
 };
@@ -99,6 +100,7 @@ private:
   set<string> keywords;
   AhoCorasick::Node* root;
   AhoCorasick::Node* state;
+
 public:
   SearchMachine(set<string> _k) : keywords(_k){
     _build_tree();
@@ -207,7 +209,7 @@ public:
       for(set<string>::iterator it = results.begin();
 	  it != results.end();
 	  it++){
-	mr.rv[*it] = index - it->length() + 1;
+	mr.rv.insert(pair<string,int>(*it,index - it->length() + 1));
       }
       index++;
     }
@@ -260,6 +262,7 @@ int main(){
       cin >> from >> to;
       connects[from].push_back(to);
     }
+
     for(int i=0;i<total_seasonwords;i++){
       string seasonword;
       cin >> seasonword;
@@ -268,68 +271,71 @@ int main(){
 
     AhoCorasick::SearchMachine* sm = new AhoCorasick::SearchMachine(seasonwords);
     AhoCorasick::MatchingResult start = sm->feed("");
-    //dp[word_length][State]
+
     map<State,int> dp[600];
 
     //init
-    for(map<string,vector<string> >::iterator it = connects.begin();
-	it != connects.end();
-	it++){
+    for(map<string,vector<string> >::iterator conn_it = connects.begin();
+	conn_it != connects.end();
+	conn_it++){
 
+      const string& from = conn_it->first;
       sm->set_state(start.id);
-      const string& from = it->first;
       AhoCorasick::MatchingResult mr = sm->feed(from);
-
+      
       //last_word,season_count,last_node
-      State next(from, 
-		 mr.rv.size(),
-		 mr.id);
-      dp[from.size()][next] = 1;
+      dp[from.size()][State(from,mr.rv.size(),mr.id)] = 1;
+
+      for(int i = 0; i< conn_it->second.size();i++){
+      	const string& to = conn_it->second[i];
+      	sm->set_state(start.id);
+      	mr = sm->feed(to);
+
+      	dp[to.size()][State(to,mr.rv.size(),mr.id)] = 1;
+      }
     }
 
-
     for(int prev_word_length = 0; prev_word_length < word_limit; prev_word_length++){
+      if(dp[prev_word_length].size() == 0) continue;
       map<State,int>& prev = dp[prev_word_length];
       for(map<State,int>::iterator prev_state_it = prev.begin();
 	  prev_state_it != prev.end();
 	  prev_state_it++){
 
-	  for(map<string,vector<string> >::iterator it = connects.begin();
-	      it != connects.end();
-	      it++){
-	    const string& from = it->first;
-	    for(int to_idx=0;to_idx < it->second.size(); to_idx++){
-	      const string& to = it->second[to_idx];
+	map<string,vector<string> >::iterator conn_it;
+	if((conn_it = connects.find(prev_state_it->first.last_word))
+	   != connects.end()){
 
-	      if(from == prev_state_it->first.last_word){
-		sm->set_state(prev_state_it->first.last_node_address);
-		AhoCorasick::MatchingResult mr = sm->feed(to);
-		
-		if(prev_state_it->first.seasonword_count + mr.rv.size() >= 2) continue;
-		//last_word,season_count,last_node
-		State next(to, 
-			   prev_state_it->first.seasonword_count + mr.rv.size(),
-			   mr.id);
-		
-		// cout << "from:" << from <<  " to:" << to << endl;
-		
-		dp[prev_word_length + to.size()][next]
-		  += dp[prev_word_length][prev_state_it->first] % MOD;
-		dp[prev_word_length + to.size()][next] %= MOD;
-	      }
-	    }
+	  for(int to_idx = 0; to_idx < conn_it->second.size(); to_idx++){
+	    const string& to = conn_it->second[to_idx];
+
+	    sm->set_state(prev_state_it->first.last_node_address);
+	    AhoCorasick::MatchingResult mr = sm->feed(to);
+	      
+	    if(prev_state_it->first.seasonword_count + mr.rv.size() >= 2) continue;
+	    //last_word,season_count,last_node
+	    State next(to, 
+		       prev_state_it->first.seasonword_count + mr.rv.size(),
+		       mr.id);
+	    
+	    dp[prev_word_length + to.size()][next]
+	      += prev_state_it->second % MOD;
+	    
+	    dp[prev_word_length + to.size()][next] %= MOD;
 	  }
+	}
       }
       dp[prev_word_length].clear();
     }
-    
     int res = 0;
-    for(map<State,int>::iterator prev_state_it = dp[word_limit].begin();
-	prev_state_it != dp[word_limit].end();
+
+    map<State,int>& last_state = dp[word_limit];
+    for(map<State,int>::iterator prev_state_it = last_state.begin();
+	prev_state_it != last_state.end();
 	prev_state_it++){
       if(prev_state_it->first.seasonword_count != 1) continue;
 
-      res += dp[word_limit][prev_state_it->first] % MOD;
+      res += prev_state_it->second % MOD;
       res %= MOD;
     }
 
