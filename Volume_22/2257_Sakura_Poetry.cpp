@@ -39,13 +39,14 @@ namespace AhoCorasick{
   struct MatchingResult {
     int match_count;
     long long id;
+    MatchingResult() : match_count(0), id(0){}
   };
 };
 
 class AhoCorasick::Node {
 private:
   set<string> results;
-  map<char,AhoCorasick::Node*> transitions;
+  unordered_map<char,AhoCorasick::Node*> transitions;
   vector<AhoCorasick::Node*> v_transitions;
   char character;
   AhoCorasick::Node* parent;
@@ -188,7 +189,7 @@ public:
   }
 
   AhoCorasick::MatchingResult feed(const string& text){
-    AhoCorasick::MatchingResult matching_result = {0,0};
+    AhoCorasick::MatchingResult matching_result;
     int index = 0;
     while(index < text.length()){
       AhoCorasick::Node* trans = NULL;
@@ -202,9 +203,8 @@ public:
 	state = trans;
       }
       
-      set<string> results;
-      if(state != NULL) results = state->get_results();
-      matching_result.match_count += results.size();
+      matching_result.match_count += state->get_results().size();
+      index++;
     }
     matching_result.id = state->get_id();
     state = root;
