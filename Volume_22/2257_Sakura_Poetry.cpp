@@ -188,8 +188,9 @@ public:
     state = reinterpret_cast<AhoCorasick::Node*>(current_num);
   }
 
-  AhoCorasick::MatchingResult feed(const string& text){
-    AhoCorasick::MatchingResult matching_result;
+  void feed(const string& text,AhoCorasick::MatchingResult* matching_result){
+    matching_result->match_count = 0; //init
+
     int index = 0;
     while(index < text.length()){
       AhoCorasick::Node* trans = NULL;
@@ -203,12 +204,12 @@ public:
 	state = trans;
       }
       
-      matching_result.match_count += state->get_results().size();
+      matching_result->match_count += state->get_results().size();
+      if(matching_result->match_count >= 2) break;
       index++;
     }
-    matching_result.id = state->get_id();
+    matching_result->id = state->get_id();
     state = root;
-    return matching_result;
   }
 };
 
@@ -308,17 +309,17 @@ int main(){
     }
 
     AhoCorasick::SearchMachine* sm = new AhoCorasick::SearchMachine(seasonwords);
+    AhoCorasick::MatchingResult* mr = new AhoCorasick::MatchingResult();
     
-    AhoCorasick::MatchingResult start = sm->feed("");
+    sm->feed("",mr);
     unordered_map<State,int> dp[600];
 
     //init
     for(int i=0;i<words.size();i++){
-      sm->set_state(start.id);
-      AhoCorasick::MatchingResult mr = sm->feed(words[i]);
+      sm->feed(words[i],mr);
       //last_word,season_count,last_node
-      if(mr.match_count >= 2) continue;
-      dp[words[i].size()][State(i,mr.match_count,mr.id)] = 1;
+      if(mr->match_count >= 2) continue;
+      dp[words[i].size()][State(i,mr->match_count,mr->id)] = 1;
     }
 
     for(int prev_word_length = 0; 
@@ -335,13 +336,13 @@ int main(){
 
 	  int next_idx = connects[prev_state_it->first.last_word][to_idx];
 	  sm->set_state(prev_state_it->first.last_node_address);
-	  AhoCorasick::MatchingResult mr = sm->feed(words[next_idx]);
+	  sm->feed(words[next_idx],mr);
 
-	  if(prev_state_it->first.seasonword_count + mr.match_count >= 2) continue;
+	  if(prev_state_it->first.seasonword_count + mr->match_count >= 2) continue;
 	  //last_word,season_count,last_node
 	  State next(next_idx, 
-		     prev_state_it->first.seasonword_count + mr.match_count,
-		     mr.id);
+		     prev_state_it->first.seasonword_count + mr->match_count,
+		     mr->id);
 
 	  dp[prev_word_length + words[next_idx].size()][next]
 	    += prev_state_it->second % MOD;
@@ -351,18 +352,17 @@ int main(){
       }
       dp[prev_word_length].clear();
     }
+    
     int res = 0;
-
     unordered_map<State,int>& last_state = dp[word_limit];
     for(unordered_map<State,int>::iterator prev_state_it = last_state.begin();
 	prev_state_it != last_state.end();
 	prev_state_it++){
       if(prev_state_it->first.seasonword_count != 1) continue;
-
+      
       res += prev_state_it->second % MOD;
       res %= MOD;
     }
-
     printf("%d\n",res);
   }
 }
