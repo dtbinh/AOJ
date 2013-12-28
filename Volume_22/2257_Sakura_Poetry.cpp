@@ -10,6 +10,7 @@
 #include <stack>
 #include <limits>
 #include <map>
+#include <unordered_map>
 #include <functional>
 #include <string>
 #include <cstring>
@@ -44,7 +45,7 @@ namespace AhoCorasick{
 class AhoCorasick::Node {
 private:
   set<string> results;
-  map<char,AhoCorasick::Node*> transitions;
+  unordered_map<char,AhoCorasick::Node*> transitions;
   vector<AhoCorasick::Node*> v_transitions;
   char character;
   AhoCorasick::Node* parent;
@@ -222,12 +223,12 @@ public:
 
 class State{
 public:
-  const string& last_word;
+  int last_word;
   int seasonword_count;
   ll last_node_address;
-  State() : last_word(""),seasonword_count(0),last_node_address(0) {}
-  State(ll _a) : last_word(""),seasonword_count(0),last_node_address(_a) {}
-  State(const string& _s,int _sc,ll _a) : last_word(_s),seasonword_count(_sc),last_node_address(_a) {}
+  State() : last_word(0),seasonword_count(0),last_node_address(0) {}
+  State(ll _a) : last_word(0),seasonword_count(0),last_node_address(_a) {}
+  State(int _s,int _sc,ll _a) : last_word(_s),seasonword_count(_sc),last_node_address(_a) {}
 
   bool operator<(const State& s) const{
     if(last_word == s.last_word){
@@ -244,6 +245,18 @@ public:
   }
 };
 
+vector<string> words;
+map<string,int> visited_words;
+
+int word2num(const string& str){
+  if(visited_words.find(str) == visited_words.end()){
+    words.push_back(str);
+    visited_words[str] = words.size() - 1;
+    return words.size() - 1;
+  }
+  return visited_words[str];
+}
+
 int main(){
   int connect_dic_size;
   int word_limit;
@@ -255,12 +268,18 @@ int main(){
 	       &total_seasonwords)){
     if(word_limit == 0) break;
 
+    words.clear();
+    visited_words.clear();
+
     set<string> seasonwords;
-    map<string,vector<string> > connects;
+    vector<int> connects[1000];
+
     for(int i=0;i<connect_dic_size;i++){
       string from,to;
       cin >> from >> to;
-      connects[from].push_back(to);
+      int f_num = word2num(from);
+      int t_num = word2num(to);
+      connects[f_num].push_back(t_num);
     }
 
     for(int i=0;i<total_seasonwords;i++){
@@ -275,54 +294,40 @@ int main(){
     map<State,int> dp[600];
 
     //init
-    for(map<string,vector<string> >::iterator conn_it = connects.begin();
-	conn_it != connects.end();
-	conn_it++){
-
-      const string& from = conn_it->first;
+    for(int i=0;i<words.size();i++){
       sm->set_state(start.id);
-      AhoCorasick::MatchingResult mr = sm->feed(from);
-      
+      AhoCorasick::MatchingResult mr = sm->feed(words[i]);
       //last_word,season_count,last_node
-      dp[from.size()][State(from,mr.rv.size(),mr.id)] = 1;
-
-      for(int i = 0; i< conn_it->second.size();i++){
-      	const string& to = conn_it->second[i];
-      	sm->set_state(start.id);
-      	mr = sm->feed(to);
-
-      	dp[to.size()][State(to,mr.rv.size(),mr.id)] = 1;
-      }
+      if(mr.rv.size() >= 2) continue;
+      dp[words[i].size()][State(i,mr.rv.size(),mr.id)] = 1;
     }
 
-    for(int prev_word_length = 0; prev_word_length < word_limit; prev_word_length++){
-      if(dp[prev_word_length].size() == 0) continue;
+    for(int prev_word_length = 0; 
+	prev_word_length < word_limit; 
+	prev_word_length++){
       map<State,int>& prev = dp[prev_word_length];
       for(map<State,int>::iterator prev_state_it = prev.begin();
 	  prev_state_it != prev.end();
 	  prev_state_it++){
 
-	map<string,vector<string> >::iterator conn_it;
-	if((conn_it = connects.find(prev_state_it->first.last_word))
-	   != connects.end()){
+	for(int to_idx=0;
+	    to_idx < connects[prev_state_it->first.last_word].size();
+	    to_idx++){
 
-	  for(int to_idx = 0; to_idx < conn_it->second.size(); to_idx++){
-	    const string& to = conn_it->second[to_idx];
-
-	    sm->set_state(prev_state_it->first.last_node_address);
-	    AhoCorasick::MatchingResult mr = sm->feed(to);
-	      
-	    if(prev_state_it->first.seasonword_count + mr.rv.size() >= 2) continue;
-	    //last_word,season_count,last_node
-	    State next(to, 
-		       prev_state_it->first.seasonword_count + mr.rv.size(),
-		       mr.id);
-	    
-	    dp[prev_word_length + to.size()][next]
-	      += prev_state_it->second % MOD;
-	    
-	    dp[prev_word_length + to.size()][next] %= MOD;
-	  }
+	  int next_idx = connects[prev_state_it->first.last_word][to_idx];
+	  sm->set_state(prev_state_it->first.last_node_address);
+	  AhoCorasick::MatchingResult mr
+	    = sm->feed(words[next_idx]);
+	  
+	  if(prev_state_it->first.seasonword_count + mr.rv.size() >= 2) continue;
+	  //last_word,season_count,last_node
+	  State next(next_idx, 
+		     prev_state_it->first.seasonword_count + mr.rv.size(),
+		     mr.id);
+	  dp[prev_word_length + words[next_idx].size()][next]
+	    += prev_state_it->second % MOD;
+	  
+	  dp[prev_word_length + words[next_idx].size()][next] %= MOD;
 	}
       }
       dp[prev_word_length].clear();
