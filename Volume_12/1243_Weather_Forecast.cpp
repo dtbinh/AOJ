@@ -62,8 +62,8 @@ bool check(){
   return true;
 }
 
-void dfs(int day,int cloud_pos,int total_days){
-
+int dfs(int day,int cloud_pos,int total_days){
+  int res = 0;
   for(int i=0;i<9;i++){
     int dx = cloud_pos + tx[i];
     if(dx < 0
@@ -86,26 +86,10 @@ void dfs(int day,int cloud_pos,int total_days){
       memcpy(no_rainny_days,store,sizeof(int)*20);
       continue;
     }
-
-    int history = 0;
-    history = (next << 12);
-    history |= (1<<dx);
-    
-    // if(visited[day+1].count(history)) continue;
-
-    // printf("day:%d\n",day+1);
-    // printf("%u\n",history);
-
-    // printf("cloud day:%d\n",day+1);
-    // print_stage(next);
-    
-    // printf("festival day:%d\n",day+1);
-    // print_stage(stage[day+1]);
-
-    visited[day+1].insert(history);
-    dfs(day+1,dx,total_days);
+    res = max(max(res,day+1),dfs(day+1,dx,total_days));
     memcpy(no_rainny_days,store,sizeof(int)*20);
   }
+  return res;
 }
 
 int main(){
@@ -136,29 +120,8 @@ int main(){
     init |= (1<<(5+4));
     init |= (1<<(5+5));
 
-    // if(total_days % 7 != 0){
-    //   total_days += (total_days % 7);
-    // }
-    // printf("ans:%d\n",(stage[1] & init) ? 0
-    // 	   : (dfs(1,5,init,total_days) < total_days ? 0 : 1));
-
-    int last_day = 0;
     rain(init);
-    
-    if(init & stage[1]) {
-      // nothing to do
-    }
-    else {
-      dfs(1,5,total_days);
-    }
-
-    for(int i=1;i<400;i++){
-      if(visited[i].size() > 0){
-	last_day = i;
-      }
-    }
-
-    printf("last:%d total:%d\n",last_day,total_days);
-    printf("%d\n",last_day < total_days ? 0 : 1);
+    printf("%d\n",(init & stage[1]) ? 0
+	   : dfs(1,5,total_days) < total_days ? 0 : 1);
   }
 }
