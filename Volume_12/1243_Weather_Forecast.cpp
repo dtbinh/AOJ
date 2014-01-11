@@ -28,10 +28,11 @@ typedef pair <int,P> PP;
   
 static const double EPS = 1e-8;
   
-static const int tx[] = {-1,1,4,-4,0};
+static const int tx[] = {-8,-4,-2,-1,1,2,4,8,0};
 
-set<unsigned long int> visited[400];
-unsigned long int stage[400];
+set<int> visited[400];
+int stage[400];
+int no_rainny_days[20];
 
 void print_stage(int num){
   for(int y=0;y<4;y++){
@@ -43,53 +44,68 @@ void print_stage(int num){
   printf("\n");
 }
 
-int dfs(int day,int cloud_pos,unsigned long int rain_log,int total_days){
-  int res = day;
-
-  for(int dist=1;dist<=2;dist++){
-    for(int i=0;i<5;i++){
-      int dx = cloud_pos + tx[i] * dist;
-      if(dx < 0
-	 || dx == 3 || dx == 7 || dx == 11
-	 || (dx >= 12)) continue;
-      
-      unsigned long int next = 0;
-      next |= (1<<dx);
-      next |= (1<<(dx+1));
-      next |= (1<<(dx+4));
-      next |= (1<<(dx+5));
-      
-      if(stage[day+1] & next) continue;
-      if(day + 1 > total_days) continue;
-
-      unsigned long int next_rain_log = rain_log;
-      next_rain_log |= next;
-
-      if((day + 1) % 7 == 0){
-	if(next_rain_log != (1<<16)-1){
-	  continue;
-	}
-	else {
-	  next_rain_log = next;
-	}
-      }
-
-      unsigned long int history = 0;
-      history |= (next << 16);
-      history |= next_rain_log;
-
-      if(visited[day+1].count(history)) continue;
-
-      // printf("cloud day:%d\n",day+1);
-      // print_stage(next);
-
-      // printf("festival day:%d\n",day+1);
-      // print_stage(stage[day+1]);
-      visited[day+1].insert(history);
-      res = max(res,dfs(day+1,dx,next_rain_log,total_days));
+int rain(int bits){
+  for(int i=0;i<16;i++){
+    if(bits & (1<<i)){
+      no_rainny_days[i] = 0;
+    }
+    else{
+      no_rainny_days[i]++;
     }
   }
-  return res;
+}
+
+bool check(){
+  for(int i=0;i<16;i++){
+    if(no_rainny_days[i] >= 7) return false;
+  }
+  return true;
+}
+
+void dfs(int day,int cloud_pos,int total_days){
+
+  for(int i=0;i<9;i++){
+    int dx = cloud_pos + tx[i];
+    if(dx < 0
+       || dx == 3 || dx == 7 || dx == 11
+       || (dx >= 12)) continue;
+
+    int store[20];
+    memcpy(store,no_rainny_days,sizeof(int)*20);
+
+    int next = 0;
+    next |= (1<<dx);
+    next |= (1<<(dx+1));
+    next |= (1<<(dx+4));
+    next |= (1<<(dx+5));
+    if(stage[day+1] & next) continue;
+    if(day + 1 > total_days) continue;
+
+    rain(next);
+    if(!check()){
+      memcpy(no_rainny_days,store,sizeof(int)*20);
+      continue;
+    }
+
+    int history = 0;
+    history = (next << 12);
+    history |= (1<<dx);
+    
+    // if(visited[day+1].count(history)) continue;
+
+    // printf("day:%d\n",day+1);
+    // printf("%u\n",history);
+
+    // printf("cloud day:%d\n",day+1);
+    // print_stage(next);
+    
+    // printf("festival day:%d\n",day+1);
+    // print_stage(stage[day+1]);
+
+    visited[day+1].insert(history);
+    dfs(day+1,dx,total_days);
+    memcpy(no_rainny_days,store,sizeof(int)*20);
+  }
 }
 
 int main(){
@@ -100,9 +116,10 @@ int main(){
 
     for(int i=0;i<400;i++) visited[i].clear();
     memset(stage,0,sizeof(stage));
+    memset(no_rainny_days,0,sizeof(no_rainny_days));
 
     for(int day=1;day<=total_days;day++){
-      unsigned long int bits = 0;
+      int bits = 0;
       for(int pos=0;pos<16;pos++){
 	int state;
 	scanf("%d",&state);
@@ -113,13 +130,35 @@ int main(){
       stage[day] = bits;
     }
 
-    unsigned long int init = 0;
+    int init = 0;
     init |= (1<<5);
     init |= (1<<(5+1));
     init |= (1<<(5+4));
     init |= (1<<(5+5));
 
-    printf("%d\n",(stage[1] & init) ? 0
-	   : (dfs(1,5,init,total_days) < total_days ? 0 : 1));
+    // if(total_days % 7 != 0){
+    //   total_days += (total_days % 7);
+    // }
+    // printf("ans:%d\n",(stage[1] & init) ? 0
+    // 	   : (dfs(1,5,init,total_days) < total_days ? 0 : 1));
+
+    int last_day = 0;
+    rain(init);
+    
+    if(init & stage[1]) {
+      // nothing to do
+    }
+    else {
+      dfs(1,5,total_days);
+    }
+
+    for(int i=1;i<400;i++){
+      if(visited[i].size() > 0){
+	last_day = i;
+      }
+    }
+
+    printf("last:%d total:%d\n",last_day,total_days);
+    printf("%d\n",last_day < total_days ? 0 : 1);
   }
 }
