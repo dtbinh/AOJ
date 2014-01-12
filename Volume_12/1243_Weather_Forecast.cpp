@@ -27,18 +27,10 @@ typedef pair <int,int> P;
 typedef pair <int,P> PP;
   
 static const double EPS = 1e-8;
+
+static const int tx[] = {+0,+1,+0,-1,+0,+2,+0,-2,0};
+static const int ty[] = {-1,+0,+1,+0,-2,+0,+2,+0,0};
   
-static const int tx[11][5] = {{0, 1, 2, 4, 8},
-			      {0, 1, 2, 5, 9},
-			      {0, 1, 2, 6, 10},
-			      {-1, -1, -1, -1 -1},
-			      {0, 4, 5, 6, 8},
-			      {1, 4, 5, 6, 9},
-			      {2, 4, 5, 6, 10},
-			      {-1, -1, -1, -1 -1},
-			      {0, 4, 8, 9, 10},
-			      {1, 5, 8, 9, 10},
-			      {2, 6, 8, 9, 10}};
 class State {
 public:
   long long int no_rainny_summary;
@@ -135,12 +127,14 @@ bool dfs(int day,int cloud_pos,int total_days){
   int store[16];
   memcpy(store,no_rainny_days,sizeof(int)*16);
 
-  for(int i=0;i<5;i++){
-    int dx = tx[cloud_pos][i];       
-    if(day+1 == 1 && dx != 5) continue;
-    if(dx < 0) continue;
+  for(int i=0;i<9;i++){
+    int dx = (cloud_pos % 4) + tx[i];
+    int dy = (cloud_pos / 4) + ty[i];
 
-    int next = make_cloud(dx);
+    if(day+1 == 1 && i != 8) continue;
+    if(dx < 0 || dy < 0 || dx >= 3 || dy >= 3) continue;
+
+    int next = make_cloud(dy*4+dx);
     if(stage[day+1] & next) continue;
     // if(day + 1 > total_days) continue;
 
@@ -149,20 +143,12 @@ bool dfs(int day,int cloud_pos,int total_days){
     if(!check()){
       continue;
     }
-    // printf("festial:%d\n",day+1);
-    // print_stage(stage[day+1]);
-    
-    // printf("cloud:%d\n",day+1);
-    // print_stage(next);
-    
-    // printf("no rain:%d\n",day+1);
-    // print_rain();
-    
-    State next_state(no_rainny_days,dx);
-    if(visited[day+1].count(next_state) > 0) continue;
+
+    State next_state(no_rainny_days,dy*4+dx);
+    if(visited[day+1].count(next_state)) continue;
     visited[day+1].insert(next_state);
     
-    res |= dfs(day+1,dx,total_days);
+    res |= dfs(day+1,dy*4+dx,total_days);
   }
   return res;
 }
