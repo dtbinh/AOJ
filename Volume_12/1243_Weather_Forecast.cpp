@@ -28,8 +28,17 @@ typedef pair <int,P> PP;
   
 static const double EPS = 1e-8;
   
-static const int tx[] = {-8,-4,-2,-1,1,2,4,8,0};
-
+static const int tx[11][5] = {{0, 1, 2, 4, 8},
+			      {0, 1, 2, 5, 9},
+			      {0, 1, 2, 6, 10},
+			      {-1, -1, -1, -1 -1},
+			      {0, 4, 5, 6, 8},
+			      {1, 4, 5, 6, 9},
+			      {2, 4, 5, 6, 10},
+			      {-1, -1, -1, -1 -1},
+			      {0, 4, 8, 9, 10},
+			      {1, 5, 8, 9, 10},
+			      {2, 6, 8, 9, 10}};
 class State {
 public:
   long long int no_rainny_summary;
@@ -126,39 +135,34 @@ bool dfs(int day,int cloud_pos,int total_days){
   int store[16];
   memcpy(store,no_rainny_days,sizeof(int)*16);
 
-  for(int i=0;i<9;i++){
-    if(day+1 == 1 && i != 8) continue;
-
-    int dx = cloud_pos + tx[i];
-    if(dx < 0
-       || dx == 3 || dx == 7 || dx == 11
-       || (dx >= 12)) continue;
+  for(int i=0;i<5;i++){
+    int dx = tx[cloud_pos][i];       
+    if(day+1 == 1 && dx != 5) continue;
+    if(dx < 0) continue;
 
     int next = make_cloud(dx);
     if(stage[day+1] & next) continue;
     // if(day + 1 > total_days) continue;
 
+    memcpy(no_rainny_days,store,sizeof(int)*16);
     rain(next);
     if(!check()){
-      memcpy(no_rainny_days,store,sizeof(int)*16);
       continue;
     }
-
     // printf("festial:%d\n",day+1);
     // print_stage(stage[day+1]);
-
+    
     // printf("cloud:%d\n",day+1);
     // print_stage(next);
-
+    
     // printf("no rain:%d\n",day+1);
     // print_rain();
-
+    
     State next_state(no_rainny_days,dx);
     if(visited[day+1].count(next_state) > 0) continue;
     visited[day+1].insert(next_state);
-
+    
     res |= dfs(day+1,dx,total_days);
-    memcpy(no_rainny_days,store,sizeof(int)*16);
   }
   return res;
 }
@@ -177,7 +181,7 @@ int main(){
       int bits = 0;
       for(int pos=0;pos<16;pos++){
 	int state;
-	cin >> state;
+	scanf("%d",&state);
 	if(state == 1){
 	  bits |= (1<<pos);
 	}
