@@ -34,8 +34,8 @@ public:
   Node(int _t,int _d) : to(_t),dist(_d){}
 };
 
-bool is_LPG[3005];
-bool dp[3005][2005]; //dp[city_id][remaining_LPG] = dist;
+bool is_LPG[6001];
+bool dp[6001][2001]; //dp[city_id][remaining_LPG] = dist;
 
 int get_city_id(map<string,int>& cities,const string& city){
   if(cities.find(city) == cities.end()){
