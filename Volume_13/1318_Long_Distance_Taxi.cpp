@@ -37,11 +37,11 @@ public:
 
 bool is_LPG[3005];
 bool dp[3005][2005]; //dp[city_id][remaining_LPG] = dist;
-static int gCity_idx = 0;
 
 int get_city_id(map<string,int>& cities,const string& city){
   if(cities.find(city) == cities.end()){
-    cities[city] = gCity_idx++;
+    int idx = cities.size();
+    cities[city] = idx;
   }
   return cities[city];
 }
@@ -74,7 +74,6 @@ int main(){
     if(total_roads == 0
        && total_LPG_stations == 0
        && capacity == 0) break;
-    gCity_idx = 0;
 
     map<string,int> cities;
     vector<Edge> edges(total_roads);
