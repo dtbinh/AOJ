@@ -26,13 +26,12 @@ typedef long long ll;
 typedef pair <int,int> P;
 typedef pair <int,P > PP;
 
-class Edge {
+class Node {
 public:
-  int from;
   int to;
   int dist;
-  Edge() {}
-  Edge(int _f,int _t,int _d) : from(_f),to(_t),dist(_d){}
+  Node() {}
+  Node(int _t,int _d) : to(_t),dist(_d){}
 };
 
 bool is_LPG[3005];
@@ -76,7 +75,6 @@ int main(){
        && capacity == 0) break;
 
     map<string,int> cities;
-    vector<Edge> edges(total_roads);
     memset(is_LPG,false,sizeof(is_LPG));
     memset(dp,false,sizeof(dp));
 
@@ -85,6 +83,7 @@ int main(){
     get_city_id(cities,src);
     get_city_id(cities,dst);
 
+    vector<Node> nodes[6001];
     for(int road_idx = 0; road_idx < total_roads; road_idx++){
       string from_str,to_str;
       int dist;
@@ -93,7 +92,8 @@ int main(){
       int from_num = get_city_id(cities,from_str);
       int to_num = get_city_id(cities,to_str);
 
-      edges[road_idx] = Edge(from_num,to_num,dist);
+      nodes[from_num].push_back(Node(to_num,dist));
+      nodes[to_num].push_back(Node(from_num,dist));
     }
 
     for(int LPG_idx = 0; LPG_idx < total_LPG_stations; LPG_idx++){
@@ -106,13 +106,6 @@ int main(){
     que.push(State(get_city_id(cities,src),0,10*capacity));
 
     int dst_id = get_city_id(cities,dst);
-
-    vector<vector<Edge> > nodes(cities.size());
-    for(int i=0; i<edges.size(); i++){
-      Edge e = edges[i];
-      nodes[e.from].push_back(Edge(e.from, e.to, e.dist));
-      nodes[e.to].push_back(Edge(e.to, e.from, e.dist));
-    }
 
     int res = INF;
     while(!que.empty()){
