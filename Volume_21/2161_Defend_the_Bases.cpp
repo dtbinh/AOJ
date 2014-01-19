@@ -28,7 +28,7 @@ typedef pair <int,P > PP;
 const static int tx[] = {0,1,1,1,0,-1,-1,-1};
 const static int ty[] = {-1,-1,0,1,1,1,0,-1};
  
-static const double EPS = 1e-8;
+static const double EPS = 1e-12;
 
 class BipartiteGraph {
 private:
@@ -60,7 +60,7 @@ public:
     for(int i=0;i<G[v].size();i++){
       int u = G[v][i];
       int w = match[u];
-      if(w < 0 || !used[w] && dfs(w)){
+      if(w < 0 || (!used[w] && dfs(w))){
 	match[v] = u;
 	match[u] = v;
 	return true;
@@ -71,10 +71,10 @@ public:
 
   int bipartite_matching() {
     int res = 0;
-    memset(match,-1,sizeof(match));
+    fill(match,match+V,-1);
     for(int v=0; v < V;v++){
       if(match[v] < 0){
-	memset(used,false,sizeof(used));
+	fill(used,used+V,false);
 	if(dfs(v)){
 	  res++;
 	}
@@ -97,7 +97,7 @@ public:
   Point point;
   int velocity;
   Troop() : point(),velocity(0){}
-  Troop(Point _p,int _v) : point(_p),velocity(_v){}
+  Troop(const Point& _p,int _v) : point(_p),velocity(_v){}
 };
 
 double compute_distance(const Point& p1,const Point& p2){
@@ -107,6 +107,21 @@ double compute_distance(const Point& p1,const Point& p2){
 
 double compute_time(double distance,double velocity){
   return distance / velocity;
+}
+
+bool check(double time,int total_troops,int total_bases,
+	   double times[101][101]){
+  BipartiteGraph bg(total_troops + total_bases);
+
+  for(int troop_idx = 0; troop_idx < total_troops; troop_idx++){
+    for(int base_idx = 0; base_idx < total_bases; base_idx++){
+      if(time >= times[troop_idx][base_idx] - EPS){
+	bg.add_edge(troop_idx,total_troops + base_idx);
+      }
+    }
+  }
+
+  return (bg.bipartite_matching() == total_bases);
 }
 
 int main(){
@@ -127,5 +142,29 @@ int main(){
       scanf("%d %d",&x,&y);
       bases.push_back(Point(x,y));
     }
+
+    double times[101][101];
+    for(int troop_idx = 0; troop_idx < total_troops; troop_idx++){
+      for(int base_idx = 0; base_idx < total_bases; base_idx++){
+	times[troop_idx][base_idx]
+	  = compute_time(
+	    compute_distance(bases[base_idx],troops[troop_idx].point),
+	    troops[troop_idx].velocity);
+      }
+    }
+
+    double upper_time = 100000000000000.0;
+    double lower_time = 0;
+    for(int round=0;round<100;round++){
+      double mid = (upper_time + lower_time) / 2.0;
+      if(check(mid,total_troops,total_bases,times)){
+	upper_time = mid;
+      }
+      else{
+	lower_time = mid;
+      }
+    }
+
+    printf("%.10f\n",upper_time);
   }
 }
