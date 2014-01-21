@@ -96,6 +96,7 @@ int main(){
 
       for(int to = 1; to <= total_cities; to++){
 	if(edges[s.city][to].distance >= INF) continue;
+	if(s.prev == to) continue;
 
 	if(edges[s.city][to].speed_limit >= s.speed - 1
 	   && s.speed-1 >= 1){
