@@ -69,20 +69,16 @@ int main(){
   while(~scanf("%d %d",&total_cities,&total_roads)){
     if(total_cities == 0 &&  total_roads == 0) break;
 
-    vector<Edge> edges[20001];
-
-    int road_cost[20001];
-    memset(road_cost,0,sizeof(road_cost));
+    vector<Edge> edges[10001];
 
     for(int road_idx = 0; road_idx < total_roads; road_idx++){
       int from,to,distance,cost;
       scanf("%d %d %d %d",&from,&to,&distance,&cost);
       edges[from-1].push_back(Edge(to-1,distance,cost,road_idx));
       edges[to-1].push_back(Edge(from-1,distance,cost,road_idx));
-      road_cost[road_idx] = cost;
     }
     
-    int dp[20001];
+    int dp[10001];
     memset(dp,0x3f,sizeof(dp));
 
     priority_queue<State,vector<State>,greater<State> > que;
