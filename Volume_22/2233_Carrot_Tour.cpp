@@ -65,7 +65,8 @@ public:
   }
 };
 
-double dp[3001][21][21]; //dp[carrot][prev][now] := remaining distance
+double dp[5001][21][21]; //dp[carrot][prev][now] := remaining distance
+bool isok[21][21][21]; //cur,prev,old
 
 int main(){
   int total_cities;
@@ -78,6 +79,15 @@ int main(){
       int x,y;
       scanf("%d %d",&x,&y);
       cities.push_back(complex<double>(x,y));
+    }
+
+    memset(isok,true,sizeof(isok));
+    for(int old = 0; old < total_cities; old++){
+      for(int prev = 0; prev < total_cities; prev++){
+	for(int cur = 0; cur < total_cities; cur++){
+	  isok[cur][prev][old] = check(cur,prev,old,limit_rad,cities);
+	}
+      }
     }
 
     priority_queue<State> que;
@@ -101,9 +111,9 @@ int main(){
 	int next_city = to;
 	int next_prev = s.city;
 	int next_old = s.prev;
-	if(next_old != 20){
-	  if(!check(next_city,next_prev,next_old,limit_rad,cities)) continue;
-	}
+	if(!isok[next_city][next_prev][next_old]) continue;
+	if(dp[s.carrots+1][s.city][to] >= s.remaining_distance - dist - EPS) continue;
+
 	que.push(State(next_city,next_prev,next_old,
 		       s.carrots+1,s.remaining_distance - dist));
       }
