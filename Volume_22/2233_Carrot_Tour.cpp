@@ -67,6 +67,7 @@ public:
 
 double dp[5001][21][21]; //dp[carrot][prev][now] := remaining distance
 bool isok[21][21][21]; //cur,prev,old
+double city_distance[21][21];
 
 int main(){
   int total_cities;
@@ -86,6 +87,7 @@ int main(){
       for(int prev = 0; prev < total_cities; prev++){
 	for(int cur = 0; cur < total_cities; cur++){
 	  isok[cur][prev][old] = check(cur,prev,old,limit_rad,cities);
+	  city_distance[cur][prev] = abs(cities[cur] - cities[prev]);
 	}
       }
     }
@@ -103,19 +105,20 @@ int main(){
       dp[s.carrots][s.prev][s.city] = s.remaining_distance;
       max_carrots = max(s.carrots,max_carrots);
 
-      for(int to=0;to<cities.size();to++){
+      double dist;
+      int next_city,next_prev,next_old;
+      for(int to=0;to<total_cities;to++){
 	if(to == s.city) continue;
-	double dist = abs(cities[to] - cities[s.city]);
 	if(s.remaining_distance - dist - EPS < 0) continue;
 
-	int next_city = to;
-	int next_prev = s.city;
-	int next_old = s.prev;
+	next_city = to;
+	next_prev = s.city;
+	next_old = s.prev;
 	if(!isok[next_city][next_prev][next_old]) continue;
-	if(dp[s.carrots+1][s.city][to] >= s.remaining_distance - dist - EPS) continue;
+	if(dp[s.carrots+1][s.city][to] >= s.remaining_distance - city_distance[next_city][next_prev] - EPS) continue;
 
 	que.push(State(next_city,next_prev,next_old,
-		       s.carrots+1,s.remaining_distance - dist));
+		       s.carrots+1,s.remaining_distance - city_distance[next_city][next_prev]));
       }
     }
 
