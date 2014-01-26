@@ -66,7 +66,7 @@ public:
   }
 };
 
-bool dp[5001][9000]; //dp[carrot][visit history] := remaining distance
+bool dp[5001][21][21]; //dp[carrot][prev][now] := remaining distance
 
 int main(){
   int total_cities;
@@ -84,24 +84,18 @@ int main(){
     priority_queue<State> que;
     que.push(State(0,0,r,0));
     int max_carrots = 0;
-    memset(dp,0,sizeof(dp));
+    memset(dp,false,sizeof(dp));
 
     while(!que.empty()){
       State s = que.top();
       que.pop();
       max_carrots = max(s.carrots,max_carrots);
 
-      while(s.deq.size() > 3) s.deq.pop_front();
-      int history = 0;
-      int digit = 1;
+      int prev = 20;
+      if(s.deq.size() > 1) prev = *(s.deq.end()-2);
 
-      for(int i=0;i<s.deq.size();i++){
-	history += (s.deq[i]+1) * digit;
-	digit *= 21;
-      }
-
-      if(dp[s.carrots][history]) continue;
-      dp[s.carrots][history] = true;
+      if(dp[s.carrots][prev][s.city]) continue;
+      dp[s.carrots][prev][s.city] = true;
 
       for(int to=0;to<cities.size();to++){
 	if(to == s.city) continue;
@@ -117,8 +111,7 @@ int main(){
 	}
 	if(s.remaining_distance - dist <= 0) continue;
 
-	State next(to,s.carrots+1,s.remaining_distance - dist,deq);
-	que.push(next);
+	que.push(State(to,s.carrots+1,s.remaining_distance - dist,deq));
       }
     }
 
