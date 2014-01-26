@@ -105,11 +105,9 @@ int main(){
       dp[s.carrots][s.prev][s.city] = s.remaining_distance;
       max_carrots = max(s.carrots,max_carrots);
 
-      double dist;
       int next_city,next_prev,next_old;
       for(int to=0;to<total_cities;to++){
 	if(to == s.city) continue;
-	if(s.remaining_distance - dist - EPS < 0) continue;
 
 	next_city = to;
 	next_prev = s.city;
