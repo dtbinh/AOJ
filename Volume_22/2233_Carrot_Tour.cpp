@@ -40,8 +40,8 @@ bool check(const deque<complex<double> >& deq,double limit_rad){
   src -= mid;
   dst -= mid;
 
-  return (limit_rad >= min(abs(arg(src) - arg(dst)),
-			   abs(2*M_PI - arg(src) - arg(dst))));
+  return (limit_rad >= M_PI - min(abs(arg(src) - arg(dst)),
+				  abs(2.0*M_PI - arg(src) - arg(dst))));
 }
 class State {
 public:
@@ -52,8 +52,10 @@ public:
   State(int _ct,int _c,double _r,const deque<complex<double> >& _d) :
     city(_ct), carrots(_c), remaining_distance(_r),deq(_d) {}
 
-  State(int _ct,int _c,double _r) :
-    city(_ct), carrots(_c), remaining_distance(_r) {}
+  State(int _ct,int _c,double _r,complex<double> _d) :
+    city(_ct), carrots(_c), remaining_distance(_r) {
+    deq.push_back(_d);
+  }
 
   bool operator <(const State& s) const{
     return carrots < s.carrots;
@@ -74,7 +76,7 @@ int main(){
     }
 
     priority_queue<State> que;
-    que.push(State(0,0,r));
+    que.push(State(0,0,r,cities[0]));
     int max_carrots = 0;
     while(!que.empty()){
       State s = que.top();
