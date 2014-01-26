@@ -32,10 +32,11 @@ int ty[] = {-1,0,1,0};
  
 static const double EPS = 1e-8;
 
-bool check(const deque<complex<double> >& deq,double limit_rad){
-  complex<double> src = deq[0];
-  complex<double> mid = deq[1];
-  complex<double> dst = deq[2];
+bool check(const deque<int>& deq,double limit_rad,
+	   const vector<complex<double> >& cities){
+  complex<double> src = cities[deq[0]];
+  complex<double> mid = cities[deq[1]];
+  complex<double> dst = cities[deq[2]];
 
   src -= mid;
   dst -= mid;
@@ -48,19 +49,24 @@ public:
   int carrots;
   int city;
   double remaining_distance;
-  deque<complex<double> > deq;
-  State(int _ct,int _c,double _r,const deque<complex<double> >& _d) :
+  deque<int> deq;
+  State(int _ct,int _c,double _r,const deque<int>& _d) :
     city(_ct), carrots(_c), remaining_distance(_r),deq(_d) {}
 
-  State(int _ct,int _c,double _r,complex<double> _d) :
+  State(int _ct,int _c,double _r,int _d) :
     city(_ct), carrots(_c), remaining_distance(_r) {
     deq.push_back(_d);
   }
 
   bool operator <(const State& s) const{
+    if(carrots == s.carrots){
+      return remaining_distance < s.remaining_distance;
+    }
     return carrots < s.carrots;
   }
 };
+
+bool dp[5001][9000]; //dp[carrot][visit history] := remaining distance
 
 int main(){
   int total_cities;
@@ -76,24 +82,38 @@ int main(){
     }
 
     priority_queue<State> que;
-    que.push(State(0,0,r,cities[0]));
+    que.push(State(0,0,r,0));
     int max_carrots = 0;
+    memset(dp,0,sizeof(dp));
+
     while(!que.empty()){
       State s = que.top();
       que.pop();
       max_carrots = max(s.carrots,max_carrots);
 
+      while(s.deq.size() > 3) s.deq.pop_front();
+      int history = 0;
+      int digit = 1;
+
+      for(int i=0;i<s.deq.size();i++){
+	history += (s.deq[i]+1) * digit;
+	digit *= 21;
+      }
+
+      if(dp[s.carrots][history]) continue;
+      dp[s.carrots][history] = true;
+
       for(int to=0;to<cities.size();to++){
 	if(to == s.city) continue;
 	
 	double dist = abs(cities[to] - cities[s.city]);
-	deque<complex<double> > deq = s.deq;
+	deque<int> deq = s.deq;
 	
-	deq.push_back(cities[to]);
+	deq.push_back(to);
 	while(deq.size() > 3) deq.pop_front();
 
 	if(deq.size()==3){
-	  if(!check(deq,limit_rad)) continue;
+	  if(!check(deq,limit_rad,cities)) continue;
 	}
 	if(s.remaining_distance - dist <= 0) continue;
 
