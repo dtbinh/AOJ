@@ -30,43 +30,42 @@ typedef pair <int,P > PP;
 int tx[] = {0,1,0,-1};//URDL
 int ty[] = {-1,0,1,0};
  
-static const double EPS = 1e-8;
+static const double EPS = 1e-12;
 
-bool check(const deque<int>& deq,double limit_rad,
+bool check(int city,int prev,int old,double limit_rad,
 	   const vector<complex<double> >& cities){
-  complex<double> src = cities[deq[0]];
-  complex<double> mid = cities[deq[1]];
-  complex<double> dst = cities[deq[2]];
+  complex<double> src = cities[old];
+  complex<double> dst = cities[city];
 
-  src -= mid;
-  dst -= mid;
+  src -= cities[prev];
+  dst -= cities[prev];
+  double computed_arg = abs(arg(src) - arg(dst));
 
-  return (limit_rad >= M_PI - min(abs(arg(src) - arg(dst)),
-				  abs(2.0*M_PI - arg(src) - arg(dst))));
+  return (limit_rad >= M_PI - min(computed_arg,
+				  abs(2.0*M_PI - computed_arg)) - EPS);
 }
 class State {
 public:
   int carrots;
   int city;
+  int prev;
+  int old;
   double remaining_distance;
-  deque<int> deq;
-  State(int _ct,int _c,double _r,const deque<int>& _d) :
-    city(_ct), carrots(_c), remaining_distance(_r),deq(_d) {}
+  State(int _ct,int _p,int _o,int _c,double _r) :
+    city(_ct),prev(_p),old(_o), carrots(_c), remaining_distance(_r) {}
 
   State(int _ct,int _c,double _r,int _d) :
     city(_ct), carrots(_c), remaining_distance(_r) {
-    deq.push_back(_d);
+    prev = 20;
+    old = 20;
   }
 
   bool operator <(const State& s) const{
-    if(carrots == s.carrots){
-      return remaining_distance < s.remaining_distance;
-    }
-    return carrots < s.carrots;
+    return remaining_distance < s.remaining_distance;
   }
 };
 
-bool dp[5001][21][21]; //dp[carrot][prev][now] := remaining distance
+double dp[3001][21][21]; //dp[carrot][prev][now] := remaining distance
 
 int main(){
   int total_cities;
@@ -84,34 +83,29 @@ int main(){
     priority_queue<State> que;
     que.push(State(0,0,r,0));
     int max_carrots = 0;
-    memset(dp,false,sizeof(dp));
+    memset(dp,0,sizeof(dp));
 
     while(!que.empty()){
       State s = que.top();
       que.pop();
+
+      if(dp[s.carrots][s.prev][s.city] >= s.remaining_distance - EPS) continue;
+      dp[s.carrots][s.prev][s.city] = s.remaining_distance;
       max_carrots = max(s.carrots,max_carrots);
-
-      int prev = 20;
-      if(s.deq.size() > 1) prev = *(s.deq.end()-2);
-
-      if(dp[s.carrots][prev][s.city]) continue;
-      dp[s.carrots][prev][s.city] = true;
 
       for(int to=0;to<cities.size();to++){
 	if(to == s.city) continue;
-	
 	double dist = abs(cities[to] - cities[s.city]);
-	deque<int> deq = s.deq;
-	
-	deq.push_back(to);
-	while(deq.size() > 3) deq.pop_front();
+	if(s.remaining_distance - dist - EPS < 0) continue;
 
-	if(deq.size()==3){
-	  if(!check(deq,limit_rad,cities)) continue;
+	int next_city = to;
+	int next_prev = s.city;
+	int next_old = s.prev;
+	if(next_old != 20){
+	  if(!check(next_city,next_prev,next_old,limit_rad,cities)) continue;
 	}
-	if(s.remaining_distance - dist <= 0) continue;
-
-	que.push(State(to,s.carrots+1,s.remaining_distance - dist,deq));
+	que.push(State(next_city,next_prev,next_old,
+		       s.carrots+1,s.remaining_distance - dist));
       }
     }
 
