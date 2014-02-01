@@ -35,20 +35,22 @@ public:
   int parent;
   int brother;
 
+  int water;
   int capacity;
   int height;
   int start_x;
   int end_x;
-  Cell(int _h,int _sx,int _ex) : height(_h),start_x(_sx),end_x(_ex){
+  Cell(int _h,int _sx,int _ex) : height(_h),start_x(_sx),end_x(_ex),
+				 parent(-1),brother(-1),water(0){
     capacity = height * (end_x - start_x);
   }
 
   void pour_water(int _water){
-    capacity -= _water;
+    water += _water;
   }
 
   bool is_filled(){
-    return (capacity <= 0);
+    return (capacity <= water);
   }
 
   bool operator<(const Cell& c) const{
@@ -60,14 +62,49 @@ struct Board{
   int x;
   int height;
   Board(int _x,int _h) : x(_x), height(_h) {}
+  bool operator<(const Board& b) const{
+    return x < b.x;
+  }
+  bool operator>(const Board& b) const{
+    return x > b.x;
+  }
+};
+
+struct Faucet{
+  int x;
+  int cm3_per_second;
+  Faucet(int _x,int _c) : x(_x), cm3_per_second(_c) {}
+  Faucet() : x(0), cm3_per_second(0) {}
+
+  bool operator <(const Faucet& f) const{
+    return (x < f.x);
+  }
+
+  bool operator >(const Faucet& f) const{
+    return (x > f.x);
+  }
+  bool operator ==(const Faucet& f) const{
+    return (x == f.x);
+  }
+
+  bool operator <(const int _x) const{
+    return (x < _x);
+  }
+  bool operator >(const int _x) const{
+    return (x > _x);
+  }
+  bool operator ==(const int _x) const{
+    return (x == _x);
+  }
 };
 
 int main(){
   int total_data_sets;
   while(~scanf("%d",&total_data_sets)){
-    vector<Cell> cells;
-    vector<Board> boards;
     for(int data_set_idx = 0; data_set_idx < total_data_sets; data_set_idx++){
+
+      vector<Cell> cells;
+      vector<Board> boards;
       int total_boards;
       scanf("%d",&total_boards);
 
@@ -79,6 +116,7 @@ int main(){
       }
       boards.push_back(Board(100,50));
 
+      sort(boards.begin(),boards.end());
       for(int src_idx = 0; src_idx < boards.size(); src_idx++){
 	if(boards[src_idx].x == 100) continue;
 
@@ -95,14 +133,10 @@ int main(){
 	  if(boards[target_idx].height < boards[src_idx].height) continue;
 
 	  else if(boards[target_idx].height > boards[src_idx].height){
-	    cells.push_back(Cell(boards[src_idx].height,boards[src_idx].x,boards[target_idx].x));
+	    cells.push_back(Cell(boards[src_idx].height,boards[target_idx].x,boards[src_idx].x));
 	    break;
 	  }
 	}
-      }
-
-      for(int i=0;i<cells.size();i++){
-	printf("idx%d sx:%d ex:%d height:%d\n",i,cells[i].start_x,cells[i].end_x,cells[i].height);
       }
 
       //set brother
@@ -141,16 +175,41 @@ int main(){
 	}
       }
 
+
+      vector<Faucet> faucets;
       int total_faucets;
+      scanf("%d",&total_faucets);
       for(int foucet_idx = 0; foucet_idx < total_faucets; foucet_idx++){
 	int x,cm3_per_second;
 	scanf("%d %d",&x,&cm3_per_second);
+	faucets.push_back(Faucet(x,cm3_per_second));
       }
 
+      sort(faucets.begin(),faucets.end());
+
+
       int total_observation_times;
+      scanf("%d",&total_observation_times);
+
+      vector<Cell> store = cells;
       for(int observation_time_idx = 0; observation_time_idx < total_observation_times; observation_time_idx++){
 	int x,time;
 	scanf("%d %d",&x,&time);
+	
+	for(int cell_idx = 0;cell_idx < cells.size(); cell_idx++){
+	  int faucet_idx = lower_bound(faucets.begin(),faucets.end(),cells[cell_idx].start_x) - faucets.begin();
+
+	  if(faucet_idx == faucets.size()) continue;
+	  if(faucets[faucet_idx].x > cells[cell_idx].end_x) continue;
+
+	  cells[cell_idx].pour_water(faucets[faucet_idx].cm3_per_second * time);
+	}
+
+	for(int i=0;i<cells.size();i++){
+	  printf("idx%d sx:%d ex:%d height:%d cap:%d water:%d\n",i,cells[i].start_x,cells[i].end_x,cells[i].height,cells[i].capacity,cells[i].water);
+	}
+
+	cells = store;
       }
     }
   }
