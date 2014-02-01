@@ -34,6 +34,7 @@ class Cell {
 public:
   int parent;
   int brother;
+  bool has_child;
 
   int water;
   int capacity;
@@ -41,7 +42,7 @@ public:
   int start_x;
   int end_x;
   Cell(int _h,int _sx,int _ex) : height(_h),start_x(_sx),end_x(_ex),
-				 parent(-1),brother(-1),water(0){
+				 parent(-1),brother(-1),water(0),has_child(false){
     capacity = height * (end_x - start_x) * 30;
   }
 
@@ -52,8 +53,8 @@ public:
   double compute_water_level(){
     return (double)water / ((double)(end_x - start_x) * 30.0);
   }
-  bool is_over(){
-    return (capacity < water);
+  bool is_filled(){
+    return (capacity <= water);
   }
 
   bool operator<(const Cell& c) const{
@@ -196,6 +197,10 @@ int main(){
 	    cells[src_idx].parent = target_idx;
 	  }
 	}
+
+	if(cells[src_idx].parent != -1){
+	  cells[cells[src_idx].parent].has_child = true;
+	}
       }
 
 
@@ -220,36 +225,97 @@ int main(){
 	scanf("%d %d",&x,&time);
 	
 	for(int cell_idx = 0;cell_idx < cells.size(); cell_idx++){
-	  int faucet_idx = lower_bound(faucets.begin(),faucets.end(),cells[cell_idx].start_x) - faucets.begin();
-
-	  if(faucet_idx == faucets.size()) continue;
-	  if(faucets[faucet_idx].x > cells[cell_idx].end_x) continue;
-
-	  cells[cell_idx].pour_water(faucets[faucet_idx].cm3_per_second * time);
-	}
-
-
-	for(int round=0;round<1000000;round++){
-	  for(int cell_idx = 0;cell_idx < cells.size(); cell_idx++){
-	    while(cells[cell_idx].is_over()){
-	      int brother = cells[cell_idx].brother;
-	      if(brother == -1) break;
-
-	      cells[brother].water += (cells[cell_idx].water - cells[cell_idx].capacity);
-	      cells[cell_idx].water = cells[cell_idx].capacity;
-	    }
+	  for(int faucet_idx = 0; faucet_idx < faucets.size();faucet_idx++){
+	    if(faucet_idx == faucets.size()) continue;
+	    if(faucets[faucet_idx].x < cells[cell_idx].start_x) continue;
+	    if(faucets[faucet_idx].x > cells[cell_idx].end_x) continue;
+	    if(cells[cell_idx].has_child) continue;
+	    
+	    cells[cell_idx].pour_water(faucets[faucet_idx].cm3_per_second * time);
 	  }
 	}
 
-	for(int i=0;i<cells.size();i++){
-	  printf("idx%d sx:%d ex:%d height:%d cap:%d water:%d level:%lf brother:%d parent:%d\n",
-		 i,cells[i].start_x,cells[i].end_x,cells[i].height,cells[i].capacity,cells[i].water,
-		 cells[i].compute_water_level(),cells[i].brother,cells[i].parent);
+
+	bool is_erased[1001];
+	memset(is_erased,false,sizeof(is_erased));
+
+	for(int round=0;round<1000;round++){
+	  bool is_updated = false;
+	  for(int src_idx = 0;src_idx < cells.size(); src_idx++){
+	    if(is_erased[src_idx]) continue;
+	    if(!cells[src_idx].is_filled()) continue;
+
+	    int freq[1001];
+	    memset(freq,0,sizeof(freq));
+
+	    int limit = cells.size() * 3;
+	    int cell_idx = src_idx;
+
+	    bool isok = true;
+	    while(limit-- > 0){
+	      if(!cells[cell_idx].is_filled()) break;
+
+	      freq[cell_idx]++;
+	      if(freq[cell_idx] >= 3) isok = false;
+	      int brother = cells[cell_idx].brother;
+	      if(brother == -1) break;
+	      cells[brother].water += (cells[cell_idx].water - cells[cell_idx].capacity);
+	      cells[cell_idx].water = cells[cell_idx].capacity;
+	      cell_idx = brother;
+	    }
+	    
+	    if(isok) continue;
+
+	    is_updated = true;
+	    int sx = INF;
+	    int ex = 0;
+	    int water = 0;
+
+	    for(int cell_idx = 0;cell_idx < cells.size(); cell_idx++){
+	      if(is_erased[cell_idx]) continue;
+
+	      if(freq[cell_idx] >= 3){
+		sx = min(sx,cells[cell_idx].start_x);
+		ex = max(ex,cells[cell_idx].end_x);
+		water += cells[cell_idx].water;
+		cells[cell_idx].water = 0;
+		is_erased[cell_idx] = true;
+	      }
+	    }
+	    
+	    int new_cell_idx = 0;
+	    for(int cell_idx = 0;cell_idx < cells.size(); cell_idx++){
+	      if(is_erased[cell_idx]) continue;
+	      
+	      if(sx == cells[cell_idx].start_x 
+		 && ex == cells[cell_idx].end_x){
+
+		cells[cell_idx].water = water;
+		new_cell_idx = cell_idx;
+
+		break;
+	      }
+	    }
+	    
+	    for(int cell_idx = 0;cell_idx < cells.size(); cell_idx++){
+	      if(is_erased[cell_idx]) continue;
+	      if(cells[cell_idx].brother != -1
+		 &&is_erased[cells[cell_idx].brother]){
+		cells[cell_idx].brother = new_cell_idx;
+	      }
+	    }
+	  }
+
+	  if(!is_updated) break;
 	}
 
-	int cell_idx = lower_bound(cells.begin(),cells.end(),x) - cells.begin() - 1;
-	printf("%lf\n",cells[cell_idx].compute_water_level());
-
+	double res= 0.0;
+	for(int cell_idx = 0;cell_idx < cells.size(); cell_idx++){
+	  if(cells[cell_idx].start_x <= x && x <= cells[cell_idx].end_x){
+	    res = max(cells[cell_idx].compute_water_level(),res);
+	  }
+	}
+	printf("%lf\n",res >= 50.0 ? 50.0 : res);
 	cells = store;
       }
     }
