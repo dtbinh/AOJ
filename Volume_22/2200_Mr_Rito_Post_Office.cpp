@@ -31,17 +31,99 @@ int ty[] = {-1,0,1,0};
  
 static const double EPS = 1e-8;
 
+struct Edge{
+  int dst;
+  int time;
+  char type;
+  Edge(int _d,int _ti,char _ty) : dst(_d),time(_ti),type(_ty){}
+  Edge(){}
+};
+
+class State{
+public:
+  int next_target_idx;
+  int current_pos;
+  int cost;
+  int ship_pos;
+  State(int _nt,int _cp,int _c,int _s) : next_target_idx(_nt), current_pos(_cp),cost(_c),ship_pos(_s) {}
+  bool operator <(const State& s) const {
+    return cost < s.cost;
+  }
+  bool operator >(const State& s) const {
+    return cost > s.cost;
+  }
+};
+
+int dp[201][201][201]; //current_pos,target_pos,ship_pos
+
 int main(){
   int total_cities;
   int total_roads;
-  for(int road_idx = 0; road_idx < total_roads; road_idx++){
-    int src,dst,time;
-    char type[2];
-    scanf("%d %d %d %s",&src,&dst,&time,type);
-  }
-  int total_routes;
-  for(int route_idx = 0; route_idx < total_routes; route_idx++){
-    int route;
-    scanf("%d",&route);
+
+  while(~scanf("%d %d",&total_cities,&total_roads)){
+    if(total_cities == 0 && total_roads == 0) break;
+
+    vector<Edge> edges[201];
+
+    for(int road_idx = 0; road_idx < total_roads; road_idx++){
+      int src,dst,time;
+      char type[2];
+      scanf("%d %d %d %s",&src,&dst,&time,type);
+      edges[src].push_back(Edge(dst,time,type[0]));
+      edges[dst].push_back(Edge(src,time,type[0]));
+    }
+
+    int total_routes;
+    int routes[1001];
+    scanf("%d",&total_routes);
+    for(int route_idx = 0; route_idx < total_routes; route_idx++){
+      int route;
+      scanf("%d",&route);
+      routes[route_idx] = route;
+    }
+
+    priority_queue<State,vector<State>,greater<State> > que;
+
+    // next_target_idx,current_pos,cost,ship_pos
+    que.push(State(0,routes[0],0,routes[0]));
+
+    memset(dp,0x3f,sizeof(dp));
+
+    int res = INF;
+    while(!que.empty()){
+      State s = que.top();
+      que.pop();
+      if(dp[s.current_pos][routes[s.next_target_idx]][s.ship_pos] <= s.cost) continue;
+      dp[s.current_pos][routes[s.next_target_idx]][s.ship_pos] = s.cost;
+
+      if(s.next_target_idx == total_routes - 1
+	 && routes[s.next_target_idx] == s.current_pos){
+	res = s.cost;
+	goto found;
+      }
+
+      for(int dst_idx = 0; dst_idx < edges[s.current_pos].size(); dst_idx++){
+	int dst = edges[s.current_pos][dst_idx].dst;
+	int time = edges[s.current_pos][dst_idx].time;
+	char type = edges[s.current_pos][dst_idx].type;
+
+	if(type == 'S' && s.ship_pos != s.current_pos) continue;
+
+	int next_target_idx = s.next_target_idx;
+	if(s.current_pos == routes[s.next_target_idx]){
+	  next_target_idx++;
+	}
+	int next_ship_pos = s.ship_pos;
+	if(type == 'S' && s.current_pos == s.ship_pos){
+	  next_ship_pos = dst;
+	}
+	// next_target_idx,current_pos,cost,ship_pos
+	State next(next_target_idx,dst,s.cost + time,next_ship_pos);
+	que.push(next);
+      }
+    }
+  found:;
+
+    printf("%d\n",res);
   }
 }
