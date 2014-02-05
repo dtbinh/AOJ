@@ -54,6 +54,10 @@ public:
   }
 };
 
+int heuristic(int src,int dst,int warshall_floyd[201][201]){
+  return warshall_floyd[src][dst];
+}
+
 int dp[201][201][201]; //current_pos,target_pos,ship_pos
 
 int main(){
@@ -64,6 +68,8 @@ int main(){
     if(total_cities == 0 && total_roads == 0) break;
 
     vector<Edge> edges[201];
+    int warshall_floyd[201][201];
+    memset(warshall_floyd,0x3f,sizeof(warshall_floyd));
 
     for(int road_idx = 0; road_idx < total_roads; road_idx++){
       int src,dst,time;
@@ -71,6 +77,8 @@ int main(){
       scanf("%d %d %d %s",&src,&dst,&time,type);
       edges[src].push_back(Edge(dst,time,type[0]));
       edges[dst].push_back(Edge(src,time,type[0]));
+      warshall_floyd[src][dst] = time;
+      warshall_floyd[dst][src] = time;
     }
 
     int total_routes;
@@ -82,6 +90,15 @@ int main(){
       routes[route_idx] = route;
     }
 
+    for(int k = 0; k <= total_cities; k++){
+      for(int i = 0; i <= total_cities; i++){
+	for(int j = 0; j <= total_cities; j++){
+	  warshall_floyd[i][j]
+	    = min(warshall_floyd[i][j],
+		  warshall_floyd[i][k]+warshall_floyd[k][j]);
+	}
+      }
+    }
     priority_queue<State,vector<State>,greater<State> > que;
 
     // next_target_idx,current_pos,cost,ship_pos
@@ -93,8 +110,10 @@ int main(){
     while(!que.empty()){
       State s = que.top();
       que.pop();
-      if(dp[s.current_pos][routes[s.next_target_idx]][s.ship_pos] <= s.cost) continue;
-      dp[s.current_pos][routes[s.next_target_idx]][s.ship_pos] = s.cost;
+      if(dp[s.current_pos][routes[s.next_target_idx]][s.ship_pos]
+	 <= s.cost + heuristic(s.current_pos,routes[total_routes-1],warshall_floyd)) continue;
+      dp[s.current_pos][routes[s.next_target_idx]][s.ship_pos]
+	= s.cost + heuristic(s.current_pos,routes[total_routes-1],warshall_floyd);
 
       if(s.next_target_idx == total_routes - 1
 	 && routes[s.next_target_idx] == s.current_pos){
