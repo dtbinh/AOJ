@@ -1,5 +1,5 @@
 #define _USE_MATH_DEFINES
-#define INF 0x3f3f3f3f
+#define INF 0x11111111
 #include <cstdio>
 #include <iostream>
 #include <sstream>
@@ -31,35 +31,6 @@ int ty[] = {-1,0,1,0};
  
 static const double EPS = 1e-8;
 
-struct Edge{
-  int dst;
-  int time;
-  char type;
-  Edge(int _d,int _ti,char _ty) : dst(_d),time(_ti),type(_ty){}
-  Edge(){}
-};
-
-class State{
-public:
-  int next_target_idx;
-  int current_pos;
-  int cost;
-  int ship_pos;
-  State(int _nt,int _cp,int _c,int _s) : next_target_idx(_nt), current_pos(_cp),cost(_c),ship_pos(_s) {}
-  bool operator <(const State& s) const {
-    return cost < s.cost;
-  }
-  bool operator >(const State& s) const {
-    return cost > s.cost;
-  }
-};
-
-int heuristic(int src,int dst,int warshall_floyd[201][201]){
-  return warshall_floyd[src][dst];
-}
-
-int dp[201][201][201]; //current_pos,target_pos,ship_pos
-
 int main(){
   int total_cities;
   int total_roads;
@@ -67,20 +38,29 @@ int main(){
   while(~scanf("%d %d",&total_cities,&total_roads)){
     if(total_cities == 0 && total_roads == 0) break;
 
-    vector<Edge> edges[201];
-    int warshall_floyd[201][201];
-    memset(warshall_floyd,0x3f,sizeof(warshall_floyd));
+    int sea[201][201];
+    int land[201][201];
+    memset(sea,0x11,sizeof(sea));
+    memset(land,0x11,sizeof(land));
 
     for(int road_idx = 0; road_idx < total_roads; road_idx++){
       int src,dst,time;
       char type[2];
       scanf("%d %d %d %s",&src,&dst,&time,type);
-      edges[src].push_back(Edge(dst,time,type[0]));
-      edges[dst].push_back(Edge(src,time,type[0]));
-      warshall_floyd[src][dst] = time;
-      warshall_floyd[dst][src] = time;
+      if(type[0] == 'S'){
+	sea[src][dst] = min(sea[src][dst],time);
+	sea[dst][src] = min(sea[dst][src],time);
+      }
+      else if(type[0] == 'L'){
+	land[src][dst] = min(land[src][dst],time);
+	land[dst][src] = min(land[dst][src],time);
+      }
     }
-
+    for(int src=1;src<=total_cities;src++){
+      int dst = src;
+      sea[src][dst] = 0;
+      land[src][dst] = 0;
+    }
     int total_routes;
     int routes[1001];
     scanf("%d",&total_routes);
@@ -90,59 +70,39 @@ int main(){
       routes[route_idx] = route;
     }
 
-    for(int k = 0; k <= total_cities; k++){
-      for(int i = 0; i <= total_cities; i++){
-	for(int j = 0; j <= total_cities; j++){
-	  warshall_floyd[i][j]
-	    = min(warshall_floyd[i][j],
-		  warshall_floyd[i][k]+warshall_floyd[k][j]);
+    int dp[201][201];
+    memset(dp,0x11,sizeof(dp));
+
+    for(int mid=1;mid<=total_cities;mid++){
+      for(int src=1;src<=total_cities;src++){
+	for(int dst=1;dst<=total_cities;dst++){
+	  land[src][dst] = min(land[src][dst],land[src][mid] + land[mid][dst]);
+	  sea[src][dst] = min(sea[src][dst],sea[src][mid] + sea[mid][dst]);
 	}
       }
     }
-    priority_queue<State,vector<State>,greater<State> > que;
+    
+    int ship[1001][201]; // ship[route_idx][city] = cost
+    memset(ship,0x11,sizeof(ship));
+    ship[0][routes[0]] = 0;
 
-    // next_target_idx,current_pos,cost,ship_pos
-    que.push(State(0,routes[0],0,routes[0]));
+    for(int route_idx = 1; route_idx < total_routes; route_idx++){
+      int prev_target = routes[route_idx - 1];
+      int target = routes[route_idx];
 
-    memset(dp,0x3f,sizeof(dp));
+      for(int mid1 = 1; mid1 <= total_cities; mid1++){
+	ship[route_idx][mid1] = min(ship[route_idx][mid1],ship[route_idx-1][mid1] + land[prev_target][target]);
 
+	for(int mid2 = 1; mid2 <= total_cities; mid2++){
+	  ship[route_idx][mid2] = min(ship[route_idx][mid2],
+				      ship[route_idx-1][mid1] + land[prev_target][mid1] + sea[mid1][mid2] + land[mid2][target]);
+	}
+      }
+    }
     int res = INF;
-    while(!que.empty()){
-      State s = que.top();
-      que.pop();
-      if(dp[s.current_pos][routes[s.next_target_idx]][s.ship_pos]
-	 <= s.cost + heuristic(s.current_pos,routes[total_routes-1],warshall_floyd)) continue;
-      dp[s.current_pos][routes[s.next_target_idx]][s.ship_pos]
-	= s.cost + heuristic(s.current_pos,routes[total_routes-1],warshall_floyd);
-
-      if(s.next_target_idx == total_routes - 1
-	 && routes[s.next_target_idx] == s.current_pos){
-	res = s.cost;
-	goto found;
-      }
-
-      for(int dst_idx = 0; dst_idx < edges[s.current_pos].size(); dst_idx++){
-	int dst = edges[s.current_pos][dst_idx].dst;
-	int time = edges[s.current_pos][dst_idx].time;
-	char type = edges[s.current_pos][dst_idx].type;
-
-	if(type == 'S' && s.ship_pos != s.current_pos) continue;
-
-	int next_target_idx = s.next_target_idx;
-	if(s.current_pos == routes[s.next_target_idx]){
-	  next_target_idx++;
-	}
-	int next_ship_pos = s.ship_pos;
-	if(type == 'S' && s.current_pos == s.ship_pos){
-	  next_ship_pos = dst;
-	}
-	// next_target_idx,current_pos,cost,ship_pos
-	State next(next_target_idx,dst,s.cost + time,next_ship_pos);
-	que.push(next);
-      }
+    for(int city=1;city<=total_cities;city++){
+      res = min(ship[total_routes-1][city],res);
     }
-  found:;
-
     printf("%d\n",res);
   }
 }
