@@ -72,14 +72,10 @@ public:
       double pivot = A[pivot_y][pivot_x];
       if(abs(pivot) < EPS) continue;
 
-      dispB("before div pivot");
-      dispA("before div pivot");
       for(int x=0;x<N;x++){
 	A[pivot_y][x] /= pivot;
       }
       B[pivot_y] /= pivot;
-      dispB("after div pivot");
-      dispA("after div pivot");
       for(int y=0;y<N;y++){
 	if(y == pivot_y) continue;
 	if(abs(A[y][pivot_x]) < EPS) continue;
@@ -88,13 +84,14 @@ public:
 	B[y] -= B[pivot_y] * scalar;
 
 	for(int x=0;x<N;x++){
-	  // A[y][x] -=  A[y][pivot_x] * A[pivot_y][x];
 	  A[y][x] -=  A[pivot_y][x] * scalar;
 	}
       }
-      dispB("after minus pivot");
-      dispA("after minus pivot");
-    }
+    }    
+  }
+
+  const T atB(int idx) const{
+    return B[idx];
   }
 
   void dispB(const string str){
@@ -146,6 +143,7 @@ void disp_mat1d(double* B,int N){
     }
     printf("]\n");
 }
+
 int main(){
   int dimension;
   while(~scanf("%d",&dimension)){
@@ -158,6 +156,8 @@ int main(){
 
     double** A = new double*[dimension+1];
     double* B_dash = new double[dimension+1];
+
+    map<string,vector<unsigned int> > history;
     for(unsigned int S=0;S<(1<<(dimension+3));S++){
       if(__builtin_popcount(S) != (dimension+1)) continue;
       
@@ -173,10 +173,40 @@ int main(){
 	y++;
       }
 
-      disp_mat2d(A,dimension+1);
-      disp_mat1d(B_dash,dimension+1);
       Matrix<double> mat(A,B_dash,dimension+1);
       mat.gauss_jordan();
+
+      string key = "";
+      for(int idx=dimension;idx>=0;idx--){
+	stringstream ss;
+	char buf[128];
+	sprintf(buf,"%.4lf",mat.atB(idx));
+	ss << buf;
+	key += "|" + ss.str();
+      }
+      key += "|";
+
+      history[key].push_back(S);
     }
+
+    int res = 0;
+    for(map<string,vector<unsigned int> >::iterator it = history.begin();
+	it != history.end();
+	it++){
+      unsigned int S = 0;
+      for(int i=0;i< it->second.size();i++){
+	S |= it->second[i];
+      }
+
+      if(__builtin_popcount(S) == (dimension+2)){
+	for(int i=0;i<=dimension+2;i++){
+	  if(!(S & (1<<i))){
+	    res = i;
+	    break;
+	  }
+	}
+      }
+    }
+    printf("%d\n",res);
   }
 }
