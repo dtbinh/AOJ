@@ -50,44 +50,15 @@ public:
   Company(){}
 };
 
-class State{
-public:
-  int station;
-  int fare;
-  State(int _s,int _f) : station(_s), fare(_f) {}
-  State() : station(0),fare(0) {}
-  bool operator<(const State& s) const{
-    return fare < s.fare;
-  }
-  bool operator>(const State& s) const{
-    return fare > s.fare;
-  }
-};
+int fares[21][20001];
+int dist[21][101][101];
 
-int fares[21][100001];
-
-int compute_fare(int z,int company,Company companies[21]){
+int compute_fare(int company,int z,const Company companies[21]){
   if(z == 0) return 0;
   if(fares[company][z] != -1) return fares[company][z];
-  int idx = lower_bound(companies[company].points,companies[company].points + companies[company].total_points,z) - companies[company].points;
-  return (fares[company][z] = (compute_fare(z-1,company,companies) + companies[company].slopes[idx]));
-}
 
-void dfs(int org,int company,int distance ,int pos,int dp[101][101],
-	 const vector<Edge> edges[101],Company companies[21],int total_point[21],bool visited[101]){
-  if(visited[pos]) return;
-  visited[pos] = true;
-
-  int fare = 0;
-  if(company != -1){
-    fare = compute_fare(distance,company,companies);
-  }
-  dp[pos][org] = dp[org][pos] = min(dp[org][pos],fare);
-
-  for(int i=0;i<edges[pos].size();i++){
-    if(company != -1 && edges[pos][i].company != company) continue;
-    dfs(org,edges[pos][i].company,distance + edges[pos][i].distance,edges[pos][i].dst,dp,edges,companies,total_point,visited);
-  }
+  int idx = lower_bound(companies[company].points,companies[company].points + (companies[company].total_points + 1),z) - companies[company].points;
+  return (fares[company][z] = (compute_fare(company,z-1,companies) + companies[company].slopes[idx]));
 }
 
 int main(){
@@ -114,6 +85,8 @@ int main(){
     vector<Edge> edges[101];
     Company companies[21];
 
+    memset(dist,0x3f,sizeof(dist));
+
     for(int line_idx = 1; line_idx<=total_lines;line_idx++){
       int stations[2];
       int distance;
@@ -121,6 +94,10 @@ int main(){
       scanf("%d %d %d %d",&stations[0],&stations[1],&distance,&company);
       edges[stations[0]].push_back(Edge(stations[1],distance,company));
       edges[stations[1]].push_back(Edge(stations[0],distance,company));
+
+      dist[company][stations[1]][stations[0]]
+	= dist[company][stations[0]][stations[1]]
+	= min(distance,dist[company][stations[1]][stations[0]]);
     }
 
     for(int company_idx = 1; company_idx <= total_companies;company_idx++){
@@ -144,6 +121,16 @@ int main(){
       companies[company_idx] = Company(points,slopes,total_point[company_idx]);
     }
 
+    for(int company=1;company <= total_companies; company++){
+      for(int mid=1;mid<=total_stations;mid++){
+	for(int start=1;start<=total_stations;start++){
+	  for(int end=1;end<=total_stations;end++){
+	    dist[company][start][end] = min(dist[company][start][end],dist[company][start][mid] + dist[company][mid][end]);
+	  }
+	}
+      }
+    }
+
     int dp[101][101];
     memset(dp,0x3f,sizeof(dp));
 
@@ -151,29 +138,22 @@ int main(){
       dp[i][i] = 0;
     }
 
-    for(int start=1;start<=total_stations; start++){
-      for(int i=0;i<edges[start].size();i++){
-	dp[edges[start][i].dst][start]
-	  = dp[start][edges[start][i].dst]
-	  = min(dp[start][edges[start][i].dst],
-		compute_fare(edges[start][i].distance,edges[start][i].company,companies));
-	
-      }
-    }
-
-    bool visited[101];
-    for(int start=1;start<=total_stations; start++){
-      memset(visited,false,sizeof(visited));
-      dfs(start,-1,0,start,dp,edges,companies,total_point,visited);
-    }
-
-    for(int mid=1;mid<=total_stations;mid++){
-      for(int start=1;start<=total_stations;start++){
-	for(int end=1;end<=total_stations;end++){
-	  dp[end][start] = dp[start][end] = min(dp[start][end],dp[start][mid] + dp[mid][end]);
+    for(int start=1;start<=total_stations;start++){
+      for(int end=1;end<=total_stations;end++){
+	for(int company = 1; company <= total_companies; company++){
+	  if(dist[company][start][end] >= INF) continue;
+	  dp[end][start] = dp[start][end] = min(dp[start][end],compute_fare(company,dist[company][start][end],companies));
 	}
       }
     }
+    for(int mid=1;mid<=total_stations;mid++){
+      for(int start=1;start<=total_stations;start++){
+	for(int end=1;end<=total_stations;end++){
+	  dp[start][end] = min(dp[start][end],dp[start][mid] + dp[mid][end]);
+	}
+      }
+    }
+
     printf("%d\n",dp[start_station][goal_station] >= INF ? -1 : dp[start_station][goal_station]);
   }
 }
