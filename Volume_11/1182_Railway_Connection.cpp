@@ -69,6 +69,21 @@ int compute_fare(int z,int points[51],int total_points,int slopes[51]){
   return compute_fare(z-1,points,total_points,slopes) + slopes[idx];
 }
 
+void dfs(int org,int company,int distance ,int pos,int dp[101][101],
+	 const vector<Edge> edges[101],Company companies[21],int total_point[21],bool visited[101]){
+  if(visited[pos]) return;
+  visited[pos] = true;
+  for(int i=0;i<edges[pos].size();i++){
+    int fare = compute_fare(distance,
+			    companies[edges[pos][i].company].points,
+			    total_point[edges[pos][i].company],
+			    companies[edges[pos][i].company].slopes);
+    if(company != -1 && edges[pos][i].company != company) return;
+    dp[org][pos] = min(dp[org][pos],fare);
+    dfs(org,edges[pos][i].company,distance + edges[pos][i].distance,edges[pos][i].dst,dp,edges,companies,total_point,visited);
+  }
+}
+
 int main(){
   int total_stations;
   int total_lines;
@@ -119,35 +134,44 @@ int main(){
 
       companies[company_idx] = Company(points,slopes);
       // for(int z=1;z<=9;z++){
-      // 	cout << compute_fare(z,points,total_point[company_idx],slopes) << endl;
+      // 	cout <<  << endl;
       // }
     }
 
-    priority_queue<State,vector<State>,greater<State> > que;
-    State init(start_station,0);
-    que.push(init);
-    int res = -1;
-    while(!que.empty()){
-      State s = que.top();
-      que.pop();
-      if(s.station == goal_station){
-	res = s.fare;
-	break;
-      }
+    int dp[101][101];
+    memset(dp,0x3f,sizeof(dp));
 
-      for(int i = 0; i < edges[s.station].size(); i++){
-	int dst = edges[s.station][i].dst;
-	int distance = edges[s.station][i].distance;
-	int company_idx = edges[s.station][i].company;
+    for(int i=1;i<=total_stations;i++){
+      dp[i][i] = 0;
+    }
 
-	int fare = compute_fare(distance,
-				companies[company_idx].points,
-				total_point[company_idx],
-				companies[company_idx].slopes);
-	que.push(State(dst,s.fare + fare));
+    bool visited[101];
+    for(int start=1;start<=total_stations; start++){
+      memset(visited,false,sizeof(visited));
+      dfs(start,-1,0,start,dp,edges,companies,total_point,visited);
+    }
+
+    for(int start=1;start<=total_stations; start++){
+      for(int i=0;i<edges[start].size();i++){
+	dp[edges[start][i].dst][start]
+	  = dp[start][edges[start][i].dst]
+	  = min(dp[start][edges[start][i].dst],
+		compute_fare(edges[start][i].distance,
+			     companies[edges[start][i].company].points,
+			     total_point[edges[start][i].company],
+			     companies[edges[start][i].company].slopes));
+	
       }
     }
 
-    printf("%d\n",res);
+    for(int mid=1;mid<=total_stations;mid++){
+      for(int start=1;start<=total_stations;start++){
+	for(int end=1;end<=total_stations;end++){
+	  dp[start][end] = min(dp[start][end],dp[start][mid] + dp[mid][end]);
+	}
+      }
+    }
+
+    printf("%d\n",dp[start_station][goal_station] >= INF ? -1 : dp[start_station][goal_station]);
   }
 }
