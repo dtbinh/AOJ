@@ -87,6 +87,8 @@ int main(){
 	   || buf[x] == 'D' || buf[x] == 'L'){
 	  sx = x;
 	  sy = y;
+	  init_state |= (1<<init_dic(x,y,dic));
+
 	  const char dirs[4] = {'U','R','D','L'};
 	  for(int i=0;i<4;i++){
 	    if(dirs[i] == buf[x]){
@@ -106,6 +108,7 @@ int main(){
     que.push(State(sx,sy,dir,init_state,0));
 
     set<int> visited[101][101][4];
+    bool flag = false;
     while(!que.empty()){
       State s = que.top();
       que.pop();
