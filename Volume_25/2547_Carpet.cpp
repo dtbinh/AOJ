@@ -34,24 +34,17 @@ int ty[] = {-1,0,1,0};
 int main(){
   int N;
   while(~scanf("%d",&N)){
-    map<int,bool> has_carpet;
+    set<int> has_carpet;
     int count = 0;
     for(int i=0;i<N;i++){
       int height;
       scanf("%d",&height);
       count++;
 
-      for(map<int,bool>::iterator it = has_carpet.begin();
-	  it != has_carpet.end();
-	  it++){
-	if(it->first > height){
-	  it->second = false;
-	}
-	if(it->first == height && it->second == true){
-	  count--;
-	}
-      }
-      has_carpet[height] = true;
+      if(has_carpet.count(height)) count--;
+      set<int>::iterator it = upper_bound(has_carpet.begin(),has_carpet.end(),height);
+      has_carpet.erase(it,has_carpet.end());
+      has_carpet.insert(height);
     }
     printf("%d\n",count);
   }
