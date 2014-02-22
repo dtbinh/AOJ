@@ -46,20 +46,6 @@ public:
   }
 };
 
-class State{
-public:
-  int time;
-  int pos;
-  int age7_duration;
-  State(int _t,int _p,int _d) : time(_t),pos(_p), age7_duration(_d){}
-  bool operator<(const State& s) const{
-    return age7_duration < s.age7_duration;
-  }
-  bool operator>(const State& s) const{
-    return age7_duration > s.age7_duration;
-  }
-};
-
 int main(){
   int total_stars;
   int start;
