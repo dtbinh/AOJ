@@ -100,7 +100,7 @@ int main(){
 
 
     int max_duration[501];
-    fill(max_duration,max_duration+501,-INF);
+    memset(max_duration,-1,sizeof(max_duration));
 
     int res = 0;
     start = conv[start];
