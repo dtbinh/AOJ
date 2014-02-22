@@ -35,7 +35,8 @@ class Star {
 public:
   int lower_bound_time;
   int upper_bound_time;
-  Star(int _l,int _u) : lower_bound_time(_l),upper_bound_time(_u){}
+  int idx;
+  Star(int _l,int _u,int _i) : lower_bound_time(_l),upper_bound_time(_u),idx(_i){}
   Star() : lower_bound_time(0),upper_bound_time(0){}
   bool operator<(const Star& s) const{
     return lower_bound_time < s.lower_bound_time;
@@ -69,16 +70,21 @@ int main(){
     for(int star_idx = 0; star_idx < total_stars; star_idx++){
       int lower_bound_time,upper_bound_time;
       scanf("%d %d",&lower_bound_time,&upper_bound_time);
-      stars[star_idx] = Star(lower_bound_time,upper_bound_time);
+      stars[star_idx] = Star(lower_bound_time,upper_bound_time,star_idx);
     }
 
     sort(stars,stars+total_stars);
+
+    map<int,int> conv;
+    for(int star_idx = 0; star_idx < total_stars; star_idx++){
+      conv[stars[star_idx].idx] = star_idx;
+    }
 
     int cost[501][501];
     memset(cost,0x3f,sizeof(cost));
     for(int from_star_idx = 0; from_star_idx < total_stars; from_star_idx++){
       for(int to_star_idx = 0; to_star_idx < total_stars; to_star_idx++){
-	scanf("%d",&cost[from_star_idx][to_star_idx]);
+	scanf("%d",&cost[conv[from_star_idx]][conv[to_star_idx]]);
       }
     }
     for(int mid_star_idx = 0; mid_star_idx < total_stars; mid_star_idx++){
@@ -92,42 +98,34 @@ int main(){
       }
     }
 
-    map<P,int> visited;
-    priority_queue<State,vector<State> > que;
-    que.push(State(0,start,0));
 
-    int max_duration = 0;
-    while(!que.empty()){
-      State s = que.top();
-      que.pop();
+    int max_duration[501];
+    memset(max_duration,0,sizeof(max_duration));
 
-      int remainings = 0;
-      if(s.time < stars[s.pos].upper_bound_time){
-	remainings = min(stars[s.pos].upper_bound_time - stars[s.pos].lower_bound_time,
-			 stars[s.pos].upper_bound_time - s.time);
+    start = conv[start];
+    for(int to_star_idx = 0; to_star_idx < total_stars; to_star_idx++){
+      if(cost[start][to_star_idx] <= stars[to_star_idx].upper_bound_time){
+	max_duration[to_star_idx]
+	  = stars[to_star_idx].upper_bound_time
+	  - max(cost[start][to_star_idx],stars[to_star_idx].lower_bound_time);
       }
-      max_duration = max(s.age7_duration + remainings,max_duration);
+    }
 
+    int res = 0;
+    for(int from_star_idx = 0; from_star_idx < total_stars; from_star_idx++){
+      for(int to_star_idx = 0; to_star_idx < total_stars; to_star_idx++){
+	int time = stars[from_star_idx].upper_bound_time + cost[from_star_idx][to_star_idx];
+	if(time >= stars[to_star_idx].upper_bound_time) continue;
 
-      if(visited.find(P(s.time,s.pos)) != visited.end()
-	 && visited[P(s.time,s.pos)] >= s.age7_duration) continue;
-      visited[P(s.time,s.pos)] = s.age7_duration;
-
-      for(int to=0;to<total_stars;to++){
-	if(s.pos == to) continue;
-
-	int mission_ignored_time = s.time + cost[s.pos][to];
-	que.push(State(mission_ignored_time,to,s.age7_duration));
-
-	int considering_mission_time = stars[s.pos].upper_bound_time + cost[s.pos][to];
-	int age7_duration = min(stars[s.pos].upper_bound_time - stars[s.pos].lower_bound_time,
-				stars[s.pos].upper_bound_time - s.time);
-
-	if(age7_duration > 0){
-	  que.push(State(considering_mission_time,to,s.age7_duration + age7_duration));
+	if(max_duration[to_star_idx] 
+	   < max_duration[from_star_idx]
+	   + stars[to_star_idx].upper_bound_time - max(time,stars[to_star_idx].lower_bound_time)){
+	  max_duration[to_star_idx] = max_duration[from_star_idx]
+	    + stars[to_star_idx].upper_bound_time - max(time,stars[to_star_idx].lower_bound_time);
+	  res = max(res,max_duration[to_star_idx]);
 	}
       }
     }
-    printf("%d\n",max_duration);
+    printf("%d\n",res);
   }
 }
