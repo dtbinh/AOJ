@@ -60,14 +60,18 @@ public:
     n = 1;
     while(n < _n) n *= 2;
 
-    points = new Team[2*n];
+    points = new Team[2*n+1];
+    for(int i=0;i<2*n+1;i++){
+      points[i] = Team(i,0);
+    }
+
   }
 
   void insert(int idx,int p){
     idx += n - 1;
 
     points[idx].id = idx - (n - 1);
-    points[idx].point = p;
+    points[idx].point += p;
 
     while(idx > 0){
       idx = (idx - 1) / 2;
@@ -91,7 +95,7 @@ public:
   }
 
   Team query(int a,int b,int idx,int l,int r){
-    if(r <= a || b <= l) return Team(0,0);
+    if(r <= a || b <= l) return Team(0,-100000);
     if(a <= l && r <= b) return points[idx];
     else{
       Team left = query(a,b,idx * 2 + 1,1,(l+r) / 2);
@@ -120,23 +124,33 @@ int main(){
     memset(disp_time,0,sizeof(disp_time));
     int prev_champ = 1;
     int prev_time = 0;
-    SegmentTree seg_tree(total_teams+1);
+    SegmentTree seg_tree(total_teams);
 
+    map<int,vector<Team> > records;
     for(int record_idx=0;record_idx<total_records;record_idx++){
       int id,time,point;
       scanf("%d %d %d",&id,&time,&point);
       
-      seg_tree.insert(id,point);
+      records[time].push_back(Team(id,point));
+    }
+
+    for(map<int,vector<Team> >::iterator it = records.begin();
+	it != records.end();
+	it++){
+      for(int i=0;i<it->second.size();i++){
+	seg_tree.insert(it->second[i].id,it->second[i].point);
+      }
       Team team = seg_tree.query(0,total_teams,0,0,total_teams);
       if(prev_champ != team.id){
-	disp_time[prev_champ] += time - prev_time;
-	prev_time = time;
+	disp_time[prev_champ] += it->first - prev_time;
+	prev_time = it->first;
 	prev_champ = team.id;
       }
     }
+
     disp_time[prev_champ] += contest_duration - prev_time;
     
-    int res = 0;
+    int res = 1;
     int max_disp = 0;
     for(int team_idx=1;team_idx <= total_teams; team_idx++){
       if(max_disp < disp_time[team_idx]){
