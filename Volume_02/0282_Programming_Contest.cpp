@@ -60,7 +60,7 @@ public:
     n = 1;
     while(n < _n) n *= 2;
 
-    points = new Team[n];
+    points = new Team[2*n];
   }
 
   void insert(int idx,int p){
@@ -115,9 +115,6 @@ int main(){
 	       &total_teams,
 	       &total_records,
 	       &contest_duration)){
-    
-    priority_queue<Team> que;
-    
     int disp_time[100001];
     
     memset(disp_time,0,sizeof(disp_time));
