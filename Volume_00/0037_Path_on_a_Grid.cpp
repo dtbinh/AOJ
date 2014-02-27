@@ -32,29 +32,26 @@ int tx[] = {0,1,0,-1};
 int ty[] = {-1,0,1,0};
 
 bool is_path[10][10][10][10];
-bool visited[10][10];
+const char ch_dir[] = {'U','R','D','L'};
 
-void dfs(int sx,int sy){
-  if(visited[sx][sy]) return;
-
-  visited[sx][sy] = true;
-
+void dfs(int sx,int sy,int dir){
   for(int i=0;i<4;i++){
-    int dx = tx[i] + sx;
-    int dy = ty[i] + sy;
+    int next_dir = (dir + i + 3) % 4;
+    int dx = tx[next_dir] + sx;
+    int dy = ty[next_dir] + sy;
     if(dx < 0 || dx > 4 || dy < 0 || dy > 4) continue;
     if(!is_path[sx][sy][dx][dy]) continue;
 
-    is_path[sx][sy][dx][dy] = false;
-    const char ch_dir[] = {'U','R','D','L'};
-    printf("%c\n",ch_dir[i]);
+    printf("%c",ch_dir[next_dir]);
+    if(dx == 0 && dy == 0) return;
 
-    dfs(dx,dy);
+    dfs(dx,dy,next_dir);
+    break;
   }
 }
 
 int main(){
-  memset(visited,false,sizeof(visited));
+
   memset(is_path,false,sizeof(is_path));
   for(int i=0;i<9;i++){
     char buf[8];
@@ -79,5 +76,6 @@ int main(){
     }
   }
 
-  dfs(0,0);
+  dfs(0,0,1);
+  printf("\n");
 }
