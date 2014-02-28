@@ -30,21 +30,20 @@ static const double EPS = 1e-8;
 
 
 int main(){
-  int n,s;
-  while(~scanf("%d %d",&n,&s)){
-    int dp[10][1001];
-    memset(dp,0,sizeof(dp));
-    dp[0][0] = 1;
-    for(int i=0;i<n;i++){
-      for(int from=0;from<=s;from++){
-	for(int num=0;num<=100;num++){
-	  if(from+num > s) continue;
-	  if(from == num) continue;
-	  dp[i+1][from+num] += dp[i][from];
-	}
+  ll dp[10][1001];
+  memset(dp,0,sizeof(dp));
+  dp[0][0] = 1;
+  for(int num=0;num<=100;num++){
+    for(int i=9;i>0;i--){
+      for(int to=1000;to-num>=0;to--){
+	dp[i][to] += dp[i-1][to-num];
       }
     }
+  }
 
-    printf("%d\n",dp[n][s]);
+  int n,s;
+  while(~scanf("%d %d",&n,&s)){
+    if(n==0 && s==0) break;
+    printf("%lld\n",dp[n][s]);
   }
 }
