@@ -58,9 +58,12 @@ int main(){
     int normal_required_time;
     scanf("%d",&normal_required_time);
 
-    int nodes[21][21];
-    int edges[21][21][21][21];
-
+    int traffic_light[21][21];
+    bool has_construction[21][21][21][21];
+    int traffic_jam[21][21][21][21];
+    memset(traffic_light,0,sizeof(traffic_light));
+    memset(traffic_jam,0,sizeof(traffic_jam));
+    memset(has_construction,false,sizeof(has_construction));
 
     int total_traffic_lights;
     scanf("%d",&total_traffic_lights);
@@ -69,7 +72,7 @@ int main(){
       int period;
       scanf("%s %d",point,&period);
       pair<char,int> pos = conv(point);
-      nodes[pos->first - 'a'][pos->second - 1] = 1;
+      traffic_light[pos.first - 'a'][pos.second - 1] = period;
     }
     int total_roads_being_constructed;
     scanf("%d",&total_roads_being_constructed);
@@ -80,7 +83,7 @@ int main(){
       pair<char,int> pos_from = conv(from);
       pair<char,int> pos_to = conv(to);
 
-      edges[pos_from->first - 'a'][pos_from->second - 1][pos_to->first - 'a'][pos_to->second - 1] = 1;
+      has_construction[pos_from.first - 'a'][pos_from.second - 1][pos_to.first - 'a'][pos_to.second - 1] = true;
     }
 
     int total_traffic_jam_roads;
@@ -92,7 +95,7 @@ int main(){
       scanf("%s %s %d",from,to,&jam_required_time);
       pair<char,int> pos_from = conv(from);
       pair<char,int> pos_to = conv(to);
-      edges[pos_from->first - 'a'][pos_from->second - 1][pos_to->first - 'a'][pos_to->second - 1] = 1;
+      traffic_jam[pos_from.first - 'a'][pos_from.second - 1][pos_to.first - 'a'][pos_to.second - 1] = jam_required_time;
     }
     
     char start[32];
@@ -102,10 +105,10 @@ int main(){
     pair<char,int> pos_s = conv(start);
     pair<char,int> pos_g = conv(goal);
 
-    int sx = pos_s->second - 1;
-    int sy = pos_s->first - 'a';
+    int sx = pos_s.second - 1;
+    int sy = pos_s.first - 'a';
 
-    int gx = pos_g->second - 1;
-    int gy = pos_g->first - 'a';
+    int gx = pos_g.second - 1;
+    int gy = pos_g.first - 'a';
   }
 }
