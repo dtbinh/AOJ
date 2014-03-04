@@ -49,12 +49,15 @@ pair<char,int> conv(char point[32]){
   return make_pair(alpha[0],atoi(num.c_str()));
 }
 
+bool dp[201][4][21][21];
+
 int main(){
   int total_east2west_roads;
   int total_north2south_roads;
   while(~scanf("%d %d",
 	       &total_east2west_roads,
 	       &total_north2south_roads)){
+    if(total_east2west_roads == 0 && total_north2south_roads == 0) continue;
     int normal_required_time;
     scanf("%d",&normal_required_time);
 
@@ -84,6 +87,7 @@ int main(){
       pair<char,int> pos_to = conv(to);
 
       has_construction[pos_from.first - 'a'][pos_from.second - 1][pos_to.first - 'a'][pos_to.second - 1] = true;
+      has_construction[pos_to.first - 'a'][pos_to.second - 1][pos_from.first - 'a'][pos_from.second - 1] = true;
     }
 
     int total_traffic_jam_roads;
@@ -96,6 +100,7 @@ int main(){
       pair<char,int> pos_from = conv(from);
       pair<char,int> pos_to = conv(to);
       traffic_jam[pos_from.first - 'a'][pos_from.second - 1][pos_to.first - 'a'][pos_to.second - 1] = jam_required_time;
+      traffic_jam[pos_to.first - 'a'][pos_to.second - 1][pos_from.first - 'a'][pos_from.second - 1] = jam_required_time;
     }
     
     char start[32];
@@ -110,5 +115,54 @@ int main(){
 
     int gx = pos_g.second - 1;
     int gy = pos_g.first - 'a';
+
+
+    memset(dp,false,sizeof(dp));
+    dp[0][1][sy][sx] = true;
+    dp[0][0][sy][sx] = true;
+    dp[0][2][sy][sx] = true;
+    dp[0][3][sy][sx] = true;
+
+    for(int time = 0;time <= 100; time++){
+      for(int x=0;x<total_north2south_roads;x++){
+	for(int y=0;y<total_east2west_roads;y++){
+	  for(int next_dir=0;next_dir<4;next_dir++){
+
+	    int dx = x + tx[next_dir];
+	    int dy = y + ty[next_dir];
+	    if(dx < 0 || dx >= total_north2south_roads
+	       || dy < 0 || dy >= total_east2west_roads) continue;
+	    if(has_construction[y][x][dy][dx]) continue;
+
+	    for(int org_dir = 0; org_dir < 4 ; org_dir++){	    
+	      if((org_dir+2)%4 == next_dir) continue;
+
+	      if((org_dir == 1 || org_dir == 3) 
+		 && traffic_light[y][x] != 0
+		 && (time / traffic_light[y][x]) % 2 == 0) continue;
+	      
+	      if((org_dir == 0 || org_dir == 2) 
+		 && traffic_light[y][x] != 0
+		 && (time / traffic_light[y][x]) % 2 != 0) continue;
+
+	      int jam = traffic_jam[y][x][dy][dx];
+	      dp[time + jam + normal_required_time][next_dir][dy][dx]
+		|= dp[time][org_dir][y][x];
+	    }
+	  }
+	}
+      }
+    }
+    int res = INF;
+    for(int time = 0;time <= 100; time++){
+      for(int dir = 0;dir < 4; dir++){
+	if(dp[time][dir][gy][gx]){
+	  res = min(time,res);
+	}
+      }
+    }
+
+    printf("%d\n",res);
+
   }
 }
