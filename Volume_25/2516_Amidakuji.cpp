@@ -31,6 +31,47 @@ static const double EPS = 1e-8;
 int tx[] = {0,1,0,-1};
 int ty[] = {-1,0,1,0};
 
+bool check(const vector<int>& matrix,int freq[12],int W){
+  for(int i=0;i<matrix.size();i++){
+    if(matrix[i] != i) return false;
+  }
+
+  for(int i=0;i<W;i++){
+    if(freq[i] != 0) return false;
+  }
+  return true;
+}
+
+int dfs(const vector<int>& matrix,
+	const vector<int>& patterns,
+	int freq[12],
+	int W,int H,int height){
+  if(height >= H){
+    return H;
+  }
+
+  if(check(matrix,freq,W)){
+    return height;
+  }
+
+  int res = H;
+  for(int i=0;i<patterns.size();i++){
+    vector<int> next = matrix;
+    int S = patterns[i];
+    int next_freq[12];
+    memcpy(next_freq,freq,sizeof(int)*W);
+
+    for(int j=0;j<=W-1;j++){
+      if(S & (1<<j)){
+	swap(next[j],next[j+1]);
+	next_freq[j]--;
+      }
+    }
+    res = min(res,dfs(next,patterns,next_freq,W,H,height+1));
+  }
+  return res;
+}
+
 int main(){
   int W,H;
   while(~scanf("%d %d",&W,&H)){
@@ -38,53 +79,38 @@ int main(){
     for(int i=0;i<W;i++){
       matrix.push_back(i);
     }
-    vector<pair<int,int> > permutation;
+
+    int freq[12];
+    memset(freq,0,sizeof(freq));
+
     for(int i=0;i<H;i++){
       int line;
       scanf("%d",&line);
       line--;
-      int lhs = matrix[line];
-      int rhs = matrix[line+1];
       swap(matrix[line],matrix[line+1]);
-      permutation.push_back(make_pair(min(lhs,rhs),max(lhs,rhs)));
+      freq[line]++;
     }
-
-    bool used[16];
-    memset(used,false,sizeof(used));
     
-    int res = 0;
+    vector<int> patterns;
+    for(int S=0;S<=(1<<(W-1)) - 1;S++){
+      bool isok = true;
+      for(int prohibit=2;prohibit <= W-1;prohibit++){
+	int base = (1<<prohibit) - 1;
 
-    for(int i=0;i<H;i++){
-      if(used[i]) continue;
-      int lhs = permutation[i].first;
-      int rhs = permutation[i].second;
-      for(int j=i+1;j<H;j++){
-	if(lhs == permutation[j].first
-	   && rhs == permutation[j].second){
-	  used[i] = true;
-	  used[j] = true;
-	  break;
+	for(int pos = 0; pos + prohibit <= W-1; pos++){
+	  base <<= 1;
+	  if((base & S) == base) {
+	    isok = false;
+	    break;
+	  }
 	}
+      }
+
+      if(isok){
+	patterns.push_back(S);
       }
     }
 
-    for(int i=0;i<H;i++){
-      if(used[i]) continue;
-      res++;
-      used[i] = true;
-      int bits = 0; 
-      bits |= (1<<permutation[i].first);
-      bits |= (1<<permutation[i].second);
-      for(int j=i+1;j<H;j++){
-	if(used[j]) continue;
-	if(!(bits & (1<<permutation[j].first))
-	   && !(bits & (1<<permutation[j].second))){
-	  bits |= (1<<permutation[j].first);
-	  bits |= (1<<permutation[j].second);
-	  used[j] = true;
-	}
-      }
-    }
-    printf("%d\n",res);
+    printf("%d\n",dfs(matrix,patterns,freq,W,H,0));
   }
 }
