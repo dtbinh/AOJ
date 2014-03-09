@@ -31,7 +31,25 @@ static const double EPS = 1e-8;
 int tx[] = {0,1,0,-1};
 int ty[] = {-1,0,1,0};
 
-bool check(const vector<int>& matrix,int freq[12],int W){
+class State{
+public:
+  int freq[8];
+  vector<int> matrix;
+  int height;
+  State(int _freq[8],const vector<int>& _matrix,int _h){
+    memcpy(freq,_freq,sizeof(int)*8);
+    matrix = _matrix;
+    height = _h;
+  }
+  bool operator<(const State& s) const{
+    return height < s.height;
+  }
+  bool operator>(const State& s) const{
+    return height > s.height;
+  }
+};
+
+bool is_clear(const vector<int>& matrix,int freq[12],int W){
   for(int i=0;i<matrix.size();i++){
     if(matrix[i] != i) return false;
   }
@@ -42,34 +60,11 @@ bool check(const vector<int>& matrix,int freq[12],int W){
   return true;
 }
 
-int dfs(const vector<int>& matrix,
-	const vector<int>& patterns,
-	int freq[12],
-	int W,int H,int height){
-  if(height >= H){
-    return H;
+bool is_valid(const vector<int>& matrix,int freq[12],int W){
+  for(int i=0;i<W;i++){
+    if(freq[i] < 0) return false;
   }
-
-  if(check(matrix,freq,W)){
-    return height;
-  }
-
-  int res = H;
-  for(int i=0;i<patterns.size();i++){
-    vector<int> next = matrix;
-    int S = patterns[i];
-    int next_freq[12];
-    memcpy(next_freq,freq,sizeof(int)*W);
-
-    for(int j=0;j<=W-1;j++){
-      if(S & (1<<j)){
-	swap(next[j],next[j+1]);
-	next_freq[j]--;
-      }
-    }
-    res = min(res,dfs(next,patterns,next_freq,W,H,height+1));
-  }
-  return res;
+  return true;
 }
 
 int main(){
@@ -79,8 +74,8 @@ int main(){
     for(int i=0;i<W;i++){
       matrix.push_back(i);
     }
-
-    int freq[12];
+    map<string,int> dp;
+    int freq[8];
     memset(freq,0,sizeof(freq));
 
     for(int i=0;i<H;i++){
@@ -117,6 +112,43 @@ int main(){
       }
     }
 
-    printf("%d\n",dfs(matrix,patterns,freq,W,H,0));
+    priority_queue<State,vector<State>,greater<State> > que;
+    que.push(State(freq,matrix,0));
+
+    int res = H;
+    while(!que.empty()){
+      State s = que.top();
+      que.pop();
+
+      if(!is_valid(s.matrix,s.freq,W)) continue;
+
+      if(s.height >= H){
+	goto found;
+      }
+
+      if(is_clear(s.matrix,s.freq,W)){
+	res = s.height;
+	goto found;
+      }
+
+      for(int i=0;i<patterns.size();i++){
+	vector<int> next_matrix = s.matrix;
+	int S = patterns[i];
+	int next_freq[8];
+	memcpy(next_freq,s.freq,sizeof(int)*W);
+	
+	for(int j=0;j<=W-1;j++){
+	  if(S & (1<<j)){
+	    swap(next_matrix[j],next_matrix[j+1]);
+	    next_freq[j]--;
+	  }
+	}
+
+	que.push(State(next_freq,next_matrix,s.height+1));
+      }
+    }
+
+  found:;
+    printf("%d\n",res);
   }
 }
