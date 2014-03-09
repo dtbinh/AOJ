@@ -92,14 +92,15 @@ int main(){
 	  min_move = move_count;
 	  last_hotel_candidates.push_back(hotel_idx);
 	}
-	else if(min_cost == dp[total_days][hotel_idx][move_count].cost){
+	else if(min_cost == dp[total_days][hotel_idx][move_count].cost
+		&& min_move == move_count){
 	  last_hotel_candidates.push_back(hotel_idx);
 	}
       }
     }
 
     printf("%d %d\n",min_cost,min_move);
-    vector<vector<int> > candidates;
+    vector<int> champ;
     for(int last_hotel_candidate_idx=0;
 	last_hotel_candidate_idx < last_hotel_candidates.size();
 	last_hotel_candidate_idx++){
@@ -122,12 +123,28 @@ int main(){
       }
 
       reverse(stk.begin(),stk.end());
-      candidates.push_back(stk);
+      if(champ.empty()){
+	champ = stk;
+      }
+      else {
+	for(int i=0;i<champ.size();i++){
+	  if(stk[i] != champ[i]){
+	    if(stk[i] > champ[i]){
+	      //nothing to do;
+	      break;
+	    }
+	    else if(stk[i] < champ[i]){
+	      champ = stk;
+	      break;
+	    }
+	  }
+	}
+      }
+
     }
 
-    sort(candidates.begin(),candidates.end());
-    for(int i=0;i<candidates[0].size();i++){
-      printf("%d\n",candidates[0][i]);
+    for(int i=0;i<champ.size();i++){
+      printf("%d\n",champ[i]);
     }
   }
 }
