@@ -94,15 +94,21 @@ int main(){
     vector<int> patterns;
     for(int S=0;S<=(1<<(W-1)) - 1;S++){
       bool isok = true;
-      for(int prohibit=2;prohibit <= W-1;prohibit++){
+      for(int prohibit=2;prohibit <= W;prohibit++){
 	int base = (1<<prohibit) - 1;
 
-	for(int pos = 0; pos + prohibit <= W-1; pos++){
-	  base <<= 1;
+	for(int pos = 0; pos + prohibit <= W; pos++){
 	  if((base & S) == base) {
 	    isok = false;
 	    break;
 	  }
+	  base <<= 1;
+	}
+      }
+
+      for(int pos=0;pos<W;pos++){
+	if(freq[pos] <= 0 && (S & (1<<pos))){
+	  isok = false;
 	}
       }
 
