@@ -46,7 +46,7 @@ int main(){
   while(~scanf("%d %d",
 	       &total_hotels,
 	       &total_days)){
-    int price_table[51][51];
+    int price_table[100][100];
     memset(price_table,0,sizeof(price_table));
 
     for(int hotel_idx=1;hotel_idx<=total_hotels;hotel_idx++){
@@ -57,15 +57,23 @@ int main(){
       }
     }
 
-    DP dp[51][51][51]; //dp[day][current_hotel][current_move_count] = cost
+    DP dp[100][100][100]; //dp[day][current_hotel][current_move_count] = cost
+    for(int day=1;day<=total_days;day++){   
+      for(int hotel_idx=1;hotel_idx<=total_hotels;hotel_idx++){
+      	  for(int move_count=0;move_count<=day;move_count++){
+	    dp[day][hotel_idx][move_count].cost = INF;
+	    dp[day][hotel_idx][move_count].prev = -1;
+	  }
+      }
+    }
     for(int hotel_idx=1;hotel_idx<=total_hotels;hotel_idx++){
       dp[0][hotel_idx][0].cost = 0;
     }
 
     for(int day=1;day<=total_days;day++){   
-      for(int hotel_idx=1;hotel_idx<=total_hotels;hotel_idx++){
-	for(int prev_hotel_idx=1;prev_hotel_idx<=total_hotels;prev_hotel_idx++){
-	  for(int prev_move_count=0;prev_move_count<=day;prev_move_count++){
+      for(int prev_move_count=0;prev_move_count<=day;prev_move_count++){
+	for(int hotel_idx=1;hotel_idx<=total_hotels;hotel_idx++){
+	  for(int prev_hotel_idx=1;prev_hotel_idx<=total_hotels;prev_hotel_idx++){
 	    int move_count
 	      = prev_move_count + (prev_hotel_idx == hotel_idx ? 0 : 1);
 	    
@@ -76,6 +84,13 @@ int main(){
 		= dp[day-1][prev_hotel_idx][prev_move_count].cost + price_table[day][hotel_idx];
 	      dp[day][hotel_idx][move_count].prev = prev_hotel_idx;
 	    }
+	    
+	    if(dp[day][hotel_idx][move_count].cost
+	       == dp[day-1][prev_hotel_idx][prev_move_count].cost + price_table[day][hotel_idx]
+	       && dp[day][hotel_idx][move_count].prev > prev_hotel_idx){
+	      dp[day][hotel_idx][move_count].prev = prev_hotel_idx;
+	    }
+	    
 	  }
 	}
       }
@@ -84,8 +99,8 @@ int main(){
     int min_cost = INF;
     int min_move = INF;
     vector<int> last_hotel_candidates;
-    for(int hotel_idx=1;hotel_idx<=total_hotels;hotel_idx++){
-      for(int move_count=0;move_count<=total_days;move_count++){
+    for(int move_count=0;move_count<=total_days;move_count++){
+      for(int hotel_idx=1;hotel_idx<=total_hotels;hotel_idx++){
 	if(min_cost > dp[total_days][hotel_idx][move_count].cost){
 	  last_hotel_candidates.clear();
 	  min_cost = dp[total_days][hotel_idx][move_count].cost;
@@ -94,6 +109,12 @@ int main(){
 	}
 	else if(min_cost == dp[total_days][hotel_idx][move_count].cost
 		&& min_move == move_count){
+	  last_hotel_candidates.push_back(hotel_idx);
+	}
+	else if(min_cost == dp[total_days][hotel_idx][move_count].cost
+		&& min_move > move_count){
+	  last_hotel_candidates.clear();
+	  min_move = move_count;
 	  last_hotel_candidates.push_back(hotel_idx);
 	}
       }
@@ -147,4 +168,5 @@ int main(){
       printf("%d\n",champ[i]);
     }
   }
+  return 0;
 }
