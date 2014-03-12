@@ -31,20 +31,19 @@ static const double EPS = 1e-8;
 int tx[] = {+0,+1,+1,+1,+0,-1,-1,-1};
 int ty[] = {-1,-1,+0,+1,+1,+1,+0,-1};
 
-const int mask = (1<<16) - 1;
-
-map<string,set<int> > route;
+map<string,int> freq;
 
 void dfs(int x,int y,
 	 string str,
-	 int bits,
+	 int visited,
 	 char stage[4][4],
 	 const set<string>& keywords){
-  if(__builtin_popcount((bits & mask)) > 8) return;
+  str += stage[y][x];
+  visited |= (1<<(4*y+x));
+  if(__builtin_popcount((visited)) > 8) return;
   
-  if(keywords.count(str) > 0
-     && route[str].count(bits) == 0){
-    route[str].insert(bits);
+  if(keywords.count(str) > 0){
+    freq[str]++;
   }
 
   for(int i=0;i<8;i++){
@@ -52,10 +51,8 @@ void dfs(int x,int y,
     int dy = y + ty[i];
     if(dx < 0 || dx >= 4 || dy < 0 || dy >= 4) continue;
     int idx = dy * 4 + dx;
-    if(bits & (1<<idx)) continue;
-    string next = str;
-    next.push_back(stage[dy][dx]);
-    dfs(dx,dy,next,bits | (1<<idx),stage,keywords);
+    if(visited & (1<<idx)) continue;
+    dfs(dx,dy,str,visited,stage,keywords);
   }
 }
 
@@ -64,20 +61,18 @@ void dfs(int x,int y,
 int main(){
   int N;
   while(~scanf("%d",&N)){
-    route.clear();
+    freq.clear();
     char stage[4][4];
 
     set<string> keywords;
-    vector<string> idx2keyword;
     map<string,int> score_table;
-    int dp[10001];
+    ll dp[10001];
 
     for(int i=0;i<N;i++){
       string word;
       int score;
       cin >> word >> score;
       score_table[word] = score;
-      idx2keyword.push_back(word);
       keywords.insert(word);
     }
     for(int y=0;y<4;y++){
@@ -93,39 +88,38 @@ int main(){
     memset(dp,-1,sizeof(dp));
     for(int y=0;y<4;y++){
       for(int x=0;x<4;x++){
-	int bits = ((1<<(y*4+x)) << 16);
-	string str = "";
-	str.push_back(stage[y][x]);
-	dfs(x,y,str,bits | (1<<(y*4+x)),stage,keywords);
+	dfs(x,y,"",0,stage,keywords);
       }
     }
 
     dp[0] = 0;
-    for(int idx=0;idx<N;idx++){
-      string key = idx2keyword[idx];
+    for(set<string>::iterator it = keywords.begin();
+	it != keywords.end();
+	it++){
+      const string key = *it;
 
-      for(int route_idx=0,size=route[key].size();
-	  route_idx < size;
-	  route_idx++){
+      for(int freq_idx=0,size=freq[key];
+	  freq_idx < size;
+	  freq_idx++){
 	int cost = key.length();
 
-	int next[10001];
-	memset(next,0,sizeof(next));
+	ll next[10001];
+	memcpy(next,dp,sizeof(ll)*10001);
 	for(int from_time=0;from_time<=time_limit;from_time++){
 	  int next_time = from_time + cost;
 	  if(from_time >= time_limit) continue;
 	  if(dp[from_time] == -1) continue;
-	  next[next_time] = max(dp[from_time] + score_table[key],
-				dp[next_time]);
+	  next[next_time] = max(dp[from_time] + (ll)score_table[key],
+				next[next_time]);
 	}
-	memcpy(dp,next,sizeof(int)*10001);
+	memcpy(dp,next,sizeof(ll)*10001);
       }
     }
 
-    int max_score = 0;
+    ll max_score = 0;
     for(int time = time_limit; time >=0; time--){
       max_score = max(dp[time],max_score);
     }
-    printf("%d\n",max_score);
+    printf("%lld\n",max_score);
   }
 }
