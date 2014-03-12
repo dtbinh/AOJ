@@ -40,11 +40,11 @@ void dfs(int x,int y,
 	 const set<string>& keywords){
   str += stage[y][x];
   visited |= (1<<(4*y+x));
-  if(__builtin_popcount((visited)) > 8) return;
-  
   if(keywords.count(str) > 0){
     freq[str]++;
   }
+
+  if(__builtin_popcount((visited)) >= 8) return;
 
   for(int i=0;i<8;i++){
     int dx = x + tx[i];
