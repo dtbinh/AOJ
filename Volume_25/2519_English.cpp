@@ -65,6 +65,7 @@ int main(){
     char stage[4][4];
 
     set<string> keywords;
+    vector<string> keywords_v;
     map<string,int> score_table;
     int dp[10001];
 
@@ -74,6 +75,7 @@ int main(){
       cin >> word >> score;
       score_table[word] = score;
       keywords.insert(word);
+      keywords_v.push_back(word);
     }
     for(int y=0;y<4;y++){
       string line;
@@ -93,22 +95,30 @@ int main(){
     }
 
     dp[0] = 0;
-    for(set<string>::iterator it = keywords.begin();
-	it != keywords.end();
-	it++){
-      const string key = *it;
-
+    for(int key_idx=0;key_idx < keywords_v.size();key_idx++){
+      const string& key = keywords_v[key_idx];
       int cost = key.length();
       int score = score_table[key];
 
-      for(int freq_idx=0,size=freq[key];
-	  freq_idx < size;
-	  freq_idx++){
+      int scalar = 1;
+      int capacity = freq[key];
+      for(;
+	  scalar <= capacity;
+	  capacity -= scalar,scalar *= 2){
 
-	for(int next_time=time_limit;next_time - cost>=0;next_time--){
-	  int from_time = next_time - cost;
+	for(int next_time=time_limit;next_time - cost * scalar>=0;next_time--){
+	  int from_time = next_time - cost * scalar;
 	  if(dp[from_time] == -1) continue;
-	  dp[next_time] = max(dp[from_time] + score,
+	  dp[next_time] = max(dp[from_time] + score * scalar,
+			      dp[next_time]);
+	}
+      }
+
+      if(capacity){
+	for(int next_time=time_limit;next_time - cost * capacity>=0;next_time--){
+	  int from_time = next_time - cost * capacity;
+	  if(dp[from_time] == -1) continue;
+	  dp[next_time] = max(dp[from_time] + score * capacity,
 			      dp[next_time]);
 	}
       }
