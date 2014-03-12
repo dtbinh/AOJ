@@ -40,7 +40,7 @@ void dfs(int x,int y,
 	 int bits,
 	 char stage[4][4],
 	 const set<string>& keywords){
-  if(__builtin_popcount((bits & mask)) >= 8) return;
+  if(__builtin_popcount((bits & mask)) > 8) return;
   
   if(keywords.count(str) > 0
      && route[str].count(bits) == 0){
@@ -109,15 +109,16 @@ int main(){
 	  route_idx++){
 	int cost = key.length();
 
-	int tmp[10001];
-	memset(tmp,0,sizeof(tmp));
-	for(int next_time=0;next_time<=time_limit;next_time++){
-	  int from_time = next_time - cost;
-	  if(from_time < 0) continue;
+	int next[10001];
+	memset(next,0,sizeof(next));
+	for(int from_time=0;from_time<=time_limit;from_time++){
+	  int next_time = from_time + cost;
+	  if(from_time >= time_limit) continue;
 	  if(dp[from_time] == -1) continue;
-	  tmp[next_time] = max(dp[from_time] + score_table[key],dp[next_time]);
+	  next[next_time] = max(dp[from_time] + score_table[key],
+				dp[next_time]);
 	}
-	memcpy(dp,tmp,sizeof(int)*10001);
+	memcpy(dp,next,sizeof(int)*10001);
       }
     }
 
