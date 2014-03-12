@@ -66,7 +66,7 @@ int main(){
 
     set<string> keywords;
     map<string,int> score_table;
-    ll dp[10001];
+    int dp[10001];
 
     for(int i=0;i<N;i++){
       string word;
@@ -98,28 +98,26 @@ int main(){
 	it++){
       const string key = *it;
 
+      int cost = key.length();
+      int score = score_table[key];
+
       for(int freq_idx=0,size=freq[key];
 	  freq_idx < size;
 	  freq_idx++){
-	int cost = key.length();
 
-	ll next[10001];
-	memcpy(next,dp,sizeof(ll)*10001);
-	for(int from_time=0;from_time<=time_limit;from_time++){
-	  int next_time = from_time + cost;
-	  if(from_time >= time_limit) continue;
+	for(int next_time=time_limit;next_time - cost>=0;next_time--){
+	  int from_time = next_time - cost;
 	  if(dp[from_time] == -1) continue;
-	  next[next_time] = max(dp[from_time] + (ll)score_table[key],
-				next[next_time]);
+	  dp[next_time] = max(dp[from_time] + score,
+			      dp[next_time]);
 	}
-	memcpy(dp,next,sizeof(ll)*10001);
       }
     }
 
-    ll max_score = 0;
+    int max_score = 0;
     for(int time = time_limit; time >=0; time--){
       max_score = max(dp[time],max_score);
     }
-    printf("%lld\n",max_score);
+    printf("%d\n",max_score);
   }
 }
