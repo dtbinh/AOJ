@@ -58,6 +58,8 @@ void bfs(){
     que.pop();
     int sx = s.x;
     int sy = s.y;
+    if(visited[sy][sx]) continue;
+
     visited[sy][sx] = true;
     if(stage[sy][sx] == 't') break;
     for(int i=0;i<4;i++){
@@ -140,16 +142,18 @@ int main(){
 
     int min_time = 0;
     int max_time = gates.size();
-    for(int round=0;round<30;round++){
+    bool isok = false;
+    for(int round=0;round<10;round++){
       int mid = (min_time + max_time) / 2;
       if(has_route(mid,gates,gx,gy)){
 	max_time = mid;
+	isok = true;
       }
       else{
-	min_time = mid + 1;
+	min_time = mid+1;
       }
     }
 
-    printf("%d\n",max_time == gates.size() ? -1 : max_time);
+    printf("%d\n",isok ? max_time : -1);
   }
 }
