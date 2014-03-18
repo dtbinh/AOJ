@@ -34,6 +34,42 @@ int W,H;
 char stage[1001][1001];
 bool visited[1001][1001];
 
+class State{
+public:
+  int x;
+  int y;
+  int cost;
+  State(int _x,int _y,int _c) : x(_x),y(_y),cost(_c){}
+
+  bool operator <(const State& s) const{
+    return cost < s.cost;
+  }
+  bool operator >(const State& s) const{
+    return cost > s.cost;
+  }
+};
+
+void bfs(int sx,int sy){
+  priority_queue<State,vector<State>,greater<State> > que;
+  que.push(State(sx,sy,0));
+  
+  while(!que.empty()){
+    State s = que.top();
+    que.pop();
+    int sx = s.x;
+    int sy = s.y;
+    visited[sy][sx] = true;
+    for(int i=0;i<4;i++){
+      int dx = sx + tx[i];
+      int dy = sy + ty[i];
+      if(dx < 0 || dy < 0 || dx >= W || dy >= H) continue;
+      if(visited[dy][dx]) continue;
+      if(stage[dy][dx] == '#') continue;
+      que.push(State(dx,dy,s.cost+1));
+    }
+  }
+}
+
 void dfs(int sx,int sy){
   visited[sy][sx] = true;
   for(int i=0;i<4;i++){
@@ -49,18 +85,29 @@ void dfs(int sx,int sy){
 bool has_route(int time,const vector<P>& gates,
 	       int gx,int gy){
 
+  vector<P> skip;
   for(int i=0;i<=time;i++){
     int x = gates[i].first;
     int y = gates[i].second;
+    if(stage[y][x] == '.'){
+      skip.push_back(gates[i]);
+    }
     stage[y][x] = '.';
+    
   }
   memset(visited,false,sizeof(visited));
-  dfs(0,0);
+  bfs(0,0);
 
   for(int i=0;i<=time;i++){
     int x = gates[i].first;
     int y = gates[i].second;
     stage[y][x] = '#';
+  }
+
+  for(int i=0;i<skip.size();i++){
+    int x = skip[i].first;
+    int y = skip[i].second;
+    stage[y][x] = '.';
   }
   return visited[gy][gx];
 }
@@ -93,7 +140,7 @@ int main(){
 
     int min_time = 0;
     int max_time = gates.size();
-    for(int round=0;round<50;round++){
+    for(int round=0;round<20;round++){
       int mid = (min_time + max_time) / 2;
       if(has_route(mid,gates,gx,gy)){
 	max_time = mid;
