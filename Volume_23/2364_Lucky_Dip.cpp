@@ -49,9 +49,9 @@ public:
   }
 };
 
-void bfs(int sx,int sy){
+void bfs(){
   priority_queue<State,vector<State>,greater<State> > que;
-  que.push(State(sx,sy,0));
+  que.push(State(0,0,0));
   
   while(!que.empty()){
     State s = que.top();
@@ -59,6 +59,7 @@ void bfs(int sx,int sy){
     int sx = s.x;
     int sy = s.y;
     visited[sy][sx] = true;
+    if(stage[sy][sx] == 't') break;
     for(int i=0;i<4;i++){
       int dx = sx + tx[i];
       int dy = sy + ty[i];
@@ -86,19 +87,18 @@ bool has_route(int time,const vector<P>& gates,
 	       int gx,int gy){
 
   vector<P> skip;
-  for(int i=0;i<=time;i++){
+  for(int i=0;i<time;i++){
     int x = gates[i].first;
     int y = gates[i].second;
     if(stage[y][x] == '.'){
       skip.push_back(gates[i]);
     }
     stage[y][x] = '.';
-    
   }
   memset(visited,false,sizeof(visited));
-  bfs(0,0);
+  bfs();
 
-  for(int i=0;i<=time;i++){
+  for(int i=0;i<time;i++){
     int x = gates[i].first;
     int y = gates[i].second;
     stage[y][x] = '#';
@@ -140,16 +140,16 @@ int main(){
 
     int min_time = 0;
     int max_time = gates.size();
-    for(int round=0;round<20;round++){
+    for(int round=0;round<30;round++){
       int mid = (min_time + max_time) / 2;
       if(has_route(mid,gates,gx,gy)){
 	max_time = mid;
       }
       else{
-	min_time = mid;
+	min_time = mid + 1;
       }
     }
 
-    printf("%d\n",max_time == gates.size() ? -1 : max_time + 1);
+    printf("%d\n",max_time == gates.size() ? -1 : max_time);
   }
 }
