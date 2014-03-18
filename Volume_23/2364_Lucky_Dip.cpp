@@ -39,19 +39,24 @@ public:
   int x;
   int y;
   int cost;
-  State(int _x,int _y,int _c) : x(_x),y(_y),cost(_c){}
+  int heuristic_cost;
+  State(int _x,int _y,int _c,int _hc) : x(_x),y(_y),cost(_c),heuristic_cost(_hc){}
 
   bool operator <(const State& s) const{
-    return cost < s.cost;
+    return cost+heuristic_cost < s.cost + s.heuristic_cost;
   }
   bool operator >(const State& s) const{
-    return cost > s.cost;
+    return cost+heuristic_cost > s.cost + s.heuristic_cost;
   }
 };
 
-void bfs(){
+int heuristic(int sx,int sy,int gx,int gy){
+  return abs(gx-sx) + abs(gy-sy);
+}
+
+void bfs(int gx,int gy){
   priority_queue<State,vector<State>,greater<State> > que;
-  que.push(State(0,0,0));
+  que.push(State(0,0,0,heuristic(0,0,gx,gy)));
   
   while(!que.empty()){
     State s = que.top();
@@ -68,7 +73,7 @@ void bfs(){
       if(dx < 0 || dy < 0 || dx >= W || dy >= H) continue;
       if(visited[dy][dx]) continue;
       if(stage[dy][dx] == '#') continue;
-      que.push(State(dx,dy,s.cost+1));
+      que.push(State(dx,dy,s.cost+1,heuristic(dx,dy,gx,gy)));
     }
   }
 }
@@ -98,7 +103,7 @@ bool has_route(int time,const vector<P>& gates,
     stage[y][x] = '.';
   }
   memset(visited,false,sizeof(visited));
-  bfs();
+  bfs(gx,gy);
 
   for(int i=0;i<time;i++){
     int x = gates[i].first;
