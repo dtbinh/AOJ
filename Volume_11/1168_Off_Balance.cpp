@@ -70,7 +70,8 @@ class Block{
 private:
   vector<Point<double> > cells;
   Point<double> center_of_gravity;
-  vector<int> children;
+  set<int> children;
+  double left,right;
   void _compute_center_of_gravity(){
     Point<double> tmp;
     for(int i=0;i<cells.size();i++){
@@ -81,7 +82,11 @@ private:
     }
     center_of_gravity = tmp;
   }
-
+  void _compute_lr(){
+    for(int i=0;i<cells.size();i++){
+      cells[i].getX();
+    }
+  }
 public:
   Block(const vector<Point<double> >& _cells){
     cells = _cells;
@@ -89,6 +94,12 @@ public:
   }
   Point<double> get_center_of_gravity() const{
     return center_of_gravity;
+  }
+  const vector<Point<double> >& get_cells() const{
+    return cells;
+  }
+  void add_child(int child){
+    children.insert(child);
   }
 };
 
@@ -107,7 +118,7 @@ void dfs(char stage[60][10],bool visited[60][10],
   }
 }
 
-void add_id(char stage[60][10],int W,int H){
+vector<Block> make_blocks(char stage[60][10],int W,int H){
   bool visited[60][10];
   memset(visited,false,sizeof(visited));
 
@@ -131,6 +142,31 @@ void add_id(char stage[60][10],int W,int H){
       }
     }
   }
+  return blocks;
+}
+
+void make_children(vector<Block>& blocks){
+  for(int parent_block_idx = 0; parent_block_idx < blocks.size(); parent_block_idx++){
+    for(int child_block_idx = 0; child_block_idx < blocks.size(); child_block_idx++){
+      if(parent_block_idx == child_block_idx) continue;
+      for(int parent_cell_idx = 0;parent_cell_idx < blocks[parent_block_idx].get_cells().size();parent_cell_idx++){
+	double parent_y = blocks[parent_block_idx].get_cells()[parent_cell_idx].getY();
+	double parent_x = blocks[parent_block_idx].get_cells()[parent_cell_idx].getX();
+	for(int child_cell_idx = 0;child_cell_idx < blocks[child_block_idx].get_cells().size();child_cell_idx++){
+	  double child_y = blocks[child_block_idx].get_cells()[child_cell_idx].getY() + 1.0;
+	  double child_x = blocks[child_block_idx].get_cells()[child_cell_idx].getX() + 1.0;
+	  
+	  if(abs(parent_x - child_x) < EPS 
+	     && abs(parent_y - child_y) < EPS){
+	    blocks[parent_block_idx].add_child(child_block_idx);
+	  }
+	}
+      }
+    }
+  }
+}
+
+bool check_balance(vector<Block> blocks){
 }
 
 int main(){
@@ -145,7 +181,8 @@ int main(){
       }
     }
 
-    add_id(stage,W,H);
-    vector<Point<double> > points;
+    vector<Block> blocks = make_blocks(stage,W,H);
+    make_children(blocks);
+    check_balance(blocks);
   }
 }
