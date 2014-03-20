@@ -82,16 +82,10 @@ private:
     }
     center_of_gravity = tmp;
   }
-  void _compute_lr(){
-    right = 10000.0;
-    left = -1.0;
-    for(int i=0;i<cells.size();i++){
-      right = max(right,cells[i].getX() + 1.0);
-      left = min(left,cells[i].getX());
-    }
-  }
 public:
   Block(const vector<Point<double> >& _cells){
+    left = 1000.0;
+    right = -1.0;
     cells = _cells;
     _compute_center_of_gravity();
   }
@@ -110,8 +104,14 @@ public:
   double get_left() const{
     return left;
   }
+  void set_left(double _left){
+    left = min(left,_left);
+  }
   double get_right() const{
     return right;
+  }
+  void set_right(double _right){
+    right = max(right,_right);
   }
 };
 
@@ -150,19 +150,27 @@ vector<Block> make_blocks(char stage[60][10],int W,int H){
   return blocks;
 }
 
-void make_children(vector<Block>& blocks){
+void make_children(vector<Block>& blocks,int W,int H){
   for(int parent_block_idx = 0; parent_block_idx < blocks.size(); parent_block_idx++){
     for(int child_block_idx = 0; child_block_idx < blocks.size(); child_block_idx++){
       if(parent_block_idx == child_block_idx) continue;
       for(int parent_cell_idx = 0;parent_cell_idx < blocks[parent_block_idx].get_cells().size();parent_cell_idx++){
 	double parent_y = blocks[parent_block_idx].get_cells()[parent_cell_idx].getY();
 	double parent_x = blocks[parent_block_idx].get_cells()[parent_cell_idx].getX();
+
+	if(abs((parent_y + 1.0) - (double)H) < EPS){
+	  blocks[parent_block_idx].set_left(parent_x);
+	  blocks[parent_block_idx].set_right(parent_x + 1.0);
+	}
+
 	for(int child_cell_idx = 0;child_cell_idx < blocks[child_block_idx].get_cells().size();child_cell_idx++){
 	  double child_y = blocks[child_block_idx].get_cells()[child_cell_idx].getY() + 1.0;
 	  double child_x = blocks[child_block_idx].get_cells()[child_cell_idx].getX();
 	  
 	  if(abs(parent_x - child_x) < EPS 
 	     && abs(parent_y - child_y) < EPS){
+	    blocks[child_block_idx].set_left(child_x);
+	    blocks[child_block_idx].set_right(child_x+1.0);
 	    blocks[parent_block_idx].add_child(child_block_idx);
 	  }
 	}
@@ -201,8 +209,7 @@ bool check_balance(const vector<Block>& blocks){
       center_of_gravity /= (double)count;
       if(blocks[parent_block_idx].get_left() + EPS >= center_of_gravity.getX()
 	 || center_of_gravity.getX() >= blocks[parent_block_idx].get_right() - EPS){
-	printf("p:%d x:%lf y:%lf\n",parent_block_idx,center_of_gravity.getX(),center_of_gravity.getY());
-	// return false;
+	return false;
       }
     }
   }
@@ -224,7 +231,7 @@ int main(){
     }
 
     vector<Block> blocks = make_blocks(stage,W,H);
-    make_children(blocks);
+    make_children(blocks,W,H);
     printf("%s\n",check_balance(blocks) ? "STABLE" : "UNSTABLE");
   }
 }
