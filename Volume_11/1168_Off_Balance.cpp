@@ -83,8 +83,11 @@ private:
     center_of_gravity = tmp;
   }
   void _compute_lr(){
+    right = 10000.0;
+    left = -1.0;
     for(int i=0;i<cells.size();i++){
-      cells[i].getX();
+      right = max(right,cells[i].getX() + 1.0);
+      left = min(left,cells[i].getX());
     }
   }
 public:
@@ -100,6 +103,15 @@ public:
   }
   void add_child(int child){
     children.insert(child);
+  }
+  const set<int>& get_children() const{
+    return children;
+  }
+  double get_left() const{
+    return left;
+  }
+  double get_right() const{
+    return right;
   }
 };
 
@@ -130,15 +142,8 @@ vector<Block> make_blocks(char stage[60][10],int W,int H){
 	 && stage[y][x]-'0' <= 9){
 	vector<Point<double> > cells;
 	dfs(stage,visited,stage[y][x],x,y,cells,W,H);
-	cout << cells.size() << endl;
-	for(int i=0;i<cells.size();i++){
-	  printf("%lf %lf\n",cells[i].getX(),cells[i].getY());
-	}
 	Block block(cells);
-	cout << block.get_center_of_gravity().getX() << endl;
-	cout << block.get_center_of_gravity().getY() << endl;
 	blocks.push_back(block);
-	
       }
     }
   }
@@ -154,7 +159,7 @@ void make_children(vector<Block>& blocks){
 	double parent_x = blocks[parent_block_idx].get_cells()[parent_cell_idx].getX();
 	for(int child_cell_idx = 0;child_cell_idx < blocks[child_block_idx].get_cells().size();child_cell_idx++){
 	  double child_y = blocks[child_block_idx].get_cells()[child_cell_idx].getY() + 1.0;
-	  double child_x = blocks[child_block_idx].get_cells()[child_cell_idx].getX() + 1.0;
+	  double child_x = blocks[child_block_idx].get_cells()[child_cell_idx].getX();
 	  
 	  if(abs(parent_x - child_x) < EPS 
 	     && abs(parent_y - child_y) < EPS){
@@ -166,12 +171,49 @@ void make_children(vector<Block>& blocks){
   }
 }
 
-bool check_balance(vector<Block> blocks){
+bool check_balance(const vector<Block>& blocks){
+  for(int parent_block_idx = 0; parent_block_idx < blocks.size(); parent_block_idx++){
+    bool visited[1001];
+    memset(visited,false,sizeof(visited));
+
+    Point<double> center_of_gravity;
+    int count = 0;
+
+    queue<int> que;
+    que.push(parent_block_idx);
+    while(!que.empty()){
+      int parent = que.front();
+
+      if(visited[parent]) continue;
+      visited[parent] = true;
+
+      center_of_gravity += blocks[parent].get_center_of_gravity();
+      count++;
+      que.pop();
+      for(set<int>::iterator it = blocks[parent].get_children().begin();
+	  it != blocks[parent].get_children().end();
+	  it++){
+	que.push(*it);
+      }
+    }
+
+    if(count > 0){
+      center_of_gravity /= (double)count;
+      if(blocks[parent_block_idx].get_left() + EPS >= center_of_gravity.getX()
+	 || center_of_gravity.getX() >= blocks[parent_block_idx].get_right() - EPS){
+	printf("p:%d x:%lf y:%lf\n",parent_block_idx,center_of_gravity.getX(),center_of_gravity.getY());
+	// return false;
+      }
+    }
+  }
+  return true;
 }
 
 int main(){
   int W,H;
   while(~scanf("%d %d",&W,&H)){
+    if(W==0 && H==0) break;
+
     char stage[60][10];
     for(int y=0;y<H;y++){
       string line;
@@ -183,6 +225,6 @@ int main(){
 
     vector<Block> blocks = make_blocks(stage,W,H);
     make_children(blocks);
-    check_balance(blocks);
+    printf("%s\n",check_balance(blocks) ? "STABLE" : "UNSTABLE");
   }
 }
