@@ -31,20 +31,23 @@ int ty[] = {-1,0,1,0};
 static const double EPS = 1e-8;
 
 bool is_prime[1000001];
-map<P,int> stage;
+int stage[1101][1101];
+int dp[1101][1101];
 
 int main(){
+  memset(stage,-1,sizeof(stage));
   int x = 0;
   int y = 0;
   int dir = 1;
+  const int offset = 500;
   for(int round = 1; round <= 1000000;round++){
-    stage[P(y,x)] = round;
+    stage[y+offset][x+offset] = round;
 
     int prev_dir = dir;
     if(round > 1) dir = (dir + 3) % 4;
     int dx = x + tx[dir];
     int dy = y + ty[dir];
-    if(stage.find(P(dy,dx)) != stage.end()){
+    if(stage[dy+offset][dx+offset] != -1){
       dir = prev_dir;
     }
     dx = x + tx[dir];
@@ -71,67 +74,58 @@ int main(){
     if(total_caves == 0 && start == 0) break;
 
     int sx=0,sy=0;
-    for(map<P,int>::iterator it = stage.begin();
-	it != stage.end();
-	it++){
-      int x = it->first.second;
-      int y = it->first.first;
-      int num = it->second;
-      if(num == start){
-	sx = x;
-	sy = y;
-	break;
+    for(int y=0;y<=1000;y++){
+      for(int x=0;x<=1000;x++){
+	if(stage[y][x]  == start){
+	  sx = x;
+	  sy = y;
+	  break;
+	}
       }
     }
 
-
-    map <P,int> prev;
-    map <P,int> next;
+    memset(dp,-1,sizeof(dp));
 
     int res_prime=0;
     int res_count=0;
 
-    prev[P(sy,sx)] = (int)is_prime[stage[P(sy,sx)]];
-    if(is_prime[stage[P(sy,sx)]]){
-      res_prime = stage[P(sy,sx)];
+    dp[sy][sx] = (int)is_prime[stage[sy][sx]];
+    if(is_prime[stage[sy][sx]]){
+      res_prime = stage[sy][sx];
       res_count = 1;
     }
-    for(int y=sy+1,width=3;y<=1000;y++,width+=2){
-      bool is_update = false;
-      for(int x=sx - width;x<=sx + width;x++){
-	if(stage[P(y,x)] > total_caves) continue;
-	is_update = true;
 
-	int cost = (int)is_prime[stage[P(y,x)]];
-	if(prev.find(P(y-1,x-1)) != prev.end()){
-	  next[P(y,x)] = max(prev[P(y-1,x-1)] + cost,next[P(y,x)]);
+    for(int y=sy+1;y<=1000;y++){
+      for(int x=0;x<=1000;x++){
+	if(stage[y][x] == -1) continue;
+	if(stage[y][x] > total_caves) continue;
+
+	int cost = (int)is_prime[stage[y][x]];
+	if(dp[y-1][x-1] != -1){
+	  dp[y][x] = max(dp[y-1][x-1] + cost,dp[y][x]);
 	}
-	if(prev.find(P(y-1,x)) != prev.end()){
-	  next[P(y,x)] = max(prev[P(y-1,x)] + cost,next[P(y,x)]);
+	if(dp[y-1][x] != -1){
+	  dp[y][x] = max(dp[y-1][x] + cost,dp[y][x]);
 	}
-	if(prev.find(P(y-1,x+1)) != prev.end()){
-	  next[P(y,x)] = max(prev[P(y-1,x+1)] + cost,next[P(y,x)]);
+
+	if(dp[y-1][x+1] != -1){
+	  dp[y][x] = max(dp[y-1][x+1] + cost,dp[y][x]);
 	}
       }
-
-      prev.clear();
-      prev = next;
-
-      if(!is_update) break;
     }
 
-    for(map<P,int>::iterator it = next.begin();
-	it != next.end();
-	it++){
-      if(!is_prime[stage[it->first]]) continue;
-
-      if(res_count < it->second){
-	res_count = it->second;
-	res_prime = stage[it->first];
-      }
-      if(res_count == it->second
-	 && res_prime < stage[it->first]){
-	res_prime = stage[it->first];
+    for(int y=sy+1;y<=1000;y++){
+      for(int x=0;x<=1000;x++){
+	if(res_count < dp[y][x]
+	   && is_prime[stage[y][x]]){
+	  res_count = dp[y][x];
+	  res_prime = stage[y][x];
+	}
+	if(res_count == dp[y][x]
+	   && is_prime[stage[y][x]]
+	   && res_prime < stage[y][x]){
+	  res_prime = stage[y][x];
+	}
       }
     }
     printf("%d %d\n",res_count,res_prime);
