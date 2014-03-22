@@ -33,27 +33,6 @@ static const double EPS = 1e-8;
 bool is_prime[1000001];
 map<P,int> stage;
 
-void dfs(map<int,int>& dp,int total_caves,int sx,int sy,int count){
-  if(is_prime[stage[P(sy,sx)]]){
-    count++;
-  }
-
-  map<int,int>::iterator it = dp.find(stage[P(sy,sx)]);
-  if(it != dp.end() && it->second >= count){
-    return;
-  }
-
-  dp[stage[P(sy,sx)]] = count;
-
-  for(int nx=-1;nx<=1;nx++){
-    int dx = sx + nx;
-    int dy = sy+1;
-    if(stage.find(P(dy,dx)) == stage.end()) continue;
-    if(stage[P(dy,dx)] > total_caves) continue;
-    dfs(dp,total_caves,dx,dy,count);
-  }
-}
-
 int main(){
   int x = 0;
   int y = 0;
@@ -89,7 +68,8 @@ int main(){
 
   int start,total_caves;
   while(~scanf("%d %d",&total_caves,&start)){
-    map <int,int> dp;
+    if(total_caves == 0 && start == 0) break;
+
     int sx=0,sy=0;
     for(map<P,int>::iterator it = stage.begin();
 	it != stage.end();
@@ -104,22 +84,54 @@ int main(){
       }
     }
 
-    dfs(dp,total_caves,sx,sy,0);
+
+    map <P,int> prev;
+    map <P,int> next;
 
     int res_prime=0;
     int res_count=0;
-    for(map<int,int>::iterator it = dp.begin();
-	it != dp.end();
+
+    prev[P(sy,sx)] = (int)is_prime[stage[P(sy,sx)]];
+    if(is_prime[stage[P(sy,sx)]]){
+      res_prime = stage[P(sy,sx)];
+      res_count = 1;
+    }
+    for(int y=sy+1,width=3;y<=1000;y++,width+=2){
+      bool is_update = false;
+      for(int x=sx - width;x<=sx + width;x++){
+	if(stage[P(y,x)] > total_caves) continue;
+	is_update = true;
+
+	int cost = (int)is_prime[stage[P(y,x)]];
+	if(prev.find(P(y-1,x-1)) != prev.end()){
+	  next[P(y,x)] = max(prev[P(y-1,x-1)] + cost,next[P(y,x)]);
+	}
+	if(prev.find(P(y-1,x)) != prev.end()){
+	  next[P(y,x)] = max(prev[P(y-1,x)] + cost,next[P(y,x)]);
+	}
+	if(prev.find(P(y-1,x+1)) != prev.end()){
+	  next[P(y,x)] = max(prev[P(y-1,x+1)] + cost,next[P(y,x)]);
+	}
+      }
+
+      prev.clear();
+      prev = next;
+
+      if(!is_update) break;
+    }
+
+    for(map<P,int>::iterator it = next.begin();
+	it != next.end();
 	it++){
-      if(!is_prime[it->first]) continue;
+      if(!is_prime[stage[it->first]]) continue;
 
       if(res_count < it->second){
 	res_count = it->second;
-	res_prime = it->first;
+	res_prime = stage[it->first];
       }
       if(res_count == it->second
-	 && res_prime < it->first){
-	res_prime = it->first;
+	 && res_prime < stage[it->first]){
+	res_prime = stage[it->first];
       }
     }
     printf("%d %d\n",res_count,res_prime);
