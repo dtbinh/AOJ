@@ -28,7 +28,7 @@ typedef pair <int,P > PP;
 int tx[] = {0,1,0,-1};
 int ty[] = {-1,0,1,0};
  
-static const double EPS = 1e-8;
+static const double EPS = 1e-12;
 
 struct Anchor{
   int x,y,l;
@@ -36,65 +36,32 @@ struct Anchor{
     : x(_x), y(_y), l(_l) {}
 };
 
-bool check(const vector<Anchor>& anchors,
-	   double x,double y,double virtical_line){
-  
+double check(const vector<Anchor>& anchors,
+	     double x,double y){
+
+  double res = 100000000.0;
   for(int anchor_idx=0;anchor_idx<anchors.size();anchor_idx++){
     double bottom_line
-      = sqrt((double)(anchors[anchor_idx].x - x) * (double)(anchors[anchor_idx].x - x)
-	     + (double)(anchors[anchor_idx].y - y) * (double)(anchors[anchor_idx].y - y));
-    double diagonal_line
-      = sqrt(bottom_line * bottom_line
-	     + virtical_line * virtical_line); 
-    if((double)anchors[anchor_idx].l < diagonal_line){
-      return false;
-    }
+      = (double)(anchors[anchor_idx].x - x) * (double)(anchors[anchor_idx].x - x)
+      + (double)(anchors[anchor_idx].y - y) * (double)(anchors[anchor_idx].y - y);
+    double capacity = anchors[anchor_idx].l * anchors[anchor_idx].l;
+    res = min(res,capacity - bottom_line);
   }
-  return true;
+  return res;
 }
 
-double compute_height(const vector<Anchor>& anchors,
-		      double x,double y){
-  double max_height = 1000000.0;
-  double min_height = 0.0;
-  for(int round = 0;round < 50;round++){
-    double mid = (max_height + min_height) / 2.0;
-    if(check(anchors,x,y,mid)){
-      min_height = mid;
-    }
-    else{
-      max_height = mid;
-    }
-  }
-  return min_height;
-}
-
-double search_x(const vector<Anchor>& anchors,
-		const double y,double left, double right)
+double search(const vector<Anchor>& anchors,
+	      const double x,double left, double right)
 {
-  for (int round = 0; round < 50; round++){
-    if (compute_height(anchors,(left * 2 + right) / 3,y)
-	> compute_height(anchors,(left + right * 2) / 3,y)){
+  for (int round = 0; round < 100; round++){
+    if (check(anchors,x,(left * 2 + right) / 3)
+	> check(anchors,x,(left + right * 2) / 3)){
       right = (left + right * 2) / 3;
     } else {
       left = (left * 2 + right) / 3;
     }
   }
-  return (right + left) * 0.5;
-}
-
-double search_y(const vector<Anchor>& anchors,
-		const double x,double left, double right)
-{
-  for (int round = 0; round < 50; round++){
-    if (compute_height(anchors,x,(left * 2 + right) / 3)
-	> compute_height(anchors,x,(left + right * 2) / 3)){
-      right = (left + right * 2) / 3;
-    } else {
-      left = (left * 2 + right) / 3;
-    }
-  }
-  return (right + left) * 0.5;
+  return check(anchors,x,(right + left) * 0.5);
 }
 
 int main(){
@@ -109,8 +76,17 @@ int main(){
       anchors.push_back(Anchor(x,y,l));
     }
 
-    double last_x = search_x(anchors,0,-200.0,200.0);
-    double last_y = search_y(anchors,last_x,-200.0,200.0);
-    printf("%.7lf\n",compute_height(anchors,last_x,last_y));
+    double left = -100.0;
+    double right = 100.0;
+    for(int round = 0;round < 100; round++){
+      if (search(anchors,(left * 2 + right) / 3,-100.0,100.0)
+	  > search(anchors,(left + right * 2) / 3,-100.0,100.0)){
+	right = (left + right * 2) / 3;
+      } else {
+	left = (left * 2 + right) / 3;
+      }
+    }
+    double res = search(anchors,right,-100,100.0);
+    printf("%.7lf\n",sqrt(res));
   }
 }
