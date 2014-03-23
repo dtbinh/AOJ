@@ -28,7 +28,7 @@ typedef pair <int,P > PP;
 int tx[] = {0,1,0,-1};
 int ty[] = {-1,0,1,0};
  
-static const double EPS = 1e-12;
+static const double EPS = 1e-8;
 
 struct Anchor{
   int x,y,l;
@@ -46,11 +46,55 @@ bool check(const vector<Anchor>& anchors,
     double diagonal_line
       = sqrt(bottom_line * bottom_line
 	     + virtical_line * virtical_line); 
-    if((double)anchors[anchor_idx].l < diagonal_line + EPS){
+    if((double)anchors[anchor_idx].l < diagonal_line){
       return false;
     }
   }
   return true;
+}
+
+double compute_height(const vector<Anchor>& anchors,
+		      double x,double y){
+  double max_height = 1000000.0;
+  double min_height = 0.0;
+  for(int round = 0;round < 50;round++){
+    double mid = (max_height + min_height) / 2.0;
+    if(check(anchors,x,y,mid)){
+      min_height = mid;
+    }
+    else{
+      max_height = mid;
+    }
+  }
+  return min_height;
+}
+
+double search_x(const vector<Anchor>& anchors,
+		const double y,double left, double right)
+{
+  for (int round = 0; round < 50; round++){
+    if (compute_height(anchors,(left * 2 + right) / 3,y)
+	> compute_height(anchors,(left + right * 2) / 3,y)){
+      right = (left + right * 2) / 3;
+    } else {
+      left = (left * 2 + right) / 3;
+    }
+  }
+  return (right + left) * 0.5;
+}
+
+double search_y(const vector<Anchor>& anchors,
+		const double x,double left, double right)
+{
+  for (int round = 0; round < 50; round++){
+    if (compute_height(anchors,x,(left * 2 + right) / 3)
+	> compute_height(anchors,x,(left + right * 2) / 3)){
+      right = (left + right * 2) / 3;
+    } else {
+      left = (left * 2 + right) / 3;
+    }
+  }
+  return (right + left) * 0.5;
 }
 
 int main(){
@@ -65,24 +109,8 @@ int main(){
       anchors.push_back(Anchor(x,y,l));
     }
 
-    double res = 0.0;
-    for(double y=-100;y<=100;y+=0.1){
-      for(double x=-100;x<=100;x+=0.1){
-	double max_height = 1000000.0;
-	double min_height = 1.0;
-	for(int round = 0;round < 50;round++){
-	  double mid = (max_height + min_height) / 2.0;
-	  if(check(anchors,x,y,mid)){
-	    min_height = mid;
-	  }
-	  else{
-	    max_height = mid;
-	  }
-	}
-
-	res = max(min_height,res);
-      }
-    }
-    printf("%lf\n",res);
+    double last_x = search_x(anchors,0,-200.0,200.0);
+    double last_y = search_y(anchors,last_x,-200.0,200.0);
+    printf("%.7lf\n",compute_height(anchors,last_x,last_y));
   }
 }
