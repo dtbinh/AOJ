@@ -32,10 +32,10 @@ class State{
 public:
   string green;
   string red;
-  int mid;
+  char mid;
   int upper_idx;
   int left_idx;
-  State(int _u,int _l,int _m) : upper_idx(_u),left_idx(_l),mid(_m){}
+  State(int _u,int _l,char _m) : upper_idx(_u),left_idx(_l),mid('.'){}
   bool operator ==(const State& s) const{
     return (green==s.green
 	    && red == s.red
@@ -54,26 +54,26 @@ public:
 
 State push_right(const State& s){
   State next = s;
-  if(s.mid != -1) next.green.push_back(s.mid);
+  if(s.mid != '.') next.green.push_back(s.mid);
   if(s.left_idx < green_str.size()){
     next.mid = green_str[s.left_idx];
     next.left_idx = s.left_idx+1;
   }
   else{
-    next.mid = -1;
+    next.mid = '.';
   }
   return next;
 }
 
 State push_down(const State& s){
   State next = s;
-  if(s.mid != -1) next.red.push_back(s.mid);
+  if(s.mid != '.') next.red.push_back(s.mid);
   if(s.upper_idx < red_str.size()){
     next.mid = red_str[s.upper_idx];
     next.upper_idx = s.upper_idx+1;
   }
   else{
-    next.mid = -1;
+    next.mid = '.';
   }
   return next;
 }
@@ -85,34 +85,30 @@ int main(){
     cin >> green_str;
     cin >> pak_str;
 
-    queue<State> que;
-    que.push(State(0,0,-1));
+    State state(0,0,-1);
 
-    while(!que.empty()){
-      State s = que.front();
-      que.pop();
-
-      if(pak_str.size() < s.red.size()) continue;
-
-      if(s.red.size() > 0
-	 && pak_str.substr(0,s.red.size()) != s.red) continue;
-
-      if(s.green.size() + s.red.size()
-	 == green_str.size() + red_str.size()){
-	if(s.red != pak_str) continue;
-	cout << s.green << endl;
-	goto found;
+    for(int round =0; round < 1000;round++){
+      if(state.mid != -1){
+	bool has_pak = false;
+	for(int i=0;i<pak_str.size();i++){
+	  if(state.mid == pak_str[i]){
+	    has_pak = true;
+	  }
+	}
+	if(has_pak){
+	  state = push_down(state);
+	}
+	else{
+	  state = push_right(state);
+	}
       }
-
-      State next_push_down_state = push_down(s);
-      State next_push_right_state = push_right(s);
-      if(next_push_down_state != s){
-	que.push(next_push_down_state);
-      }
-      if(next_push_right_state != s){
-	que.push(next_push_right_state);
+      else{
+	State prev = state;
+	state = push_down(state);
+	if(prev == state) break;
       }
     }
-  found:;
+
+    cout << state.green << endl;
   }
 }
