@@ -44,7 +44,7 @@ public:
     for(int pos=cursor;pos+1<text.length();pos++){
       if(text[pos] != ' '
 	 && text[pos + 1] == ' '){
-	tmp = pos+1;
+	tmp = pos + 1;
 	break;
       }
     }
@@ -55,10 +55,11 @@ public:
   }
   void backward_word(){
     int tmp = 0;
-    for(int pos=cursor;pos-1>=0;pos--){
+
+    for(int pos=cursor-1;pos-1>=0;pos--){
       if(text[pos] != ' '
 	 && text[pos - 1] == ' '){
-	tmp = pos-1;
+	tmp = pos;
 	break;
       }
     }
@@ -83,20 +84,20 @@ public:
   }
   void delete_word(){
     int delete_first = cursor;
-    int delete_last = cursor;
+    int delete_last = text.length();
 
     bool char_flag = false;
     for(int pos=cursor;pos<text.length();pos++){
       if(text[pos] == ' '){
 	if(char_flag){
 	  delete_last = pos - 1;
+	  break;
 	}
       }
       else if(text[pos] != ' '){
 	char_flag = true;
       }
     }
-    if(delete_last == delete_first) return;
 
     string front = "";
     string rear = "";
@@ -153,40 +154,48 @@ int main(){
 	  front += fr_str[i];
 	}
 	for(int i=str_pos;i<fr_str.size();i++){
+	  rear += fr_str[i];
+
 	  if(i==str_pos && fr_str[i] == '"') {
 	    //nothing todo
 	  }
 	  else if(fr_str[i] == '"'){
 	    break;
 	  }
-	  rear += fr_str[i];
 	}
 
 	if(front == "forward"){
 	  if(rear == "char"){
 	    editor.forward_char();
+	    // editor.print_text();
 	  }
 	  else if(rear == "word"){
 	    editor.forward_word();
+	    // editor.print_text();
 	  }
 	}
 	else if(front == "backward"){
 	  if(rear == "char"){
 	    editor.backward_char();
+	    // editor.print_text();
 	  }
 	  else if(rear == "word"){
 	    editor.backward_word();
+	    // editor.print_text();
 	  }
 	}
 	else if(front == "insert"){
-	  editor.insert(rear.substr(1,rear.length()-1));
+	  editor.insert(rear.substr(1,rear.length()-2));
+	  // editor.print_text();
 	}
 	else if(front == "delete"){
 	  if(rear == "char"){
 	    editor.delete_char();
+	    // editor.print_text();
 	  }
 	  else if(rear == "word"){
 	    editor.delete_word();
+	    // editor.print_text();
 	  }
 	}
       }
