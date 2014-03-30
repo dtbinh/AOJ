@@ -37,11 +37,11 @@ private:
 public:
   Editor(const string& _text) : text(_text),cursor(0) {}
   void forward_char(){
-    if(text.length() > cursor) cursor++;
+    if(text.size() > cursor) cursor++;
   }
   void forward_word(){
-    int tmp = text.length();
-    for(int pos=cursor;pos+1<text.length();pos++){
+    int tmp = text.size();
+    for(int pos=cursor;pos+1<text.size();pos++){
       if(text[pos] != ' '
 	 && text[pos + 1] == ' '){
 	tmp = pos + 1;
@@ -70,46 +70,66 @@ public:
     string front = "";
     string rear = "";
     if(cursor > 0) front = text.substr(0,cursor);
-    if(cursor < text.length()) rear = text.substr(cursor,text.length()-cursor);
+    if(cursor < text.size()) rear = text.substr(cursor,text.size()-cursor);
 
-    cursor = front.length() + middle.length();
+    cursor = front.size() + middle.size();
     text = front + middle + rear;
   }
   void delete_char(){
     string front = "";
     string rear = "";
     if(cursor > 0) front = text.substr(0,cursor);
-    if(cursor+1 < text.length()) rear = text.substr(cursor+1,text.length()-(cursor+1));
+    if(cursor+1 < text.size()) rear = text.substr(cursor+1,text.size()-(cursor+1));
     text = front + rear;
   }
   void delete_word(){
     int delete_first = cursor;
-    int delete_last = text.length();
+    int delete_last = text.size();
 
-    bool char_flag = false;
-    for(int pos=cursor;pos<text.length();pos++){
-      if(text[pos] == ' '){
-	if(char_flag){
-	  delete_last = pos - 1;
+    if(text[cursor] == ' '){
+      bool update = false;
+      for(int pos=cursor;pos<text.size();pos++){
+	if(text[pos] != ' '){
+	  update = true;
 	  break;
 	}
       }
-      else if(text[pos] != ' '){
-	char_flag = true;
+      if(!update) return;
+
+      for(int pos=cursor;pos<text.size();pos++){
+	if(text[pos] != ' '
+	   && text[pos+1] == ' '){
+	  delete_last = pos;
+	  break;
+	}
+      }
+    }
+    else{
+      for(int pos=cursor;pos<text.size();pos++){
+	if(text[pos] == ' '){
+	  delete_last = pos - 1;
+	  break;
+	}
       }
     }
 
     string front = "";
     string rear = "";
-    if(delete_first > 0) front = text.substr(0,delete_first);
-    if(delete_last + 1 < text.length()) rear = text.substr(delete_last + 1,text.length()-(delete_last+1));
+    if(delete_first > 0){
+      front = text.substr(0,delete_first);
+    }
+    if(delete_last < text.size()){
+      rear = text.substr(delete_last+1,text.size()-delete_last + 1);
+    }
     text = front + rear;
+    // cout << front << "*****" << endl;
+    // cout << rear << "*****" << endl;
   }
   void print_text(){
     string front = "";
     string rear = "";
     if(cursor > 0) front = text.substr(0,cursor);
-    if(cursor < text.length()) rear = text.substr(cursor,text.length()-cursor);
+    if(cursor < text.size()) rear = text.substr(cursor,text.size()-cursor);
     cout << front << "^" << rear << endl;
   }
 };
@@ -185,7 +205,7 @@ int main(){
 	  }
 	}
 	else if(front == "insert"){
-	  editor.insert(rear.substr(1,rear.length()-2));
+	  editor.insert(rear.substr(1,rear.size()-2));
 	  // editor.print_text();
 	}
 	else if(front == "delete"){
