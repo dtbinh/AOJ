@@ -123,19 +123,35 @@ int main(){
     for(int test_idx=0;test_idx<total_test_cases;test_idx++){
       string text;
       getline(cin,text);
+      
       Editor editor(text);
+
+      string total_commands_str;
+
+      getline(cin,total_commands_str);
+      stringstream total_commands_ss;
+      total_commands_ss << total_commands_str;
+      
       int total_commands;
-      cin >> total_commands;
+      total_commands_ss >> total_commands;
+
       for(int command_idx=0;command_idx < total_commands; command_idx++){
 	string fr_str;
 
 	getline(cin,fr_str);
 
-	stringstream fr_ss;
-	fr_ss << fr_str;
-
 	string front,rear;
-	fr_ss >> front >> rear;
+	int str_pos = 0;
+	for(int i=0;i<fr_str.size();i++){
+	  front += fr_str[i];
+	  if(fr_str[i] == ' '){
+	    str_pos = i+1;
+	    break;
+	  }
+	}
+	for(int i=str_pos;i<fr_str.size();i++){
+	  rear += fr_str[i];
+	}
 	if(front == "forward"){
 	  if(rear == "char"){
 	    editor.forward_char();
