@@ -119,11 +119,9 @@ public:
       front = text.substr(0,delete_first);
     }
     if(delete_last < text.size()){
-      rear = text.substr(delete_last+1,text.size()-delete_last + 1);
+      rear = text.substr(delete_last+1,text.size()-delete_last);
     }
     text = front + rear;
-    // cout << front << "*****" << endl;
-    // cout << rear << "*****" << endl;
   }
   void print_text(){
     string front = "";
@@ -187,35 +185,28 @@ int main(){
 	if(front == "forward"){
 	  if(rear == "char"){
 	    editor.forward_char();
-	    // editor.print_text();
 	  }
 	  else if(rear == "word"){
 	    editor.forward_word();
-	    // editor.print_text();
 	  }
 	}
 	else if(front == "backward"){
 	  if(rear == "char"){
 	    editor.backward_char();
-	    // editor.print_text();
 	  }
 	  else if(rear == "word"){
 	    editor.backward_word();
-	    // editor.print_text();
 	  }
 	}
 	else if(front == "insert"){
 	  editor.insert(rear.substr(1,rear.size()-2));
-	  // editor.print_text();
 	}
 	else if(front == "delete"){
 	  if(rear == "char"){
 	    editor.delete_char();
-	    // editor.print_text();
 	  }
 	  else if(rear == "word"){
 	    editor.delete_word();
-	    // editor.print_text();
 	  }
 	}
       }
