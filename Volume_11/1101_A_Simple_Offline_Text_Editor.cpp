@@ -40,15 +40,15 @@ public:
     if(text.length() > cursor) cursor++;
   }
   void forward_word(){
-    int tmp = -1;
+    int tmp = text.length();
     for(int pos=cursor;pos+1<text.length();pos++){
-      if(text[pos] == ' '
-	 && text[pos + 1] != ' '){
-	tmp = pos;
+      if(text[pos] != ' '
+	 && text[pos + 1] == ' '){
+	tmp = pos+1;
 	break;
       }
     }
-    if(tmp != -1) cursor = tmp+1;
+    cursor = tmp;
   }
   void backward_char(){
     if(0 < cursor) cursor--;    
@@ -70,6 +70,8 @@ public:
     string rear = "";
     if(cursor > 0) front = text.substr(0,cursor);
     if(cursor < text.length()) rear = text.substr(cursor,text.length()-cursor);
+
+    cursor = front.length() + middle.length();
     text = front + middle + rear;
   }
   void delete_char(){
@@ -99,7 +101,7 @@ public:
     string front = "";
     string rear = "";
     if(delete_first > 0) front = text.substr(0,delete_first);
-    if(delete_last < text.length()) rear = text.substr(delete_last,text.length()-delete_last);
+    if(delete_last + 1 < text.length()) rear = text.substr(delete_last + 1,text.length()-(delete_last+1));
     text = front + rear;
   }
   void print_text(){
@@ -140,18 +142,26 @@ int main(){
 
 	getline(cin,fr_str);
 
-	string front,rear;
+	string front="";
+	string rear="";
 	int str_pos = 0;
 	for(int i=0;i<fr_str.size();i++){
-	  front += fr_str[i];
 	  if(fr_str[i] == ' '){
 	    str_pos = i+1;
 	    break;
 	  }
+	  front += fr_str[i];
 	}
 	for(int i=str_pos;i<fr_str.size();i++){
+	  if(i==str_pos && fr_str[i] == '"') {
+	    //nothing todo
+	  }
+	  else if(fr_str[i] == '"'){
+	    break;
+	  }
 	  rear += fr_str[i];
 	}
+
 	if(front == "forward"){
 	  if(rear == "char"){
 	    editor.forward_char();
@@ -169,7 +179,7 @@ int main(){
 	  }
 	}
 	else if(front == "insert"){
-	  editor.insert(rear.substr(1,rear.length()-2));
+	  editor.insert(rear.substr(1,rear.length()-1));
 	}
 	else if(front == "delete"){
 	  if(rear == "char"){
