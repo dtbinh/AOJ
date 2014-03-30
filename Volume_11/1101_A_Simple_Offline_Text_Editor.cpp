@@ -54,15 +54,15 @@ public:
     if(0 < cursor) cursor--;    
   }
   void backward_word(){
-    int tmp = -1;
+    int tmp = 0;
     for(int pos=cursor;pos-1>=0;pos--){
-      if(text[pos] == ' '
-	 && text[pos - 1] != ' '){
-	tmp = pos;
+      if(text[pos] != ' '
+	 && text[pos - 1] == ' '){
+	tmp = pos-1;
 	break;
       }
     }
-    if(tmp != -1) cursor = tmp-1;
+    cursor = tmp;
   }
   void insert(const string& str){
     string middle = str;
