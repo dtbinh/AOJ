@@ -31,6 +31,80 @@ static const double EPS = 1e-8;
 int tx[] = {0,1,0,-1};
 int ty[] = {-1,0,1,0};
 
+bool inside_mark(int flag[51][51],
+		 int cx,int cy,int range){
+  int tmp_flag[51][51];
+  memcpy(tmp_flag,flag,sizeof(int)*51*51);
+  
+  for(int y=cy-range;y<=cy+range;y++){
+    for(int x=cx-range;x<=cx+range;x++){
+      if(y < 0 || x < 0 || y > 50 || x > 50) continue;
+      if(tmp_flag[y][x] == 0){
+	tmp_flag[y][x] = 1;
+      }
+      else if(tmp_flag[y][x] == -1){
+	return false;
+      }
+    }
+  }
+
+  for(int y=0;y<50;y++){
+    for(int x=0;x<50;x++){
+      if(y >= cy-range && y <= cy+range
+      && x >= cx-range && x <= cx+range){
+	continue;
+      }
+
+      if(tmp_flag[y][x] == 0){
+	tmp_flag[y][x] = -1;
+      }
+      else if(tmp_flag[y][x] == 1){
+	return false;
+      }
+    }
+  }
+
+  memcpy(flag,tmp_flag,sizeof(int)*51*51);
+  return true;
+}
+
+bool outside_mark(int flag[51][51],
+		  int cx,int cy,int range){
+  int tmp_flag[51][51];
+  memcpy(tmp_flag,flag,sizeof(int)*51*51);
+  
+  for(int y=cy-range;y<=cy+range;y++){
+    for(int x=cx-range;x<=cx+range;x++){
+      if(y < 0 || x < 0 || y > 50 || x > 50) continue;
+      if(tmp_flag[y][x] == 0){
+	tmp_flag[y][x] = -1;
+      }
+      else if(tmp_flag[y][x] == 1){
+	return false;
+      }
+    }
+  }
+
+  for(int y=0;y<50;y++){
+    for(int x=0;x<50;x++){
+      if(y >= cy-range && y <= cy+range
+      && x >= cx-range && x <= cx+range){
+	continue;
+      }
+
+      if(tmp_flag[y][x] == 0){
+	tmp_flag[y][x] = 1;
+      }
+      else if(tmp_flag[y][x] == -1){
+	return false;
+      }
+    }
+  }
+
+  memcpy(flag,tmp_flag,sizeof(int)*51*51);
+  return true;
+}
+
 int main(){
   int h,w,d_range,total_responses;
   while(~scanf("%d %d %d %d",&h,&w,&d_range,&total_responses)){
@@ -50,31 +124,34 @@ int main(){
     }
 
     int r[101];
-    for(int d_idx=0;d_idx<d_range;d_idx++){
+    r[0] = 0;
+    for(int d_idx=1;d_idx<=d_range;d_idx++){
       int distance;
       scanf("%d",&distance);
       r[d_idx] = distance;
     }
 
-    int state=0;
+    bool is_broken = false;
+    int flag[51][51];
+    memset(flag,0,sizeof(flag));
+
     for(int response_idx=0;response_idx<total_responses;response_idx++){
       int x,y,s;
       scanf("%d %d %d",&x,&y,&s);
-      int distance = max(abs(d_x - x),abs(d_y - y));
-      printf("real dist:%d\n",distance);
-
       if(s == d_range){
-	printf("outside :\n");
-	if(distance < r[s]){
-	  state |= (1<<0);
-	}
+	bool is_valid = outside_mark(flag,x,y,r[s]);
+	printf("outside : %d valid : %d\n",r[s],is_valid);
       }
       else if(s < d_range){
-	printf("inside : %d\n",r[s]);
-	if(distance > r[s]){
-	  state |= (1<<0);
-	}
+	bool is_valid = inside_mark(flag,x,y,r[s]);
+	printf("inside : %d valid : %d\n",r[s],is_valid);
       }
+    }
+    for(int y=0;y<h;y++){
+      for(int x=0;x<w;x++){
+	printf("%02d ",flag[y][x]);
+      }
+      printf("\n");
     }
   }
 }
