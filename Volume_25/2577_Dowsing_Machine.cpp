@@ -31,82 +31,50 @@ static const double EPS = 1e-8;
 int tx[] = {0,1,0,-1};
 int ty[] = {-1,0,1,0};
 
-bool inside_mark(int flag[51][51],
+int w,h;
+
+void mark_outside_false(bool is_treasure[51][51],
 		 int cx,int cy,int range){
-  int tmp_flag[51][51];
-  memcpy(tmp_flag,flag,sizeof(int)*51*51);
-  
-  for(int y=cy-range;y<=cy+range;y++){
-    for(int x=cx-range;x<=cx+range;x++){
-      if(y < 0 || x < 0 || y > 50 || x > 50) continue;
-      if(tmp_flag[y][x] == 0){
-	tmp_flag[y][x] = 1;
-      }
-      else if(tmp_flag[y][x] == -1){
-	return false;
-      }
-    }
-  }
-
-  for(int y=0;y<50;y++){
-    for(int x=0;x<50;x++){
+  for(int y=0;y<=h;y++){
+    for(int x=0;x<=w;x++){
       if(y >= cy-range && y <= cy+range
-      && x >= cx-range && x <= cx+range){
-	continue;
+	 && x >= cx-range && x <= cx+range){
+  	continue;
       }
 
-      if(tmp_flag[y][x] == 0){
-	tmp_flag[y][x] = -1;
-      }
-      else if(tmp_flag[y][x] == 1){
-	return false;
-      }
+      is_treasure[y][x] = false;
     }
   }
-
-  memcpy(flag,tmp_flag,sizeof(int)*51*51);
-  return true;
 }
 
-bool outside_mark(int flag[51][51],
+void mark_inside_false(bool is_treasure[51][51],
 		  int cx,int cy,int range){
-  int tmp_flag[51][51];
-  memcpy(tmp_flag,flag,sizeof(int)*51*51);
-  
   for(int y=cy-range;y<=cy+range;y++){
     for(int x=cx-range;x<=cx+range;x++){
-      if(y < 0 || x < 0 || y > 50 || x > 50) continue;
-      if(tmp_flag[y][x] == 0){
-	tmp_flag[y][x] = -1;
-      }
-      else if(tmp_flag[y][x] == 1){
-	return false;
-      }
+      if(y < 0 || x < 0 || y >= h || x >= w) continue;
+      is_treasure[y][x] = false;
     }
   }
+}
 
-  for(int y=0;y<50;y++){
-    for(int x=0;x<50;x++){
-      if(y >= cy-range && y <= cy+range
-      && x >= cx-range && x <= cx+range){
-	continue;
-      }
+void dfs(char stage[51][51],
+	 bool visited[51][51],
+	 int sx,int sy){
+  visited[sy][sx] = true;
+  for(int i=0;i<4;i++){
+    int dx = sx + tx[i];
+    int dy = sy + ty[i];
+    if(dx < 0 || dy < 0 
+       || dy >= h || dx >= w) continue;
+    if(stage[dy][dx] == '#') continue;
+    if(visited[dy][dx]) continue;
 
-      if(tmp_flag[y][x] == 0){
-	tmp_flag[y][x] = 1;
-      }
-      else if(tmp_flag[y][x] == -1){
-	return false;
-      }
-    }
+    dfs(stage,visited,dx,dy);
   }
-
-  memcpy(flag,tmp_flag,sizeof(int)*51*51);
-  return true;
 }
 
 int main(){
-  int h,w,d_range,total_responses;
+  int d_range,total_responses;
   while(~scanf("%d %d %d %d",&h,&w,&d_range,&total_responses)){
     char stage[51][51];
 
@@ -131,27 +99,65 @@ int main(){
       r[d_idx] = distance;
     }
 
-    bool is_broken = false;
-    int flag[51][51];
-    memset(flag,0,sizeof(flag));
+    bool visited[51][51];
+    memset(visited,false,sizeof(visited));
+    dfs(stage,visited,d_x,d_y);
+
+    bool is_treasure[51][51];
+    memset(is_treasure,true,sizeof(is_treasure));
+
+    for(int y=0;y<h;y++){
+      for(int x=0;x<w;x++){
+	if(stage[y][x] == '#'){
+	  is_treasure[y][x] = false;
+	}
+      }
+    }
+
 
     for(int response_idx=0;response_idx<total_responses;response_idx++){
       int x,y,s;
       scanf("%d %d %d",&x,&y,&s);
-      if(s == d_range){
-	bool is_valid = outside_mark(flag,x,y,r[s]);
-	printf("outside : %d valid : %d\n",r[s],is_valid);
+      if(1<=s && s <= d_range -1){
+	int inside = r[s];
+	int outside = r[s+1];
+	mark_outside_false(is_treasure,x,y,outside);
+	mark_inside_false(is_treasure,x,y,inside);
       }
-      else if(s < d_range){
-	bool is_valid = inside_mark(flag,x,y,r[s]);
-	printf("inside : %d valid : %d\n",r[s],is_valid);
+      else if(s == d_range){
+	mark_inside_false(is_treasure,x,y,r[s]);
+	// printf("x:%d y:%d outside : %d \n",x,y,r[s]);
+      }
+      else if(s == 0){
+	mark_outside_false(is_treasure,x,y,r[1]);
+	// printf("x:%d y:%d inside : %d \n",x,y,r[s]);
       }
     }
+    
+    bool has_treasure = false;
+    bool has_missing = false;
     for(int y=0;y<h;y++){
       for(int x=0;x<w;x++){
-	printf("%02d ",flag[y][x]);
+	if(visited[y][x] && is_treasure[y][x]){
+	  has_treasure = true;
+	}
+	if(!visited[y][x] && is_treasure[y][x]){
+	  has_missing = true;
+	}
       }
-      printf("\n");
+    }
+
+    if(has_treasure && has_missing){
+      cout << "Unknown" << endl;
+    }
+    else if(has_treasure && !has_missing){
+      cout << "Yes" << endl;
+    }
+    else if(!has_treasure && has_missing){
+      cout << "No" << endl;
+    }
+    else if(!has_treasure && !has_missing){
+      cout << "Broken" << endl;
     }
   }
 }
