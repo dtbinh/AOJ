@@ -74,10 +74,6 @@ int main(){
 	for(int consumed_HP = upper_HP;consumed_HP >= 0 ;consumed_HP--){
 	  if(cost2cal[consumed_HP][prev] == -1) continue;
 
-	  cost2cal[consumed_HP][prev]
-	    = max(cost2cal[consumed_HP][prev],
-		  cost2cal[consumed_HP][prev]);
-
 	  if(consumed_HP + training_cost > upper_HP) continue;
 	  cost2cal[consumed_HP + training_cost][prev+1]
 	    = max(cost2cal[consumed_HP][prev] + cal,
