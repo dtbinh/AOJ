@@ -31,7 +31,7 @@ static const double EPS = 1e-8;
 int tx[] = {0,1,0,-1};
 int ty[] = {-1,0,1,0};
 
-int dp[101][10101];
+int dp[101][101];
 int cost2cal[101][101];
 int cal2well[10101];
 
@@ -71,13 +71,14 @@ int main(){
       int training_cost = trainings[training_idx].first;
 
       for(int prev=training_norma;prev>=0;prev--){
-	for(int consumed_HP = upper_HP; consumed_HP >= 0;consumed_HP--){
+	for(int consumed_HP = upper_HP;consumed_HP >= 0 ;consumed_HP--){
 	  if(cost2cal[consumed_HP][prev] == -1) continue;
-	  cost2cal[consumed_HP][prev+1]
-	    = max(cost2cal[consumed_HP][prev+1],cost2cal[consumed_HP][prev]);
+
+	  cost2cal[consumed_HP][prev]
+	    = max(cost2cal[consumed_HP][prev],
+		  cost2cal[consumed_HP][prev]);
 
 	  if(consumed_HP + training_cost > upper_HP) continue;
-	  if(prev+1 > training_norma) continue;
 	  cost2cal[consumed_HP + training_cost][prev+1]
 	    = max(cost2cal[consumed_HP][prev] + cal,
 		  cost2cal[consumed_HP + training_cost][prev+1]);
@@ -102,11 +103,11 @@ int main(){
       for(int HP=0;HP<=upper_HP;HP++){
 	if(dp[day][HP] == -1) continue;
 	for(int training_cost=0;training_cost<=HP;training_cost++){
-	  if(cost2cal[HP][training_norma] == -1) continue;
+	  if(cost2cal[training_cost][training_norma] == -1) continue;
 
 	  int next_HP = min(HP - training_cost + recover,upper_HP);
 	  dp[day+1][next_HP]
-	    = max(dp[day][HP] + cal2well[cost2cal[HP][training_norma]],
+	    = max(dp[day][HP] + cal2well[cost2cal[training_cost][training_norma]],
 		  dp[day+1][next_HP]);
 	}
       }
