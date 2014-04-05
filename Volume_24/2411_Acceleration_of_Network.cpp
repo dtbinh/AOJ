@@ -35,6 +35,7 @@ ll sum_d2[10001];
 ll sum_d[10001];
 ll sum[10001];
 int is_on[10001];
+ll recover_log[3652426];
 
 struct Service{
   ll lower_bound;
@@ -70,10 +71,9 @@ int main(){
     }
 
     ll recover_level = 0;
-    ll log[100001];
-    memset(log,0,sizeof(log));
 
-    for(int day=0;day<=10000;day++){
+    memset(recover_log,0,sizeof(recover_log));
+    for(int day=0;day<=3652425;day++){
       for(int service_idx = 0; service_idx < total_services; service_idx++){
 	if(is_on[service_idx] != -1
 	   && day > is_on[service_idx]
@@ -81,13 +81,13 @@ int main(){
 	       <= services[service_idx].speed_up_duration)){
 	  
 	  if(services[service_idx].type == 0){
-	    recover_level += 1;//(sum[day] - sum[day-1]);
+	    recover_level += 1;
 	  }
 	  else if(services[service_idx].type == 1){
-	    recover_level += (day - is_on[service_idx]);//(sum_d[day] - sum_d[day-1]);
+	    recover_level += (day - is_on[service_idx]);
 	  }
 	  else if(services[service_idx].type == 2){
-	    recover_level += (day - is_on[service_idx]) * (day - is_on[service_idx]);//(sum_d2[day] - sum_d2[day-1]);
+	    recover_level += (day - is_on[service_idx]) * (day - is_on[service_idx]);
 	  }
 	}
       }
@@ -98,18 +98,23 @@ int main(){
 	  is_on[service_idx] = day;
 	}
       }
-      log[day] = recover_level;
+      recover_log[day] = recover_level;
       recover_level++;
     }
 
     for(int service_idx = 0; service_idx < total_services; service_idx++){
-      printf("%d\n",is_on[service_idx]);
+      if(is_on[service_idx] != -1){
+	printf("%d\n",is_on[service_idx]);
+      }
+      else {
+	printf("Many years later\n");
+      }
     }
 
     for(int seek_idx = 0; seek_idx < seek_duration; seek_idx++){
       int day;
       scanf("%d",&day);
-      printf("%lld\n",log[day]);
+      printf("%lld\n",recover_log[day]);
     }
   }
 }
