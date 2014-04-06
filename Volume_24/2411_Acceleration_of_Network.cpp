@@ -32,8 +32,8 @@ static const ll MAX = 1e15;
 static const int tx[] = {0,1,0,-1};
 static const int ty[] = {-1,0,1,0};
 
-ll recover_log[100001];
-ll level_log[3652426];
+int is_on[10001];
+ll recover_log[3652426];
 
 struct Service{
 public:
@@ -46,27 +46,7 @@ public:
   bool operator<(const Service& s) const{
     return lower_bound < s.lower_bound;
   }
-  bool operator>(const Service& s) const{
-    return lower_bound > s.lower_bound;
-  }
-  bool operator<(const ll _v) const{
-    return lower_bound < _v;
-  }
-  bool operator>(const ll _v) const{
-    return lower_bound > _v;
-  }
 
-  ll compute_recover(ll passed_days){
-    if(type == 0){
-      return 1;
-    }
-    else if(type == 1){
-      return passed_days;
-    }
-    else if(type == 2){
-      return passed_days * passed_days;
-    }
-  }
   ll compute_recover(ll first,ll last){
     last = min((ll)speed_up_duration,last);
     first = min((ll)speed_up_duration+1,first);
@@ -101,6 +81,7 @@ int main(){
   int seek_duration;
 
   while(~scanf("%d %d",&total_services,&seek_duration)){
+    memset(is_on,-1,sizeof(is_on));
 
     vector<Service> services;
     for(int service_idx = 0; service_idx < total_services; service_idx++){
@@ -113,47 +94,58 @@ int main(){
 
     sort(services.begin(),services.end());
     ll recover_level = 0;
-    memset(recover_log,-1,sizeof(recover_log));   
-    memset(level_log,-1,sizeof(level_log));
-
-    list<Service> provider;
+    memset(recover_log,0,sizeof(recover_log));
     
-    int next_target = 0;
-    for(int day=0;day <= 3652425;day++){
-      ll add_recover_level = 0;
+    vector<Service> provider;
+    ll current = 0;
+    for(int service_idx = 0; service_idx < total_services;){
+      if(services[service_idx].lower_bound <= recover_level){
+	recover_log[service_idx] = current;
+	provider.push_back(services[service_idx]);
+	service_idx++;
+      }
+      else{
 
-      if(!provider.empty()){
-	for(list<Service>::iterator it = provider.begin();
+	ll max_add_day = MAX;
+	ll min_add_day = 0;
+	ll add_recover_level = 0;
+	
+	for(int round=0;round < 100; round++){
+	  ll mid = (max_add_day + min_add_day) / 2;
+	  
+	  ll tmp_recover_level = 0;
+	  for(int i=0;i<provider.size();i++){
+	    tmp_recover_level += provider[i].compute_recover(current - recover_log[provider[i].service_idx] + 1,
+							     (current - recover_log[provider[i].service_idx]) + mid);
+	  }
+	  
+	  if(tmp_recover_level + recover_level + mid >= services[service_idx].lower_bound){
+	    add_recover_level = tmp_recover_level + mid;
+	    max_add_day = mid;
+	  }
+	  else if(tmp_recover_level + recover_level + mid < services[service_idx].lower_bound){
+	    min_add_day = mid;
+	  }
+	}
+
+	recover_level += add_recover_level;
+	current += max_add_day;
+	
+	for(vector<Service>::iterator it = provider.begin();
 	    it != provider.end();
-	){
-	  ll passed_days = day - recover_log[it->service_idx];
-	  if(passed_days > it->speed_up_duration){
-	    list<Service>::iterator next = provider.erase(it);
+	    it++){
+	  if(current - recover_log[it->service_idx] > it->speed_up_duration){
+	    vector<Service>::iterator next = provider.erase(it);
 	    if(next == provider.end()) break;
 	    it = next;
 	  }
-	  else{
-	    add_recover_level += it->compute_recover(passed_days);
-	    it++;
-	    if(it == provider.end()) break;
-	  }
 	}
       }
-
-      for(int i = next_target; i < total_services; i++){
-	if(services[i].lower_bound > recover_level + add_recover_level) break;
-	if(recover_log[i] != -1) break;
-	recover_log[i] = day;
-	provider.push_back(services[i]);
-	next_target = i+1;
-      }
-
-      level_log[day] = recover_level + add_recover_level;      
-      recover_level += add_recover_level + 1;
     }
 
+
     for(int service_idx = 0; service_idx < total_services;service_idx++){
-      if(recover_log[service_idx] == -1){
+      if(recover_log[service_idx] > 3652425){
 	printf("Many years later\n");
       }
       else {
@@ -164,7 +156,15 @@ int main(){
     for(int seek_idx = 0; seek_idx < seek_duration; seek_idx++){
       int day;
       scanf("%d",&day);
-      printf("%lld\n",level_log[day]);
+      ll tmp_recover_level = 0;
+      for(int service_idx = 0; service_idx < total_services;service_idx++){
+	if(recover_log[service_idx] < day){
+	  tmp_recover_level
+	    += services[service_idx].compute_recover(1,(day - recover_log[service_idx]));
+	}
+      }
+
+      printf("%lld\n",tmp_recover_level + day);
     }
   }
 }
