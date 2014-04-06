@@ -125,12 +125,13 @@ int main(){
     ll current = 0;
     for(int service_idx = 0; service_idx < total_services;){
       if(services[service_idx].lower_bound <= recover_level){
+	recover_log[service_idx] = current;
 	provider.push_back(services[service_idx]);
 	service_idx++;
       }
       else{
 	if(!provider.empty()){
-	  cout << "bsearch begin" << endl;
+	  // cout << "bsearch begin" << endl;
 	  ll max_add_day = 1000000000000;
 	  ll min_add_day = 0;
 	  ll add_recover_level = 0;
@@ -145,31 +146,34 @@ int main(){
 							       (current - recover_log[provider[i].service_idx]) + mid);
 	    }
 
-	    cout << "tmp recov " << tmp_recover_level << endl;
-	    if(tmp_recover_level + recover_level >= services[service_idx].lower_bound){
+	    if(tmp_recover_level + recover_level + mid >= services[service_idx].lower_bound){
 	      add_recover_level = tmp_recover_level;
 	      max_add_day = mid;
 	    }
-	    else if(tmp_recover_level + recover_level < services[service_idx].lower_bound){
+	    else if(tmp_recover_level + recover_level + mid < services[service_idx].lower_bound){
 	      unsatisfied_recover_level = tmp_recover_level;
 	      min_add_day = mid;
 	    }
 	  }
 
 	  if(max_add_day < 1000000000000){
-	    cout << "bsearch" << endl;
+
+	    cout << "add_recover_level:" << add_recover_level << endl;
+	    cout << "add_day:" << max_add_day << endl;
+
 	    recover_level += add_recover_level;
 	    current += max_add_day;
-	    cout << current << endl;
-	    recover_log[service_idx] = current;
+	    cout << "day:" << current << endl;
+
+	    //erase from provider
 	    for(int i=0;i<provider.size();i++){
 	      if(recover_log[provider[i].service_idx] != -1
 		 && current - recover_log[provider[i].service_idx] > provider[i].speed_up_duration){
 		provider.erase(provider.begin()+i, provider.begin()+i+1);
 		i=0;
-		continue;
 		}
 	    }
+	    cout << "bsearch end" << endl;
 	  }
 	  else{
 	    recover_level++;
@@ -177,7 +181,7 @@ int main(){
 	  }
 	}
 	else{
-	  cout << "no provider" << endl;
+	  // cout << "no provider" << endl;
 	  recover_level++;
 	  current++;
 	}
@@ -185,11 +189,13 @@ int main(){
     }
 
 
+    for(int service_idx = 0; service_idx < total_services;service_idx++){
+      printf("%lld\n",recover_log[service_idx]);
+    }
 
     for(int seek_idx = 0; seek_idx < seek_duration; seek_idx++){
       int day;
       scanf("%d",&day);
-      printf("%lld\n",recover_log[day]);
     }
   }
 }
