@@ -158,12 +158,12 @@ int main(){
 
 	  if(max_add_day < 1000000000000){
 
-	    cout << "add_recover_level:" << add_recover_level << endl;
-	    cout << "add_day:" << max_add_day << endl;
+	    // cout << "add_recover_level:" << add_recover_level << endl;
+	    // cout << "add_day:" << max_add_day << endl;
 
 	    recover_level += add_recover_level;
 	    current += max_add_day;
-	    cout << "day:" << current << endl;
+	    // cout << "day:" << current << endl;
 
 	    //erase from provider
 	    for(int i=0;i<provider.size();i++){
@@ -173,7 +173,7 @@ int main(){
 		i=0;
 		}
 	    }
-	    cout << "bsearch end" << endl;
+	    // cout << "bsearch end" << endl;
 	  }
 	  else{
 	    recover_level++;
@@ -190,12 +190,26 @@ int main(){
 
 
     for(int service_idx = 0; service_idx < total_services;service_idx++){
-      printf("%lld\n",recover_log[service_idx]);
+      if(recover_log[service_idx] > 3652425){
+	printf("Many years later\n");
+      }
+      else {
+	printf("%lld\n",recover_log[service_idx]);
+      }
     }
 
     for(int seek_idx = 0; seek_idx < seek_duration; seek_idx++){
       int day;
       scanf("%d",&day);
+      ll tmp_recover_level = 0;
+      for(int service_idx = 0; service_idx < total_services;service_idx++){
+	if(recover_log[service_idx] < day){
+	  tmp_recover_level
+	    += services[service_idx].compute_recover(1,(day - recover_log[service_idx]));
+	}
+      }
+
+      printf("%lld\n",tmp_recover_level + day);
     }
   }
 }
