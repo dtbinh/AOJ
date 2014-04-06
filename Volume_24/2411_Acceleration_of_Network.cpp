@@ -27,6 +27,7 @@ typedef pair <int,int> P;
 typedef pair <int,P> PP;
   
 static const double EPS = 1e-8;
+static const ll MAX = 1e15;
   
 static const int tx[] = {0,1,0,-1};
 static const int ty[] = {-1,0,1,0};
@@ -43,34 +44,7 @@ public:
   Service(ll _l,int _t,int _s,int _si)
     : lower_bound(_l),type(_t),speed_up_duration(_s),service_idx(_si){}
   bool operator<(const Service& s) const{
-    ll my_sum = 0;
-    ll s_sum = 0;
-    if(type == 0){
-      my_sum = speed_up_duration;
-      s_sum = s.speed_up_duration;
-    }
-    else if(type == 1){
-      my_sum = speed_up_duration * (1 + speed_up_duration) / 2;
-      s_sum = s.speed_up_duration * (1 + s.speed_up_duration) / 2;
-    }
-    else if(type == 2){
-      my_sum = 1 + speed_up_duration * speed_up_duration + 2 * speed_up_duration;
-      s_sum = 1 + s.speed_up_duration * s.speed_up_duration + 2 * s.speed_up_duration;
-    }
-    return lower_bound + my_sum < s.lower_bound + s_sum;
-  }
-
-  ll compute_recover(ll day){
-    day = min((ll)speed_up_duration,day);
-    if(type == 0){
-      return day;
-    }
-    else if(type == 1){
-      return day * (1 + day) / 2;
-    }
-    else if(type == 2){
-      return 1 + day * day + 2 * day;
-    }
+    return lower_bound < s.lower_bound;
   }
 
   ll compute_recover(ll first,ll last){
@@ -118,10 +92,11 @@ int main(){
       services.push_back(Service(lower_bound,type,speed_up_duration,service_idx));
     }
 
+    sort(services.begin(),services.end());
     ll recover_level = 0;
     memset(recover_log,0,sizeof(recover_log));
     
-    deque<Service> provider;
+    vector<Service> provider;
     ll current = 0;
     for(int service_idx = 0; service_idx < total_services;){
       if(services[service_idx].lower_bound <= recover_level){
@@ -132,12 +107,12 @@ int main(){
       else{
 	if(!provider.empty()){
 	  // cout << "bsearch begin" << endl;
-	  ll max_add_day = 1000000000000;
+	  ll max_add_day = MAX;
 	  ll min_add_day = 0;
 	  ll add_recover_level = 0;
 	  ll unsatisfied_recover_level = 0;
 
-	  for(int round=0;round < 60; round++){
+	  for(int round=0;round < 80; round++){
 	    ll mid = (max_add_day + min_add_day) / 2;
 	    
 	    ll tmp_recover_level = 0;
@@ -147,16 +122,16 @@ int main(){
 	    }
 
 	    if(tmp_recover_level + recover_level + mid >= services[service_idx].lower_bound){
-	      add_recover_level = tmp_recover_level;
+	      add_recover_level = tmp_recover_level + mid;
 	      max_add_day = mid;
 	    }
 	    else if(tmp_recover_level + recover_level + mid < services[service_idx].lower_bound){
-	      unsatisfied_recover_level = tmp_recover_level;
+	      unsatisfied_recover_level = tmp_recover_level + mid;
 	      min_add_day = mid;
 	    }
 	  }
 
-	  if(max_add_day < 1000000000000){
+	  if(max_add_day < MAX){
 
 	    // cout << "add_recover_level:" << add_recover_level << endl;
 	    // cout << "add_day:" << max_add_day << endl;
@@ -166,18 +141,21 @@ int main(){
 	    // cout << "day:" << current << endl;
 
 	    //erase from provider
-	    for(int i=0;i<provider.size();i++){
-	      if(recover_log[provider[i].service_idx] != -1
-		 && current - recover_log[provider[i].service_idx] > provider[i].speed_up_duration){
-		provider.erase(provider.begin()+i, provider.begin()+i+1);
-		i=0;
-		}
+	    for(vector<Service>::iterator it = provider.begin();
+		it != provider.end();
+		it++){
+	      if(current - recover_log[it->service_idx] > it->speed_up_duration){
+		vector<Service>::iterator next = provider.erase(it);
+		if(next == provider.end()) break;
+		it = next;
+	      }
 	    }
 	    // cout << "bsearch end" << endl;
 	  }
 	  else{
-	    recover_level++;
-	    current++;
+	    recover_level += unsatisfied_recover_level;
+	    current += min_add_day;
+	    provider.erase(provider.begin(), provider.end());
 	  }
 	}
 	else{
