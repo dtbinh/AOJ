@@ -31,32 +31,80 @@ static const double EPS = 1e-8;
 static const int tx[] = {0,1,0,-1};
 static const int ty[] = {-1,0,1,0};
 
-ll sum_d2[10001];
-ll sum_d[10001];
-ll sum[10001];
 int is_on[10001];
 ll recover_log[3652426];
 
 struct Service{
+public:
   ll lower_bound;
   int type;
   int speed_up_duration;
-  Service(ll _l,int _t,int _s)
-    : lower_bound(_l),type(_t),speed_up_duration(_s){}
+  int service_idx;
+  Service(ll _l,int _t,int _s,int _si)
+    : lower_bound(_l),type(_t),speed_up_duration(_s),service_idx(_si){}
+  bool operator<(const Service& s) const{
+    ll my_sum = 0;
+    ll s_sum = 0;
+    if(type == 0){
+      my_sum = speed_up_duration;
+      s_sum = s.speed_up_duration;
+    }
+    else if(type == 1){
+      my_sum = speed_up_duration * (1 + speed_up_duration) / 2;
+      s_sum = s.speed_up_duration * (1 + s.speed_up_duration) / 2;
+    }
+    else if(type == 2){
+      my_sum = 1 + speed_up_duration * speed_up_duration + 2 * speed_up_duration;
+      s_sum = 1 + s.speed_up_duration * s.speed_up_duration + 2 * s.speed_up_duration;
+    }
+    return lower_bound + my_sum < s.lower_bound + s_sum;
+  }
+
+  ll compute_recover(ll day){
+    day = min((ll)speed_up_duration,day);
+    if(type == 0){
+      return day;
+    }
+    else if(type == 1){
+      return day * (1 + day) / 2;
+    }
+    else if(type == 2){
+      return 1 + day * day + 2 * day;
+    }
+  }
+
+  ll compute_recover(ll first,ll last){
+    last = min((ll)speed_up_duration,last);
+    first = min((ll)speed_up_duration+1,first);
+
+    ll minus = 0; 
+    if(first > 0){
+      if(type == 0){
+	minus = first - 1;
+      }
+      else if(type == 1){
+	minus = (first-1) * (1 + (first-1)) / 2;
+      }
+      else if(type == 2){
+	minus = (first-1)*(first)*(2*(first-1)+1) / 6;
+      }
+    }
+
+    if(type == 0){
+      return last - minus;
+    }
+    else if(type == 1){
+      return last * (1 + last) / 2 - minus;
+    }
+    else if(type == 2){
+      return last*(last+1)*(2*last+1) / 6 - minus;
+    }
+  }
 };
 
 int main(){
   int total_services;
   int seek_duration;
-
-  memset(sum_d2,0,sizeof(sum_d2));
-  memset(sum_d,0,sizeof(sum_d));
-  memset(sum,0,sizeof(sum));
-  for(int day=1;day<=10000;day++){
-    sum_d2[day] = sum_d2[day-1] + day * day;
-    sum_d[day] = sum_d[day-1] + day;
-    sum[day] = sum[day-1] + 1;
-  }
 
   while(~scanf("%d %d",&total_services,&seek_duration)){
     memset(is_on,-1,sizeof(is_on));
@@ -67,49 +115,76 @@ int main(){
       int type;
       int speed_up_duration;
       scanf("%lld %d %d",&lower_bound,&type,&speed_up_duration);
-      services.push_back(Service(lower_bound,type,speed_up_duration));
+      services.push_back(Service(lower_bound,type,speed_up_duration,service_idx));
     }
 
     ll recover_level = 0;
-
     memset(recover_log,0,sizeof(recover_log));
-    for(int day=0;day<=3652425;day++){
-      for(int service_idx = 0; service_idx < total_services; service_idx++){
-	if(is_on[service_idx] != -1
-	   && day > is_on[service_idx]
-	   && (day - is_on[service_idx]
-	       <= services[service_idx].speed_up_duration)){
-	  
-	  if(services[service_idx].type == 0){
-	    recover_level += 1;
+    
+    deque<Service> provider;
+    ll current = 0;
+    for(int service_idx = 0; service_idx < total_services;){
+      if(services[service_idx].lower_bound <= recover_level){
+	provider.push_back(services[service_idx]);
+	service_idx++;
+      }
+      else{
+	if(!provider.empty()){
+	  cout << "bsearch begin" << endl;
+	  ll max_add_day = 1000000000000;
+	  ll min_add_day = 0;
+	  ll add_recover_level = 0;
+	  ll unsatisfied_recover_level = 0;
+
+	  for(int round=0;round < 60; round++){
+	    ll mid = (max_add_day + min_add_day) / 2;
+	    
+	    ll tmp_recover_level = 0;
+	    for(int i=0;i<provider.size();i++){
+	      tmp_recover_level += provider[i].compute_recover(current - recover_log[provider[i].service_idx],
+							       (current - recover_log[provider[i].service_idx]) + mid);
+	    }
+
+	    cout << "tmp recov " << tmp_recover_level << endl;
+	    if(tmp_recover_level + recover_level >= services[service_idx].lower_bound){
+	      add_recover_level = tmp_recover_level;
+	      max_add_day = mid;
+	    }
+	    else if(tmp_recover_level + recover_level < services[service_idx].lower_bound){
+	      unsatisfied_recover_level = tmp_recover_level;
+	      min_add_day = mid;
+	    }
 	  }
-	  else if(services[service_idx].type == 1){
-	    recover_level += (day - is_on[service_idx]);
+
+	  if(max_add_day < 1000000000000){
+	    cout << "bsearch" << endl;
+	    recover_level += add_recover_level;
+	    current += max_add_day;
+	    cout << current << endl;
+	    recover_log[service_idx] = current;
+	    for(int i=0;i<provider.size();i++){
+	      if(recover_log[provider[i].service_idx] != -1
+		 && current - recover_log[provider[i].service_idx] > provider[i].speed_up_duration){
+		provider.erase(provider.begin()+i, provider.begin()+i+1);
+		i=0;
+		continue;
+		}
+	    }
 	  }
-	  else if(services[service_idx].type == 2){
-	    recover_level += (day - is_on[service_idx]) * (day - is_on[service_idx]);
+	  else{
+	    recover_level++;
+	    current++;
 	  }
 	}
-      }
-	
-      for(int service_idx = 0; service_idx < total_services; service_idx++){
-	if(recover_level >= services[service_idx].lower_bound
-	   && is_on[service_idx] == -1){
-	  is_on[service_idx] = day;
+	else{
+	  cout << "no provider" << endl;
+	  recover_level++;
+	  current++;
 	}
       }
-      recover_log[day] = recover_level;
-      recover_level++;
     }
 
-    for(int service_idx = 0; service_idx < total_services; service_idx++){
-      if(is_on[service_idx] != -1){
-	printf("%d\n",is_on[service_idx]);
-      }
-      else {
-	printf("Many years later\n");
-      }
-    }
+
 
     for(int seek_idx = 0; seek_idx < seek_duration; seek_idx++){
       int day;
