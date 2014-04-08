@@ -97,19 +97,19 @@ int main(){
 	}
 	else if(services[next_target].type == 1){
 	  b++;
-	  c += -(day - 1);
+	  c -= (day - 1);
 	  if(day + services[next_target].speed_up_duration <= 3652425 + 1) {
 	    sub_b[day+services[next_target].speed_up_duration]++;
-	    sub_c[day+services[next_target].speed_up_duration] += -(day-1);
+	    sub_c[day+services[next_target].speed_up_duration] -= (day-1);
 	  }
 	}
 	else if(services[next_target].type == 2){
 	  a++;
-	  b += -2*(day-1);
+	  b -= 2*(day-1);
 	  c += (day-1)*(day-1);
 	  if(day + services[next_target].speed_up_duration <= 3652425 + 1) {
 	    sub_a[day+services[next_target].speed_up_duration]++;
-	    sub_b[day+services[next_target].speed_up_duration] += -2*(day-1);
+	    sub_b[day+services[next_target].speed_up_duration] -= 2*(day-1);
 	    sub_c[day+services[next_target].speed_up_duration] += (day-1) * (day-1);
 	  }
 	}
