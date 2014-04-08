@@ -32,10 +32,13 @@ static const ll MAX = 1e15;
 static const int tx[] = {0,1,0,-1};
 static const int ty[] = {-1,0,1,0};
 
-int is_on[10001];
-ll recover_log[3652426];
+ll recover_log[100001];
+ll all_log[3652427];
+ll sub_a[3652427];
+ll sub_b[3652427];
+ll sub_c[3652427];
 
-struct Service{
+class Service{
 public:
   ll lower_bound;
   int type;
@@ -46,33 +49,8 @@ public:
   bool operator<(const Service& s) const{
     return lower_bound < s.lower_bound;
   }
-
-  ll compute_recover(ll first,ll last){
-    last = min((ll)speed_up_duration,last);
-    first = min((ll)speed_up_duration+1,first);
-
-    ll minus = 0; 
-    if(first > 0){
-      if(type == 0){
-	minus = first - 1;
-      }
-      else if(type == 1){
-	minus = (first-1) * (1 + (first-1)) / 2;
-      }
-      else if(type == 2){
-	minus = (first-1)*(first)*(2*(first-1)+1) / 6;
-      }
-    }
-
-    if(type == 0){
-      return last - minus;
-    }
-    else if(type == 1){
-      return last * (1 + last) / 2 - minus;
-    }
-    else if(type == 2){
-      return last*(last+1)*(2*last+1) / 6 - minus;
-    }
+  bool operator>(const Service& s) const{
+    return lower_bound > s.lower_bound;
   }
 };
 
@@ -81,7 +59,6 @@ int main(){
   int seek_duration;
 
   while(~scanf("%d %d",&total_services,&seek_duration)){
-    memset(is_on,-1,sizeof(is_on));
 
     vector<Service> services;
     for(int service_idx = 0; service_idx < total_services; service_idx++){
@@ -92,60 +69,61 @@ int main(){
       services.push_back(Service(lower_bound,type,speed_up_duration,service_idx));
     }
 
+    memset(recover_log,-1,sizeof(recover_log));   
+    memset(all_log,0,sizeof(all_log));
+
+    memset(sub_a,0,sizeof(sub_a));
+    memset(sub_b,0,sizeof(sub_b));
+    memset(sub_c,0,sizeof(sub_c));
+
+    int next_target = 0;
+    ll a=0,b=0,c=1;//f = ax^2 + b^x+c
+
     sort(services.begin(),services.end());
-    ll recover_level = 0;
-    memset(recover_log,0,sizeof(recover_log));
-    
-    vector<Service> provider;
-    ll current = 0;
-    for(int service_idx = 0; service_idx < total_services;){
-      if(services[service_idx].lower_bound <= recover_level){
-	recover_log[service_idx] = current;
-	provider.push_back(services[service_idx]);
-	service_idx++;
-      }
-      else{
 
-	ll max_add_day = MAX;
-	ll min_add_day = 0;
-	ll add_recover_level = 0;
-	
-	for(int round=0;round < 100; round++){
-	  ll mid = (max_add_day + min_add_day) / 2;
-	  
-	  ll tmp_recover_level = 0;
-	  for(int i=0;i<provider.size();i++){
-	    tmp_recover_level += provider[i].compute_recover(current - recover_log[provider[i].service_idx] + 1,
-							     (current - recover_log[provider[i].service_idx]) + mid);
-	  }
-	  
-	  if(tmp_recover_level + recover_level + mid >= services[service_idx].lower_bound){
-	    add_recover_level = tmp_recover_level + mid;
-	    max_add_day = mid;
-	  }
-	  else if(tmp_recover_level + recover_level + mid < services[service_idx].lower_bound){
-	    min_add_day = mid;
+    for(ll day=1;day <= 3652425 + 1;day++){
+
+      ll recover_level = all_log[day-1];
+
+      while(next_target < total_services 
+	    && services[next_target].lower_bound <= recover_level){
+	recover_log[services[next_target].service_idx] = day - 1;
+
+	if(services[next_target].type == 0){
+	  c++;
+	  if(day + services[next_target].speed_up_duration <= 3652425 + 1) {
+	    sub_c[day+services[next_target].speed_up_duration]++;
 	  }
 	}
-
-	recover_level += add_recover_level;
-	current += max_add_day;
-	
-	for(vector<Service>::iterator it = provider.begin();
-	    it != provider.end();
-	    it++){
-	  if(current - recover_log[it->service_idx] > it->speed_up_duration){
-	    vector<Service>::iterator next = provider.erase(it);
-	    if(next == provider.end()) break;
-	    it = next;
+	else if(services[next_target].type == 1){
+	  b++;
+	  c += -(day - 1);
+	  if(day + services[next_target].speed_up_duration <= 3652425 + 1) {
+	    sub_b[day+services[next_target].speed_up_duration]++;
+	    sub_c[day+services[next_target].speed_up_duration] += -(day-1);
 	  }
 	}
+	else if(services[next_target].type == 2){
+	  a++;
+	  b += -2*(day-1);
+	  c += (day-1)*(day-1);
+	  if(day + services[next_target].speed_up_duration <= 3652425 + 1) {
+	    sub_a[day+services[next_target].speed_up_duration]++;
+	    sub_b[day+services[next_target].speed_up_duration] += -2*(day-1);
+	    sub_c[day+services[next_target].speed_up_duration] += (day-1) * (day-1);
+	  }
+	}
+	next_target++;
       }
+
+      a -= sub_a[day];
+      b -= sub_b[day];
+      c -= sub_c[day];
+      all_log[day] = recover_level + a * day * day + b * day + c;
     }
 
-
     for(int service_idx = 0; service_idx < total_services;service_idx++){
-      if(recover_log[service_idx] > 3652425){
+      if(recover_log[service_idx] == -1){
 	printf("Many years later\n");
       }
       else {
@@ -156,15 +134,7 @@ int main(){
     for(int seek_idx = 0; seek_idx < seek_duration; seek_idx++){
       int day;
       scanf("%d",&day);
-      ll tmp_recover_level = 0;
-      for(int service_idx = 0; service_idx < total_services;service_idx++){
-	if(recover_log[service_idx] < day){
-	  tmp_recover_level
-	    += services[service_idx].compute_recover(1,(day - recover_log[service_idx]));
-	}
-      }
-
-      printf("%lld\n",tmp_recover_level + day);
+      printf("%lld\n",all_log[day]);
     }
   }
 }
