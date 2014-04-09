@@ -104,8 +104,8 @@ public:
 int main(){
   int total_homes;
   double R;
-  map<double,Home> x2y;
-  map<double,Home> y2x;
+  map<double,vector<Home> > x2y;
+  map<double,vector<Home> > y2x;
   vector<double> xs;
   vector<double> ys;
   vector<Point> homes;
@@ -114,8 +114,8 @@ int main(){
     for(int home_idx = 0; home_idx < total_homes; home_idx++){
       double x,y;
       scanf("%lf %lf",&x,&y);
-      x2y[x] = Home(home_idx,y);
-      y2x[y] = Home(home_idx,x);
+      x2y[x].push_back(Home(home_idx,y));
+      y2x[y].push_back(Home(home_idx,x));
       homes.push_back(Point(x,y));
       xs.push_back(x);
       ys.push_back(y);
@@ -131,25 +131,41 @@ int main(){
       int cx_idx = lower_bound(xs.begin(),xs.end(),hx) - xs.begin();
       int cy_idx = lower_bound(ys.begin(),ys.end(),hy) - ys.begin();
       for(int y_idx=cy_idx-1; y_idx <= cy_idx+1; y_idx++){
-	int dst_idx = y2x[ys[y_idx]].home_idx;
-	double dx = y2x[ys[y_idx]].coordinate;
-	double dy = ys[y_idx];
-	if(R * R < (hx - dx) * (hx - dx) + (hy - dy) * (hy - dy)){
-	  continue;
-	}
-	else if(R * R >= (hx - dx) * (hx - dx) + (hy - dy) * (hy - dy)){
-	  uft.unite(home_idx,dst_idx);
+	if(y_idx < 0 || y_idx >= ys.size()) continue;
+
+	for(int i=0;i<y2x[ys[y_idx]].size();i++){
+	  int dst_idx = y2x[ys[y_idx]][i].home_idx;
+	  
+	  if(dst_idx == home_idx) continue;
+	  double dx = y2x[ys[y_idx]][i].coordinate;
+	  double dy = ys[y_idx];
+	  if(9 * R * R <= (hx - dx) * (hx - dx) + (hy - dy) * (hy - dy)){
+	    continue;
+	  }
+	  else if(R * R >= (hx - dx) * (hx - dx) + (hy - dy) * (hy - dy)){
+	    // printf("%lf %lf\n",homes[home_idx].x,homes[home_idx].y);
+	    // printf("%lf %lf\n\n",homes[dst_idx].x,homes[dst_idx].y);
+	    uft.unite(home_idx,dst_idx);
+	  }
 	}
       }
       for(int x_idx=cx_idx-1; x_idx <= cx_idx+1; x_idx++){
-	int dst_idx = x2y[xs[x_idx]].home_idx;
-	double dx = xs[x_idx];
-	double dy = x2y[xs[x_idx]].coordinate;
-	if(R * R < (hx - dx) * (hx - dx) + (hy - dy) * (hy - dy)){
-	  continue;
-	}
-	else if(R * R >= (hx - dx) * (hx - dx) + (hy - dy) * (hy - dy)){
-	  uft.unite(home_idx,dst_idx);
+	if(x_idx < 0 || x_idx >= xs.size()) continue;
+
+	for(int i=0;i<x2y[xs[x_idx]].size();i++){
+	  int dst_idx = x2y[xs[x_idx]][i].home_idx;
+	  if(dst_idx == home_idx) continue;
+	  // printf("%lf %lf\n",homes[home_idx].x,homes[home_idx].y);
+	  // printf("%lf %lf\n\n",homes[dst_idx].x,homes[dst_idx].y);
+
+	  double dx = xs[x_idx];
+	  double dy = x2y[xs[x_idx]][i].coordinate;
+	  if(9 * R * R <= (hx - dx) * (hx - dx) + (hy - dy) * (hy - dy)){
+	    continue;
+	  }
+	  else if(R * R >= (hx - dx) * (hx - dx) + (hy - dy) * (hy - dy)){
+	    uft.unite(home_idx,dst_idx);
+	  }
 	}
       }
     }
