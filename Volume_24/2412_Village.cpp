@@ -85,6 +85,84 @@ public:
   }
 };
 
+class Home{
+public:
+  int home_idx;
+  double coordinate;
+  Home() : home_idx(0),coordinate(0){}
+  Home(int _h,double _c) : home_idx(_h),coordinate(_c){}
+};
+
+class Point {
+public:
+  double x;
+  double y;
+  Point() : x(0), y(0) {}
+  Point(double _x,double _y) : x(_x), y(_y) {}
+};
+
 int main(){
-  
+  int total_homes;
+  double R;
+  map<double,Home> x2y;
+  map<double,Home> y2x;
+  vector<double> xs;
+  vector<double> ys;
+  vector<Point> homes;
+
+  while(~scanf("%d %lf",&total_homes,&R)){
+    for(int home_idx = 0; home_idx < total_homes; home_idx++){
+      double x,y;
+      scanf("%lf %lf",&x,&y);
+      x2y[x] = Home(home_idx,y);
+      y2x[y] = Home(home_idx,x);
+      homes.push_back(Point(x,y));
+      xs.push_back(x);
+      ys.push_back(y);
+    }
+    
+    sort(xs.begin(),xs.end());
+    sort(ys.begin(),ys.end());
+
+    UnionFindTree uft(total_homes);
+    for(int home_idx = 0; home_idx < total_homes; home_idx++){
+      double hx = homes[home_idx].x;
+      double hy = homes[home_idx].y;
+      int cx_idx = lower_bound(xs.begin(),xs.end(),hx) - xs.begin();
+      int cy_idx = lower_bound(ys.begin(),ys.end(),hy) - ys.begin();
+      for(int y_idx=cy_idx-1; y_idx <= cy_idx+1; y_idx++){
+	int dst_idx = y2x[ys[y_idx]].home_idx;
+	double dx = y2x[ys[y_idx]].coordinate;
+	double dy = ys[y_idx];
+	if(R * R < (hx - dx) * (hx - dx) + (hy - dy) * (hy - dy)){
+	  continue;
+	}
+	else if(R * R >= (hx - dx) * (hx - dx) + (hy - dy) * (hy - dy)){
+	  uft.unite(home_idx,dst_idx);
+	}
+      }
+      for(int x_idx=cx_idx-1; x_idx <= cx_idx+1; x_idx++){
+	int dst_idx = x2y[xs[x_idx]].home_idx;
+	double dx = xs[x_idx];
+	double dy = x2y[xs[x_idx]].coordinate;
+	if(R * R < (hx - dx) * (hx - dx) + (hy - dy) * (hy - dy)){
+	  continue;
+	}
+	else if(R * R >= (hx - dx) * (hx - dx) + (hy - dy) * (hy - dy)){
+	  uft.unite(home_idx,dst_idx);
+	}
+      }
+    }
+
+    int res = 0;
+    bool visited[200001];
+    memset(visited,false,sizeof(visited));
+    for(int home_idx = 0; home_idx < total_homes; home_idx++){
+      if(!visited[uft.find(home_idx)]){
+	res++;
+	visited[uft.find(home_idx)] = true;
+      }
+    }
+    printf("%d\n",res);
+  }
 }
