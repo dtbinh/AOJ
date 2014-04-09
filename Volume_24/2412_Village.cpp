@@ -133,11 +133,12 @@ int main(){
       for(int y_idx=cy_idx-2; y_idx <= cy_idx+1; y_idx++){
 	if(y_idx < 0 || y_idx >= ys.size()) continue;
 
-	for(int i=0;i<y2x[ys[y_idx]].size();i++){
-	  int dst_idx = y2x[ys[y_idx]][i].home_idx;
+	const vector<Home>& h = y2x[ys[y_idx]];
+	for(int i=0;i<h.size();i++){
+	  int dst_idx = h[i].home_idx;
 	  
 	  if(dst_idx == home_idx) continue;
-	  double dx = y2x[ys[y_idx]][i].coordinate;
+	  double dx = h[i].coordinate;
 	  double dy = ys[y_idx];
 	  if(9 * R * R <= (hx - dx) * (hx - dx) + (hy - dy) * (hy - dy)){
 	    continue;
@@ -152,8 +153,9 @@ int main(){
       for(int x_idx=cx_idx-2; x_idx <= cx_idx+1; x_idx++){
 	if(x_idx < 0 || x_idx >= xs.size()) continue;
 
-	for(int i=0;i<x2y[xs[x_idx]].size();i++){
-	  int dst_idx = x2y[xs[x_idx]][i].home_idx;
+	const vector<Home>& h = x2y[xs[x_idx]];
+	for(int i=0;i<h.size();i++){
+	  int dst_idx = h[i].home_idx;
 	  if(dst_idx == home_idx) continue;
 	  // printf("%lf %lf\n",homes[home_idx].x,homes[home_idx].y);
 	  // printf("%lf %lf\n\n",homes[dst_idx].x,homes[dst_idx].y);
