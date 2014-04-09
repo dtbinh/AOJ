@@ -130,7 +130,7 @@ int main(){
       double hy = homes[home_idx].y;
       int cx_idx = lower_bound(xs.begin(),xs.end(),hx) - xs.begin();
       int cy_idx = lower_bound(ys.begin(),ys.end(),hy) - ys.begin();
-      for(int y_idx=cy_idx-1; y_idx <= cy_idx+1; y_idx++){
+      for(int y_idx=cy_idx-2; y_idx <= cy_idx+1; y_idx++){
 	if(y_idx < 0 || y_idx >= ys.size()) continue;
 
 	for(int i=0;i<y2x[ys[y_idx]].size();i++){
@@ -142,14 +142,14 @@ int main(){
 	  if(9 * R * R <= (hx - dx) * (hx - dx) + (hy - dy) * (hy - dy)){
 	    continue;
 	  }
-	  else if(R * R >= (hx - dx) * (hx - dx) + (hy - dy) * (hy - dy)){
+	  else if(R * R + EPS>= (hx - dx) * (hx - dx) + (hy - dy) * (hy - dy)){
 	    // printf("%lf %lf\n",homes[home_idx].x,homes[home_idx].y);
 	    // printf("%lf %lf\n\n",homes[dst_idx].x,homes[dst_idx].y);
 	    uft.unite(home_idx,dst_idx);
 	  }
 	}
       }
-      for(int x_idx=cx_idx-1; x_idx <= cx_idx+1; x_idx++){
+      for(int x_idx=cx_idx-2; x_idx <= cx_idx+1; x_idx++){
 	if(x_idx < 0 || x_idx >= xs.size()) continue;
 
 	for(int i=0;i<x2y[xs[x_idx]].size();i++){
@@ -163,7 +163,7 @@ int main(){
 	  if(9 * R * R <= (hx - dx) * (hx - dx) + (hy - dy) * (hy - dy)){
 	    continue;
 	  }
-	  else if(R * R >= (hx - dx) * (hx - dx) + (hy - dy) * (hy - dy)){
+	  else if(R * R + EPS >= (hx - dx) * (hx - dx) + (hy - dy) * (hy - dy)){
 	    uft.unite(home_idx,dst_idx);
 	  }
 	}
