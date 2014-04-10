@@ -28,8 +28,17 @@ typedef pair <int,P> PP;
   
 static const double EPS = 1e-8;
   
-static const int tx[] = {0,1,0,-1};
-static const int ty[] = {-1,0,1,0};
+static const int tx[] = {+0,+1,+1,+1,+0,-1,-1};
+static const int ty[] = {-1,+1,+0,-1,+1,-1,+0};
+
+class Point {
+public:
+  double x;
+  double y;
+  Point() : x(0), y(0) {}
+  Point(double _x,double _y) : x(_x), y(_y) {}
+};
+
 
 class UnionFindTree {
 private:
@@ -85,100 +94,55 @@ public:
   }
 };
 
-class Home{
-public:
-  int home_idx;
-  double coordinate;
-  Home() : home_idx(0),coordinate(0){}
-  Home(int _h,double _c) : home_idx(_h),coordinate(_c){}
-};
-
-class Point {
-public:
-  double x;
-  double y;
-  Point() : x(0), y(0) {}
-  Point(double _x,double _y) : x(_x), y(_y) {}
-};
-
 int main(){
   int total_homes;
   double R;
-  map<double,vector<Home> > x2y;
-  map<double,vector<Home> > y2x;
-  vector<double> xs;
-  vector<double> ys;
   vector<Point> homes;
 
   while(~scanf("%d %lf",&total_homes,&R)){
+    map<P,int> cell;
+    map<P,int> cell_idx;
+    int idx = 0;
+
     for(int home_idx = 0; home_idx < total_homes; home_idx++){
       double x,y;
       scanf("%lf %lf",&x,&y);
-      x2y[x].push_back(Home(home_idx,y));
-      y2x[y].push_back(Home(home_idx,x));
       homes.push_back(Point(x,y));
-      xs.push_back(x);
-      ys.push_back(y);
+      int cell_x = (int)(x / R);
+      int cell_y = (int)(y / R);
+      cell[P(cell_x,cell_y)]++;
+      if(cell_idx.find(P(cell_x,cell_y)) == cell_idx.end()){
+	cell_idx[P(cell_x,cell_y)] = idx++;
+      }
     }
+
+    int total_cells = idx;
+    UnionFindTree uft(total_cells);
     
-    sort(xs.begin(),xs.end());
-    sort(ys.begin(),ys.end());
+    for(map<P,int>::iterator it = cell.begin();
+	it != cell.end();
+	it++){
+      for(int i=0;i<8;i++){
+	int sx = it->first.first;
+	int sy = it->first.second;
 
-    UnionFindTree uft(total_homes);
-    for(int home_idx = 0; home_idx < total_homes; home_idx++){
-      double hx = homes[home_idx].x;
-      double hy = homes[home_idx].y;
-      int cx_idx = lower_bound(xs.begin(),xs.end(),hx) - xs.begin();
-      int cy_idx = lower_bound(ys.begin(),ys.end(),hy) - ys.begin();
-      for(int y_idx=cy_idx-2; y_idx <= cy_idx+1; y_idx++){
-	if(y_idx < 0 || y_idx >= ys.size()) continue;
-
-	const vector<Home>& h = y2x[ys[y_idx]];
-	for(int i=0;i<h.size();i++){
-	  int dst_idx = h[i].home_idx;
-	  
-	  if(dst_idx == home_idx) continue;
-	  double dx = h[i].coordinate;
-	  double dy = ys[y_idx];
-	  if(9 * R * R <= (hx - dx) * (hx - dx) + (hy - dy) * (hy - dy)){
-	    continue;
-	  }
-	  else if(R * R + EPS>= (hx - dx) * (hx - dx) + (hy - dy) * (hy - dy)){
-	    // printf("%lf %lf\n",homes[home_idx].x,homes[home_idx].y);
-	    // printf("%lf %lf\n\n",homes[dst_idx].x,homes[dst_idx].y);
-	    uft.unite(home_idx,dst_idx);
-	  }
-	}
-      }
-      for(int x_idx=cx_idx-2; x_idx <= cx_idx+1; x_idx++){
-	if(x_idx < 0 || x_idx >= xs.size()) continue;
-
-	const vector<Home>& h = x2y[xs[x_idx]];
-	for(int i=0;i<h.size();i++){
-	  int dst_idx = h[i].home_idx;
-	  if(dst_idx == home_idx) continue;
-	  // printf("%lf %lf\n",homes[home_idx].x,homes[home_idx].y);
-	  // printf("%lf %lf\n\n",homes[dst_idx].x,homes[dst_idx].y);
-
-	  double dx = xs[x_idx];
-	  double dy = x2y[xs[x_idx]][i].coordinate;
-	  if(9 * R * R <= (hx - dx) * (hx - dx) + (hy - dy) * (hy - dy)){
-	    continue;
-	  }
-	  else if(R * R + EPS >= (hx - dx) * (hx - dx) + (hy - dy) * (hy - dy)){
-	    uft.unite(home_idx,dst_idx);
-	  }
+	int dx = sx + tx[i];
+	int dy = sy + ty[i];
+	if(cell.find(P(dx,dy)) != cell.end()){
+	  int from = cell_idx[P(sx,sy)];
+	  int to = cell_idx[P(dx,dy)];
+	  uft.unite(from,to);
 	}
       }
     }
 
-    int res = 0;
     bool visited[200001];
     memset(visited,false,sizeof(visited));
-    for(int home_idx = 0; home_idx < total_homes; home_idx++){
-      if(!visited[uft.find(home_idx)]){
+    int res = 0;
+    for(int i=0;i<total_cells;i++){
+      if(!visited[uft.find(i)]){
+	visited[uft.find(i)] = true;
 	res++;
-	visited[uft.find(home_idx)] = true;
       }
     }
     printf("%d\n",res);
