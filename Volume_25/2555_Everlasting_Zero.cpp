@@ -44,7 +44,7 @@ int total_skills;
 
 bool check_path(int from_command,int to_command,
 		Requirement requirement[101][101]){
-  for(int skill_id = 1; skill_id <= total_skills;skill_id++){
+  for(int skill_id = 0; skill_id < total_skills;skill_id++){
     if(requirement[from_command][skill_id].lower
        > requirement[to_command][skill_id].upper){
       return false;
@@ -71,13 +71,14 @@ int main(){
 	string symbol;
 	int required_point;
 	cin >> skill_id >> symbol >> required_point;
+	skill_id--;
 	if(symbol == ">=") {
 	  requirement[command_idx][skill_id].lower
 	    = max(required_point,requirement[command_idx][skill_id].lower);
 	}
 	else if(symbol == "<="){
 	  requirement[command_idx][skill_id].upper
-	    = min(required_point,requirement[command_idx][skill_id].lower);
+	    = min(required_point,requirement[command_idx][skill_id].upper);
 	}
 	
 	if(requirement[command_idx][skill_id].lower
@@ -102,11 +103,17 @@ int main(){
     for(int round = 0; round < total_commands; round++){
       for(int start = 0; start < total_commands; start++){
 	if(!is_valid[start]) continue;
-	
+	if(used[start]) continue;
+
 	bool select = true;
 	for(int to = 0; to < total_commands; to++){
 	  if(!edge[start][to] && !used[to]){
 	    select = false;
+	    break;
+	  }
+	  if(!is_valid[to]){
+	    select = false;
+	    break;
 	  }
 	}
 	
