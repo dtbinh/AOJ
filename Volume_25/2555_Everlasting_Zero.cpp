@@ -49,17 +49,20 @@ bool check_path(int from_command,int to_command,
        > requirement[to_command][skill_id].upper){
       return false;
     }
-    if(requirement[from_command][skill_id].upper
-       < requirement[to_command][skill_id].lower){
-      return false;
-    }
+    // if(requirement[from_command][skill_id].upper
+    //    < requirement[to_command][skill_id].lower){
+    //   return false;
+    // }
   }
   return true;
 }
 
 int main(){
   while(~scanf("%d %d",&total_commands,&total_skills)){
-    Requirement requirement[101][101];    
+    Requirement requirement[101][101];
+
+    bool is_valid[101];
+    memset(is_valid,true,sizeof(is_valid));
     for(int command_idx = 0; command_idx < total_commands; command_idx++){
       int total_conditions;
       scanf("%d",&total_conditions);
@@ -76,11 +79,16 @@ int main(){
 	  requirement[command_idx][skill_id].upper
 	    = min(required_point,requirement[command_idx][skill_id].lower);
 	}
+	
+	if(requirement[command_idx][skill_id].lower
+	   > requirement[command_idx][skill_id].upper){
+	  is_valid[command_idx] = false;
+	}
       }
     }
 
     
-    bool edge[total_commands][total_commands];
+    bool edge[101][101];
     //init
     for(int from = 0; from < total_commands; from++){
       for(int to = 0; to < total_commands; to++){
@@ -88,28 +96,30 @@ int main(){
       }
     }
 
-    bool isok = false;
-    bool used[total_commands];
-    fill(used,used+total_commands,false);
+    bool used[101];
+    memset(used,false,sizeof(used));
 
-    int count = 0;
-    for(int round = 0;round < total_commands;round++){
-      for(int from = 0;from < total_commands;from++){
+    for(int round = 0; round < total_commands; round++){
+      for(int start = 0; start < total_commands; start++){
+	if(!is_valid[start]) continue;
+	
+	bool select = true;
 	for(int to = 0; to < total_commands; to++){
-	  if(edge[from][to] && !used[from] && !used[to]){
-	    used[from] = true;
-	    count++;
-	    goto next;
+	  if(!edge[start][to] && !used[to]){
+	    select = false;
 	  }
 	}
+	
+	if(select){
+	  used[start] = true;
+	}
       }
-    next:;
     }
     
-    if(count == total_commands){
-      isok = true;
+    int count = 0;
+    for(int command_idx=0;command_idx<total_commands;command_idx++){
+      if(used[command_idx]) count++;
     }
-
-    printf("%s\n",isok ? "Yes" : "No");
+    printf("%s\n",(count == total_commands) ? "Yes" : "No");
   }
 }
