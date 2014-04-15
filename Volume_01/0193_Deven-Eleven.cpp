@@ -57,18 +57,46 @@ int main(){
   while(~scanf("%d %d",&W,&H)){
     if(W == 0 && H == 0) break;
 
+    map<pair<int,int>,bool> stage;
     int total_existing_stores;
     scanf("%d",&total_existing_stores);
     for(int store_idx = 0; store_idx < total_existing_stores; store_idx++){
       int x,y;
       scanf("%d %d",&x,&y);
+      x--;
+      y--;
+      stage[pair<int,int>(x,y)] = true;
     }
 
     int total_new_stores;
+
+    int res = 0;
     scanf("%d",&total_new_stores);
     for(int store_idx = 0; store_idx < total_new_stores; store_idx++){
-      int x,y;
-      scanf("%d %d",&x,&y);
+      int sx,sy;
+      scanf("%d %d",&sx,&sy);
+
+      sx--;
+      sy--;
+      int region = 0;
+      for(int x=0;x<W;x++){
+	for(int y=0;y<H;y++){
+	  int min_dist = INF;
+	  
+	  for(map<pair<int,int>,bool>::iterator it = stage.begin();
+	      it != stage.end();
+	      it++){
+	    min_dist = min(min_dist,majadist(it->first,pair<int,int>(x,y)));
+	  }
+	  
+	  if(majadist(pair<int,int>(sx,sy),pair<int,int>(x,y)) < min_dist)
+	    {
+	      region++;
+	    }
+	}
+	res = max(region,res);
+      }
     }
+    printf("%d\n",res);
   }
 }
