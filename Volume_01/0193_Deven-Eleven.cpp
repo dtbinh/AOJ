@@ -29,33 +29,153 @@ static const double EPS = 1e-8;
 int tx[] = {0,1,0,-1};
 int ty[] = {-1,0,1,0};
 
-pair<int,int> maja(int x) {
-  if (x == 0) return pair<int,int>(0,0);
-  int n = static_cast<int>(ceil((-1.0+sqrt(1.0+4.0/3.0*x))/2.0));
-  int a = 3*n*(n-1), d = static_cast<int>(ceil((1.0*x-a)/n-1.0));
-  int k = x - a - n * d;
-  switch (d) {
-  case 0: return pair<int,int>(n-k,k);
-  case 1: return pair<int,int>(-k,n);
-  case 2: return pair<int,int>(-n,n-k);
-  case 3: return pair<int,int>(-n+k,-k);
-  case 4: return pair<int,int>(k,-n);
-  case 5: return pair<int,int>(n,-n+k);
+
+pair<int,int> hanicam(int x,int y,int angle){
+  if(y % 2 == 0){
+    switch(angle){
+    case 0:
+      //upper left
+      return pair<int,int>(x,y-1);
+      break;
+    case 1:
+      //upper right
+      return pair<int,int>(x+1,y-1);
+      break;
+    case 2:
+      //right
+      return pair<int,int>(x+1,y);
+      break;
+    case 3:
+      //lower right
+      return pair<int,int>(x+1,y+1);
+      break;
+    case 4:
+      //lower left
+      return pair<int,int>(x-1,y+1);
+      break;
+    case 5:
+      //left
+      return pair<int,int>(x-1,y);
+      break;
+    default:
+      break;
+    }
+  }
+  else if(y %2 != 0){
+    switch(angle){
+    case 0:
+      //upper left
+      return pair<int,int>(x,y-1);
+      break;
+    case 1:
+      //upper right
+      return pair<int,int>(x+1,y-1);
+      break;
+    case 2:
+      //right
+      return pair<int,int>(x+1,y);
+      break;
+    case 3:
+      //lower right
+      return pair<int,int>(x+1,y+1);
+      break;
+    case 4:
+      //lower left
+      return pair<int,int>(x,y+1);
+      break;
+    case 5:
+      //left
+      return pair<int,int>(x-1,y);
+      break;
+    default:
+      break;
+    }
   }
 }
 
-int majadist(const pair<int,int> &a, const pair<int,int> &b) {
-  int dx = abs(a.first - b.first);
-  int dy = abs(a.second - b.second);
-  int dz = abs(a.first+a.second-b.first-b.second);
-  return min(dx+dy, min(dx+dz, dy+dz));
+class State{
+public:
+  int x,y;
+  int cost;
+  int id;
+  State(int _x,int _y,int _c,int _i) : x(_x),y(_y),cost(_c), id(_i) {}
+  bool operator<(const State& s) const{
+    return cost < s.cost;
+  }
+  bool operator>(const State& s) const{
+    return cost > s.cost;
+  }
+};
+
+int min_cost[101][101];
+int id_list[101][101];
+int W,H;
+
+void bfs(int sx,int sy,int id){
+  priority_queue<State,vector<State>,greater<State> > que;
+  que.push(State(sx,sy,0,id));
+
+  while(!que.empty()){
+    State s = que.top();
+    que.pop();
+    min_cost[s.x][s.y] = s.cost;
+
+    for(int angle=0;angle < 6;angle++){
+      pair<int,int> next = hanicam(sx,sy,angle);
+      int dx = next.first;
+      int dy = next.second;
+      if(dx < 0 || dx >= W || dy < 0 || dy >= H) continue;
+      if(min_cost[dx][dy] <= s.cost + 1) continue;
+      min_cost[dx][dy] = s.cost + 1;
+      id_list[dx][dy] = s.id;
+
+      que.push(State(dx,dy,s.cost + 1,s.id));
+    }
+  }
+}
+
+int candidate_bfs(int sx,int sy){
+  int candidate_cost[101][101];
+  memset(candidate_cost,0x3f,sizeof(candidate_cost));
+
+  priority_queue<State,vector<State>,greater<State> > que;
+  
+  que.push(State(sx,sy,0,0));
+
+  while(!que.empty()){
+    State s = que.top();
+    que.pop();
+    candidate_cost[s.x][s.y] = s.cost;
+
+    for(int angle=0;angle < 6;angle++){
+      pair<int,int> next = hanicam(sx,sy,angle);
+      int dx = next.first;
+      int dy = next.second;
+      if(dx < 0 || dx >= 100 || dy < 0 || dy >= 100) continue;
+      if(min_cost[dx][dy] <= s.cost + 1) continue;
+      if(candidate_cost[dx][dy] <= s.cost + 1) continue;
+
+      que.push(State(dx,dy,s.cost + 1,s.id));
+    }
+  }
+
+  int res = 0;
+  for(int y=0;y<H;y++){
+    for(int x=0;x<W;x++){
+      if(candidate_cost[x][y] != INF){
+	res++;
+      }
+    }
+  }
+  return res;
 }
 
 int main(){
-  int W,H;
 
   while(~scanf("%d %d",&W,&H)){
     if(W == 0 && H == 0) break;
+    memset(min_cost,0x3f,sizeof(min_cost));
+    memset(id_list,-1,sizeof(id_list));
 
     map<pair<int,int>,bool> stage;
     int total_existing_stores;
@@ -65,7 +185,7 @@ int main(){
       scanf("%d %d",&x,&y);
       x--;
       y--;
-      stage[pair<int,int>(x,y)] = true;
+      bfs(x,y,store_idx);
     }
 
     int total_new_stores;
@@ -78,24 +198,7 @@ int main(){
 
       sx--;
       sy--;
-      int region = 0;
-      for(int x=0;x<W;x++){
-	for(int y=0;y<H;y++){
-	  int min_dist = INF;
-	  
-	  for(map<pair<int,int>,bool>::iterator it = stage.begin();
-	      it != stage.end();
-	      it++){
-	    min_dist = min(min_dist,majadist(it->first,pair<int,int>(x,y)));
-	  }
-	  
-	  if(majadist(pair<int,int>(sx,sy),pair<int,int>(x,y)) < min_dist)
-	    {
-	      region++;
-	    }
-	}
-	res = max(region,res);
-      }
+      res = max(res,candidate_bfs(sx,sy));
     }
     printf("%d\n",res);
   }
