@@ -35,11 +35,11 @@ pair<int,int> hanicam(int x,int y,int angle){
     switch(angle){
     case 0:
       //upper left
-      return pair<int,int>(x,y-1);
+      return pair<int,int>(x-1,y-1);
       break;
     case 1:
       //upper right
-      return pair<int,int>(x+1,y-1);
+      return pair<int,int>(x,y-1);
       break;
     case 2:
       //right
@@ -47,7 +47,7 @@ pair<int,int> hanicam(int x,int y,int angle){
       break;
     case 3:
       //lower right
-      return pair<int,int>(x+1,y+1);
+      return pair<int,int>(x,y+1);
       break;
     case 4:
       //lower left
@@ -61,7 +61,7 @@ pair<int,int> hanicam(int x,int y,int angle){
       break;
     }
   }
-  else if(y %2 != 0){
+  else if(y % 2 != 0){
     switch(angle){
     case 0:
       //upper left
@@ -121,7 +121,7 @@ void bfs(int sx,int sy,int id){
     min_cost[s.x][s.y] = s.cost;
 
     for(int angle=0;angle < 6;angle++){
-      pair<int,int> next = hanicam(sx,sy,angle);
+      pair<int,int> next = hanicam(s.x,s.y,angle);
       int dx = next.first;
       int dy = next.second;
       if(dx < 0 || dx >= W || dy < 0 || dy >= H) continue;
@@ -148,10 +148,10 @@ int candidate_bfs(int sx,int sy){
     candidate_cost[s.x][s.y] = s.cost;
 
     for(int angle=0;angle < 6;angle++){
-      pair<int,int> next = hanicam(sx,sy,angle);
+      pair<int,int> next = hanicam(s.x,s.y,angle);
       int dx = next.first;
       int dy = next.second;
-      if(dx < 0 || dx >= 100 || dy < 0 || dy >= 100) continue;
+      if(dx < 0 || dx >= W || dy < 0 || dy >= H) continue;
       if(min_cost[dx][dy] <= s.cost + 1) continue;
       if(candidate_cost[dx][dy] <= s.cost + 1) continue;
 
