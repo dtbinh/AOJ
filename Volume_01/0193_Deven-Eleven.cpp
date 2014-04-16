@@ -107,18 +107,20 @@ public:
   }
 };
 
-int min_cost[101][101];
-int id_list[101][101];
+int min_cost[128][128];
+int id_list[128][128];
+int candidate_cost[128][128];
 int W,H;
 
 void bfs(int sx,int sy,int id){
   priority_queue<State,vector<State>,greater<State> > que;
   que.push(State(sx,sy,0,id));
 
+  min_cost[sx][sy] = 0;
+
   while(!que.empty()){
     State s = que.top();
     que.pop();
-    min_cost[s.x][s.y] = s.cost;
 
     for(int angle=0;angle < 6;angle++){
       pair<int,int> next = hanicam(s.x,s.y,angle);
@@ -135,17 +137,16 @@ void bfs(int sx,int sy,int id){
 }
 
 int candidate_bfs(int sx,int sy){
-  int candidate_cost[101][101];
   memset(candidate_cost,0x3f,sizeof(candidate_cost));
 
   priority_queue<State,vector<State>,greater<State> > que;
   
   que.push(State(sx,sy,0,0));
+  candidate_cost[sx][sy] = 0;
 
   while(!que.empty()){
     State s = que.top();
     que.pop();
-    candidate_cost[s.x][s.y] = s.cost;
 
     for(int angle=0;angle < 6;angle++){
       pair<int,int> next = hanicam(s.x,s.y,angle);
@@ -154,7 +155,8 @@ int candidate_bfs(int sx,int sy){
       if(dx < 0 || dx >= W || dy < 0 || dy >= H) continue;
       if(min_cost[dx][dy] <= s.cost + 1) continue;
       if(candidate_cost[dx][dy] <= s.cost + 1) continue;
-
+      
+      candidate_cost[dx][dy] = s.cost + 1;
       que.push(State(dx,dy,s.cost + 1,s.id));
     }
   }
