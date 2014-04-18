@@ -54,50 +54,71 @@ int main(){
   int N;
   
   int char2num[256];
-  char2num['e'] = 1;
-  char2num['d'] = 2;
-  char2num['c'] = 3;
-  char2num['b'] = 4;
-  char2num['a'] = 5;
-  char2num['f'] = 6;
+  char2num['f'] = 1;
+  char2num['e'] = 2;
+  char2num['d'] = 3;
+  char2num['c'] = 4;
+  char2num['b'] = 5;
+  char2num['a'] = 6;
+  int chars[] = {'f','e','d','c','b','a'};
+
 
   while(~scanf("%d",&N)){
     for(int i=0;i<N;i++){
       string routes[2];
-      map<pair<int,int>,bool> visited[2];
+      map<pair<int,int>,bool> visited[2][6];
+
       for(int person=0;person<2;person++){
 	cin >> routes[person];
 
-	pair<int,int> current(0,0);
-	visited[person][current] = true;
-	for(int k=0;k<routes[person].size();k++){
-	  current.first 
-	    += maja(char2num[routes[person][k]]).first;
-	  current.second 
-	    += maja(char2num[routes[person][k]]).second;
-	  cout << "x: " << current.first;
-	  cout << " y: " << current.second << endl;
-	  visited[person][current] = true;
+	for(int offset=0;offset< 6;offset++){
+	  for(int char_idx=0;char_idx<6;char_idx++){
+	    char2num[chars[char_idx]]
+	      = (char_idx + offset) % 6 + 1;	  
+	  }  
+	  pair<int,int> current(0,0);
+	  visited[person][offset][current] = true;
+
+	  for(int k=0;k<routes[person].size();k++){
+	    current.first 
+	      += maja(char2num[routes[person][k]]).first;
+	    current.second 
+	      += maja(char2num[routes[person][k]]).second;
+	    // cout << "x: " << current.first;
+	    // cout << " y: " << current.second << endl;
+	    visited[person][offset][current] = true;
+	  }
 	}
       }
-
+	
       string garbage;
       cin >> garbage;
 
-      int offset_x = visited[1].begin()->first.first - visited[0].begin()->first.first;
-      int offset_y = visited[1].begin()->first.second - visited[0].begin()->first.second;
+      bool res = false;
+      for(int src_offset=0;src_offset< 6;src_offset++){
+	for(int dst_offset=0;dst_offset< 6;dst_offset++){
+	  int offset_x
+	    = visited[1][dst_offset].begin()->first.first
+	    - visited[0][src_offset].begin()->first.first;
+	  int offset_y
+	    = visited[1][dst_offset].begin()->first.second
+	    - visited[0][src_offset].begin()->first.second;
 
-      bool isok = true;
-      for(map<pair<int,int>,bool>::iterator it = visited[1].begin();
-	  it != visited[1].end();
-	  it++){
-	pair<int,int> moved(it->first.first+offset_x,
-			    it->first.second+offset_y);
-	if(visited[1].find(moved) == visited[1].end()){
-	  isok = false;
+	  bool isok = true;
+	  for(map<pair<int,int>,bool>::iterator it = visited[1][dst_offset].begin();
+	      it != visited[1][dst_offset].end();
+	      it++){
+	    pair<int,int> moved(it->first.first+offset_x,
+				it->first.second+offset_y);
+	    if(visited[0][src_offset].find(moved) == visited[0][src_offset].end()){
+	      isok = false;
+	      break;
+	    }
+	  }
+	  res |= isok;
 	}
       }
-      printf("%s\n",isok ? "true" : "false");
+      printf("%s\n",res ? "true" : "false");
     }
   }
 }
