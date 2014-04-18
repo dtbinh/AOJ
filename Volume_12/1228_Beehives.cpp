@@ -51,7 +51,7 @@ int majadist(const pair<int,int> &a, const pair<int,int> &b) {
 }
 
 int main(){
-  int N;
+  string strN;
   
   int char2num[256];
   char2num['f'] = 1;
@@ -62,14 +62,15 @@ int main(){
   char2num['a'] = 6;
   int chars[] = {'f','e','d','c','b','a'};
 
-
-  while(~scanf("%d",&N)){
+  while(getline(cin,strN)){
+    int N = atoi(strN.c_str());
+    
     for(int i=0;i<N;i++){
       string routes[2];
       map<pair<int,int>,bool> visited[2][6];
 
       for(int person=0;person<2;person++){
-	cin >> routes[person];
+	getline(cin,routes[person]);
 
 	for(int offset=0;offset< 6;offset++){
 	  for(int char_idx=0;char_idx<6;char_idx++){
@@ -92,7 +93,7 @@ int main(){
       }
 	
       string garbage;
-      cin >> garbage;
+      getline(cin,garbage);
 
       bool res = false;
       for(int src_offset=0;src_offset< 6;src_offset++){
@@ -105,12 +106,12 @@ int main(){
 	    - visited[0][src_offset].begin()->first.second;
 
 	  bool isok = true;
-	  for(map<pair<int,int>,bool>::iterator it = visited[1][dst_offset].begin();
-	      it != visited[1][dst_offset].end();
+	  for(map<pair<int,int>,bool>::iterator it = visited[0][src_offset].begin();
+	      it != visited[0][src_offset].end();
 	      it++){
 	    pair<int,int> moved(it->first.first+offset_x,
 				it->first.second+offset_y);
-	    if(visited[0][src_offset].find(moved) == visited[0][src_offset].end()){
+	    if(visited[1][dst_offset].find(moved) == visited[1][dst_offset].end()){
 	      isok = false;
 	      break;
 	    }
