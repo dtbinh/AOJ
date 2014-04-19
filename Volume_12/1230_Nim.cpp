@@ -42,12 +42,14 @@ int dfs(int total_players,int upto[21],
   int res = 0;
 
   for(int use = 1; 
-      use <= upto[player_idx] && current_stones - use >= 0; 
+      use <= upto[player_idx] 
+	&& current_stones - use >= 0; 
       use++){
     if(dfs(total_players,upto,
 	   current_stones - use,
 	   (player_idx + 1) % total_players) == 0){
       res = 1;
+      break;
     }
   }
   return (dp[current_stones][player_idx] = res);
@@ -68,6 +70,6 @@ int main(){
     }
 
     memset(dp,-1,sizeof(dp));
-    printf("%d\n",dfs(total_players,upto,initial_stones,0));
+    printf("%d\n",dfs(total_players * 2,upto,initial_stones,0));
   }
 }
