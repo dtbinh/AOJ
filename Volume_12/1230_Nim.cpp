@@ -29,5 +29,15 @@ typedef pair <int,P> PP;
 static const double EPS = 1e-8;
 
 int main(){
-  
+  int total_players;
+  while(~scanf("%d",&total_players)){
+    if(total_players == 0) break;
+
+    int initial_stones;
+    scanf("%d",&initial_stones);
+    for(int stone_idx=0;stone_idx < total_players * 2;stone_idx++){
+      int max_number;
+      scanf("%d",&max_number);
+    }
+  }
 }
