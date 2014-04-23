@@ -31,17 +31,18 @@ int ty[] = {-1,0,1,0};
 static const double EPS = 1e-8;
 
 int matrix_size;
-int matrix[16][16];
+int matrix[32][32];
 
 void rotate(int r,int c,int size,int angle){
-  int tmp[size][size];
+  int tmp[32][32];
+
   for(int y=r;y<r+size;y++){
     for(int x=c;x<c+size;x++){
       tmp[y-r][x-c] = matrix[y][x];
     }
   }
   
-  int next[size][size];
+  int next[32][32];
   while(angle > 0){
     int y=0;
     int x=0;
@@ -55,13 +56,13 @@ void rotate(int r,int c,int size,int angle){
 	}
       }
     }
-    angle -= 90;
-  }
-
-  for(int y=r;y<r+size;y++){
-    for(int x=c;x<c+size;x++){
-      matrix[y][x] = next[y-r][x-c];
+    memcpy(tmp,next,sizeof(int)*32*32);
+    for(int y=r;y<r+size;y++){
+      for(int x=c;x<c+size;x++){
+	matrix[y][x] = next[y-r][x-c];
+      }
     }
+    angle -= 90;
   }
 }
 
@@ -74,8 +75,8 @@ void reversal(int r,int c,int size){
 }
 
 void left_shift(int r){
-  int tmp[16];
-  for(int i=1;i<matrix_size;i++){
+  int tmp[32];
+  for(int i=matrix_size - 1;i-1>=0;i--){
     tmp[i-1] = matrix[r][i];
   }
   tmp[matrix_size - 1] = matrix[r][0];
@@ -85,7 +86,7 @@ void left_shift(int r){
 }
 
 void right_shift(int r){
-  int tmp[16];
+  int tmp[32];
   for(int i=0;i+1<matrix_size;i++){
     tmp[i+1] = matrix[r][i];
   }
@@ -110,6 +111,7 @@ void dfs(int base,int r,int c){
 
 void island_reversal(int r,int c){
   int base = matrix[r][c];
+
   dfs(base,r,c);
 }
 
@@ -127,8 +129,8 @@ int main(){
       int r,c,angle,size;
       switch(type){
       case 0:
-	scanf("%d %d %d %d",&r,&c,&angle,&size);
-	rotate(r-1,c-1,angle,size);
+	scanf("%d %d %d %d",&r,&c,&size,&angle);
+	rotate(r-1,c-1,size,angle);
 	break;
       case 1:
 	scanf("%d %d %d",&r,&c,&size);
