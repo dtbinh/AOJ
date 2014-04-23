@@ -40,32 +40,22 @@ void rotate(int r,int c,int size,int angle){
       tmp[y-r][x-c] = matrix[y][x];
     }
   }
-  for(int y=r;y<r+size;y++){
-    for(int x=c;x<c+size;x++){
-      printf("%d ",tmp[y-r][x-c]);
-    }
-    printf("\n");
-  }
   
-  int offset_y = (angle == 90 || angle == 180) ? size - 1 : 0;
-  int offset_x = (angle == 180 || angle == 270) ? size - 1 : 0;
-  
-  int next[size+1][size+1];
-  for(int y=0;y<size;y++){
-    for(int x=0;x<size;x++){
-      double dx = x * cos((double)angle * M_PI/180.0) + y * sin((double)angle * M_PI/180.0) + offset_x;
-      double dy = - x * sin((double)angle * M_PI/180.0) + y * cos((double)angle * M_PI/180.0) + offset_y;
-      printf("x:%d y:%d\n",x,y);
-      printf("dx:%d dy:%d\n",(int)(dx + (dx < 0 ? - EPS : EPS)),(int)(dy + (dy < 0 ? - EPS : EPS)));
-      next[(int)(dy + (dy < 0 ? - EPS : EPS))][(int)(dx + (dx < 0 ? - EPS : EPS))] = tmp[y][x];
+  int next[size][size];
+  while(angle > 0){
+    int y=0;
+    int x=0;
+    for(int dx=size-1;dx>=0;dx--){
+      for(int dy=0;dy<size;dy++){
+	next[dy][dx] = tmp[y][x];
+	x++;
+	if(x >= size){
+	  y++;
+	  x=0;
+	}
+      }
     }
-  }
-
-  for(int y=r;y<r+size;y++){
-    for(int x=c;x<c+size;x++){
-      printf("%d ",next[y-r][x-c]);
-    }
-    printf("\n");
+    angle -= 90;
   }
 
   for(int y=r;y<r+size;y++){
@@ -141,7 +131,7 @@ int main(){
 	rotate(r-1,c-1,angle,size);
 	break;
       case 1:
-	scanf("%d %d %d %d",&r,&c,&size);
+	scanf("%d %d %d",&r,&c,&size);
 	reversal(r-1,c-1,size);
 	break;
       case 2:
