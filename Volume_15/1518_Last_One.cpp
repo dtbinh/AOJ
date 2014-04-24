@@ -71,9 +71,6 @@ int main(){
 
   int total_initial_subsets;
   while(~scanf("%d",&total_initial_subsets)){
-    int freq[4];
-    memset(freq,0,sizeof(freq));
-      
     int nim = 0;
     for(int subset_idx=0;subset_idx < total_initial_subsets;subset_idx++){
       int type;
