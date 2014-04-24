@@ -74,32 +74,16 @@ int main(){
     int freq[4];
     memset(freq,0,sizeof(freq));
       
+    int nim = 0;
     for(int subset_idx=0;subset_idx < total_initial_subsets;subset_idx++){
       int type;
       string num;
       cin >> type >> num;
 
-      int dec = conv(type,num);
-      int success = 0;
-      for(int i=0;i<20;i++){
-	if(dec & (1<<i)){
-	  success++;
-	}
-	else{
-	  if(success == 1) freq[1]++;
-	  else if(success > 1) freq[2]++;
-	  success=0;
-	}
-      }
-
-      if(success == 1) freq[1]++;
-      else if(success > 1) freq[2]++;
+      int pile = conv(type,num);
+      
+      nim ^= pile;
     }
-
-    for(int i=1;i<=2;i++){
-      cout << freq[i] << endl;
-    }
-
-    printf("%s\n",((freq[1] % 2) + freq[2]) % 2 == 0 ? "win" : "lose");
+    printf("%s\n",nim == 0 ? "lose" : "win");
   }
 }
