@@ -60,7 +60,7 @@ int main(){
     
     int res = 0;
     int sum = 0;
-    for(int round = 0; round < 1000000; round++){
+    for(int round = 0; round < 10000000; round++){
       int idx = round % total_2DRespecters;
 ;
       if(respecters[idx].possess10 > 0){
@@ -94,7 +94,10 @@ int main(){
 	  if(pay10 <= storage10 && pay100 <= storage100){
 	    storage10 -= pay10;
 	    storage100 -= pay100;
+	    
 	    sum = 0;
+	    respecters[idx].possess10 += pay10;
+	    respecters[idx].possess100 += pay100;
 	    isok = true;
 	    break;
 	  }
