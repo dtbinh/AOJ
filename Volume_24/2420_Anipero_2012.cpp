@@ -1,5 +1,6 @@
 #define _USE_MATH_DEFINES
 #define INF 0x3f3f3f3f
+#define MINF 0xc0c0c0c0
  
 #include <iostream>
 #include <cstdio>
@@ -54,32 +55,28 @@ int main(){
   while(~scanf("%d %d",
 	       &total_songs,
 	       &cyalume)){
-    
+
     int dp[51][51]; //next accumulate
-    memset(dp,-1,sizeof(dp));
+    memset(dp,0xc0,sizeof(dp));
     dp[0][0] = 0;
 
-    int res = -INF;
+    int res = MINF;
     for(int song_idx=0;song_idx < total_songs;song_idx++){
       int level2_satisfaction,level1_satisfaction,none_satisfaction;
       scanf("%d %d %d",
 	    &level2_satisfaction,
 	    &level1_satisfaction,
 	    &none_satisfaction);
-      
-      // int prev_dp[51][51];
-      // memcpy(dp,prev_dp,sizeof(int)*51*51);
-      // memset(dp,-1,sizeof(dp));
 
       int next_dp[51][51];
-      memset(next_dp,-1,sizeof(next_dp));
+      memset(next_dp,0xc0,sizeof(next_dp));
       
       for(int accumulate=cyalume;accumulate>=0;accumulate--){
 	for(int prev=0;prev<=cyalume;prev++){
 	  if(prev > accumulate) continue;
 
 	  for(int next=0;next<=cyalume;next++){
-	    if(dp[prev][accumulate - next] == -1) continue;
+	    if(dp[prev][accumulate - next] < -100000000) continue;
 	    if(accumulate - next < 0) continue;
 
 	    next_dp[next][accumulate] 
