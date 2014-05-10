@@ -1,5 +1,5 @@
 #define _USE_MATH_DEFINES
-#define INF 100000000
+#define INF 0x3f3f3f3f
  
 #include <iostream>
 #include <cstdio>
@@ -31,6 +31,23 @@ static const double EPS = 1e-8;
 int tx[] = {0,1,0,-1};
 int ty[] = {-1,0,1,0};
 
+int compute_optimal_swing(int level2_satisfaction,
+			  int level1_satisfaction,
+			  int none_satisfaction,
+			  int level2_remaining,
+			  int level1_remaining
+){
+  int res = none_satisfaction;
+  for(int use_level2 = 0; use_level2 <= level2_remaining; use_level2++){
+    for(int use_level1 = 0; use_level1 <= level1_remaining; use_level1++){
+      if(use_level2 + use_level1 > 8) continue;
+      res = max(level2_satisfaction * use_level2
+		+ level1_satisfaction * use_level1,res);
+    }
+  }
+  return res;
+}
+
 int main(){
   int total_songs;
   int cyalume;
@@ -38,21 +55,51 @@ int main(){
 	       &total_songs,
 	       &cyalume)){
     
-    int dp[51][51][51]; //prev next accumulate
-    dp[0][0][0] = 0;
+    int dp[51][51]; //next accumulate
+    memset(dp,-1,sizeof(dp));
+    dp[0][0] = 0;
+
+    int res = -INF;
     for(int song_idx=0;song_idx < total_songs;song_idx++){
       int level2_satisfaction,level1_satisfaction,none_satisfaction;
       scanf("%d %d %d",
 	    &level2_satisfaction,
 	    &level1_satisfaction,
 	    &none_satisfaction);
-      for(int prev=0;prev<=song_idx;prev++){
-	for(int next=0;next<=song_idx;next++){
-	  for(int accumulate=0;accumulate<=song_idx;accumulate++){
-	    
+      
+      // int prev_dp[51][51];
+      // memcpy(dp,prev_dp,sizeof(int)*51*51);
+      // memset(dp,-1,sizeof(dp));
+
+      int next_dp[51][51];
+      memset(next_dp,-1,sizeof(next_dp));
+      
+      for(int accumulate=cyalume;accumulate>=0;accumulate--){
+	for(int prev=0;prev<=cyalume;prev++){
+	  if(prev > accumulate) continue;
+
+	  for(int next=0;next<=cyalume;next++){
+	    if(dp[prev][accumulate - next] == -1) continue;
+	    if(accumulate - next < 0) continue;
+
+	    next_dp[next][accumulate] 
+	      = max(dp[prev][accumulate - next]
+		    + compute_optimal_swing(level2_satisfaction,
+					    level1_satisfaction,
+					    none_satisfaction,
+					    next,prev),
+		    next_dp[next][accumulate]);
+
+	    if(song_idx == total_songs - 1){
+	      res = max(res,next_dp[next][accumulate]);
+	    }
 	  }
 	}
       }
+      
+      memcpy(dp,next_dp,sizeof(int)*51*51);
     }
+
+    printf("%d\n",res);
   }
 }
