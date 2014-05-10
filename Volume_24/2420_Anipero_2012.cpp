@@ -42,6 +42,7 @@ int compute_optimal_swing(int level2_satisfaction,
   for(int use_level2 = 0; use_level2 <= level2_remaining; use_level2++){
     for(int use_level1 = 0; use_level1 <= level1_remaining; use_level1++){
       if(use_level2 + use_level1 > 8) continue;
+      if(use_level2 ==0 &&  use_level1 == 0) continue;
       res = max(level2_satisfaction * use_level2
 		+ level1_satisfaction * use_level1,res);
     }
@@ -76,7 +77,7 @@ int main(){
 	  if(prev > accumulate) continue;
 
 	  for(int next=0;next<=cyalume;next++){
-	    if(dp[prev][accumulate - next] < -100000000) continue;
+	    if(dp[prev][accumulate - next] == MINF) continue;
 	    if(accumulate - next < 0) continue;
 
 	    next_dp[next][accumulate] 
