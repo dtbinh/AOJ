@@ -29,26 +29,18 @@ int main(){
   while(~scanf("%d %d %d %d %d %d",
 	       &math,&greedy,&geometry,&DP,&graph,&other)){
     if(math + greedy + geometry + DP + graph + other == 0) break;
-    int math_game = 0;
-    if(math + DP >= 3){
-      math_game = (math + DP) * (math + DP - 1) * (math + DP - 2) / (3 * 2 * 1);
-    }
 
-    int algorithm_game = 0;
-    if(greedy + graph >= 3){
-      algorithm_game = (greedy + graph) * (greedy + graph - 1) * (greedy + graph - 2) / (3 * 2 * 1);
-    }
-
-    int implement_game = 0;
-    if(geometry + other >= 3){
-      implement_game = (geometry + other) * (geometry + other - 1) * (geometry + other - 2) / (3 * 2 * 1);
-    }
+    int A = math+DP;
+    int B = greedy + graph;
+    int C = geometry + other;
     
-    int balance_game = 0;
-    if(math + DP >= 1 && greedy + graph >= 1 && geometry + other >= 1){
-      balance_game = (math + DP) * (greedy + graph) * (geometry + other) / (3 * 2 * 1);
-    }
-
+    int balance_game = min(min(A,B),C);
+    A -= balance_game;
+    B -= balance_game;
+    C -= balance_game;
+    int math_game = A / 3;
+    int algorithm_game = B / 3;
+    int implement_game = C / 3;
     printf("%d\n",math_game + algorithm_game + implement_game + balance_game);
   }
 }
