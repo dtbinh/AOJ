@@ -34,13 +34,22 @@ int main(){
     int B = greedy + graph;
     int C = geometry + other;
     
-    int balance_game = min(min(A,B),C);
-    A -= balance_game;
-    B -= balance_game;
-    C -= balance_game;
-    int math_game = A / 3;
-    int algorithm_game = B / 3;
-    int implement_game = C / 3;
-    printf("%d\n",math_game + algorithm_game + implement_game + balance_game);
+    int res = 0;
+
+    int max_game = min(min(A,B),C);
+    for(int balance_game = 0; balance_game <= min(2,max_game); balance_game++){
+      int tmpA = A;
+      int tmpB = B;
+      int tmpC = C;
+      tmpA -= balance_game;
+      tmpB -= balance_game;
+      tmpC -= balance_game;
+      int math_game = tmpA / 3;
+      int algorithm_game = tmpB / 3;
+      int implement_game = tmpC / 3;
+
+      res = max(balance_game + math_game + algorithm_game + implement_game,res);
+    }
+    printf("%d\n",res);
   }
 }
