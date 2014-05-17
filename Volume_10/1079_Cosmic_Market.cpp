@@ -31,6 +31,9 @@ struct Order{
   Order(int _t,int _p,int _a) : type(_t),pos(_p),action(_a) {}
 };
 
+bool is_used_row[50001];
+bool is_used_col[50001];
+
 int main(){
   int total_rows,total_cols,total_queries;
 
@@ -38,10 +41,9 @@ int main(){
     if(total_rows == 0 && total_cols == 0 && total_queries == 0) break;
 
     vector<Order> orders;
-    bool is_used_row[50001];
-    bool is_used_col[50001];
     memset(is_used_row,false,sizeof(is_used_row));
     memset(is_used_col,false,sizeof(is_used_col));
+
     ll remaining_row = total_rows;
     ll remaining_col = total_cols;
 
@@ -65,9 +67,9 @@ int main(){
 
 	//0:sit 1:stand up
 	if(orders[query_idx].action == 1) {
-	  occupied_seats += remaining_row;
+	  occupied_seats += remaining_col;
 	}
-	remaining_col--;
+	remaining_row--;
       }
 
       //col
@@ -78,9 +80,9 @@ int main(){
 
 	//0:sit 1:stand up
 	if(orders[query_idx].action == 1) {
-	  occupied_seats += remaining_col;
+	  occupied_seats += remaining_row;
 	}
-	remaining_row--;
+	remaining_col--;
       }
     }
     printf("%lld\n",occupied_seats);
