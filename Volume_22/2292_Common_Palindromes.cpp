@@ -102,21 +102,51 @@ public:
     delete[] sa;
   }
 
-  bool contain(const string& T){
+  int bsearch_first(const string& T){
     int a = 0;
     int b = S.length();
     while(b - a > 1){
       int c = (a + b) / 2;
-      if(S.compare(sa[c],T.length(),T) < 0) a = c;
-      else b = c;
+      if(S.compare(sa[c],T.length(),T) > 0){
+	a = c;
+      }
+      else{
+	b = c;
+      }
     }
-    return S.compare(sa[b],T.length(),T) == 0;
+    if(b >= S.length() || S.compare(sa[b],T.length(),T) != 0){
+      return -1;
+    }
+    return b;
+  }
+
+  bool bsearch_last(const string& T){
+    int a = 0;
+    int b = S.length();
+    while(b - a > 1){
+      int c = (a + b) / 2;
+      if(S.compare(sa[c],T.length(),T) < 0){
+	a = c;
+      }
+      else{
+	b = c;
+      }
+    }
+
+    if( b < 0 || S.compare(sa[b],T.length(),T) != 0){
+      return -1;
+    }
+    return b;
   }
 
   int hits(const string& T){
-    return 0;
-  }
+    int first = bsearch_first(T);
+    int last = bsearch_last(T);
 
+    if(first == -1 || last == -1) return 0;
+    
+    return last - first + 1;
+  }
 };
   
 int main(){
@@ -127,10 +157,11 @@ int main(){
     SuffixArray sa(to);
     int res = 0;
     for(int i=0;i<from.size();i++){
+      string query = "";
       for(int length=1;i + length<=from.size();length++){
-	string query = from.substr(i,length);
+	query += from[i + length - 1];
 	if(query.size() > to.size()) continue;
-	if(sa.contain(query)) res++;
+	res += sa.hits(query);
       }
     }
 
