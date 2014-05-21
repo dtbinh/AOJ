@@ -50,7 +50,7 @@ private:
   void construct_sa(){
     for(int i= 0; i <= n;i++){
       sa[i] = i;
-      rank[i] = i < n ? S[i] : -1;
+      rank[i] = (i < n ? S[i] : -1);
     }
     
     for(int k = 1; k <= n; k *= 2){
@@ -90,9 +90,9 @@ public:
   SuffixArray(const string& _S){
     S = _S;
     n = S.length();
-    rank = new int[n+1];
-    tmp = new int[n+1];
-    sa = new int[n+1];
+    rank = new int[n+10]; //not to be too small
+    tmp = new int[n+10];
+    sa = new int[n+10];
     construct_sa();
   }
 
@@ -112,9 +112,28 @@ public:
     }
     return S.compare(sa[b],T.length(),T) == 0;
   }
+
+  int hits(const string& T){
+    return 0;
+  }
+
 };
   
 int main(){
-  string S = "abracadabra";
-  SuffixArray sa(S);
+  string from;
+  while(cin >> from){
+    string to;
+    cin >> to;
+    SuffixArray sa(to);
+    int res = 0;
+    for(int i=0;i<from.size();i++){
+      for(int length=1;i + length<=from.size();length++){
+	string query = from.substr(i,length);
+	if(query.size() > to.size()) continue;
+	if(sa.contain(query)) res++;
+      }
+    }
+
+    printf("%d\n",res);
+  }
 }
