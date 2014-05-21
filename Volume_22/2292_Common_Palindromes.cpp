@@ -31,35 +31,15 @@ const int ty[] = {0,0,1,1};
 static const double EPS = 1e-8;
 
 
+
 class SuffixArray {
 private:
   string S;
-  int k; //word length
-  int n;
   int* rank;
   int* tmp;
   int* sa;
-  
-  void construct_sa(){
-    for(int i= 0; i <= n;i++){
-      sa[i] = i;
-      rank[i] = i < n ? S[i] : -1;
-    }
-    
-    for(k = 1; k <= n; k *= 2){
-      sort(sa,sa + (n + 1),compare_sa);
-      
-      tmp[sa[0]] = 0;
-      for(int i=1;i<= n;i++){
-	tmp[sa[i]] = tmp[sa[i-1]] + (compare_sa(sa[i-1],sa[i]) ? 1 : 0);
-      }
-      for(int i=0;i<=n;i++){
-	rank[i] = tmp[i];
-      }
-    }
-  }
-
-  bool compare_sa(int i,int j) const{
+  int n;
+  bool compare_sa(int i,int j,int k) const{
     if(rank[i] != rank[j]) return rank[i] < rank[j];
     else {
       int ri = i + k <= n ? rank[i + k] : -1;
@@ -67,8 +47,48 @@ private:
       return ri < rj;
     }
   }
+  void construct_sa(){
+    for(int i= 0; i <= n;i++){
+      sa[i] = i;
+      rank[i] = i < n ? S[i] : -1;
+    }
+    
+    for(int k = 1; k <= n; k *= 2){
+      qsort(0,n + 1,k);
+      
+      tmp[sa[0]] = 0;
+      for(int i=1;i<= n;i++){
+	tmp[sa[i]] = tmp[sa[i-1]] + (compare_sa(sa[i-1],sa[i],k) ? 1 : 0);
+      }
+      for(int i=0;i<=n;i++){
+	rank[i] = tmp[i];
+      }
+    }
+  }
+
+  void qsort(int lhs,int rhs,int k){
+    if(lhs >= rhs) return;
+    int pivot = (lhs + rhs) / 2;
+    
+    int i = lhs;
+    int j = rhs;
+    while(i < j){
+      while(i < pivot && compare_sa(i,pivot,k)){
+	i++;
+      }
+      while(pivot < j && compare_sa(pivot,j,k)){
+	j--;
+      }
+      swap(sa[i],sa[j]);
+      i++; j--;
+    }
+
+    qsort(lhs,pivot-1,k);
+    qsort(pivot+1,rhs,k);
+  }
 public:
-  SuffixArray(const string& S){
+  SuffixArray(const string& _S){
+    S = _S;
     n = S.length();
     rank = new int[n+1];
     tmp = new int[n+1];
@@ -93,16 +113,8 @@ public:
     return S.compare(sa[b],T.length(),T) == 0;
   }
 };
-
-bool compare_sa(int i,int j){
-  if(rank[i] != rank[j]) return rank[i] < rank[j];
-  else {
-    int ri = i + k <= n ? rank[i + k] : -1;
-    int rj = j + k <= n ? rank[j + k] : -1;
-    return ri < rj;
-  }
-}
   
 int main(){
-  
+  string S = "abracadabra";
+  SuffixArray sa(S);
 }
