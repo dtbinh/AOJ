@@ -165,9 +165,9 @@ public:
 
     if(first == -1 || last == -1) return 0;
 
-    cout << "query: " << T << endl;
-    disp();
-    cout << "lst: " << last << " fst: " << first << endl;
+    // cout << "query: " << T << endl;
+    // disp();
+    // cout << "lst: " << last << " fst: " << first << endl;
     return last - first + 1;
   }
 };
@@ -181,11 +181,22 @@ int main(){
     int res = 0;
     for(int i=0;i<from.size();i++){
       string query = "";
+
       for(int length=1;i + length<=from.size();length++){
+	bool isok = true;
   	query += from[i + length - 1];
-  	if(query.size() > to.size()) continue;
-  	res += sa.hits(query);
+
+	for(int i=0,j=query.size()-1;i<j;i++,j--){
+	  if(query[i] != query[j]) isok = false;
+	}
+
+  	if(query.size() > to.size()) break;
+
+	int hit = sa.hits(query);
+	if(hit == 0) break;
+  	if(isok) res += hit;
       }
+
     }
     printf("%d\n",res);
   }
