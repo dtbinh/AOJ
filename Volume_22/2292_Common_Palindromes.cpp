@@ -115,9 +115,9 @@ public:
   SuffixArray(const string& _S){
     S = _S;
     n = S.length();
-    rank = new int[n+12](); //not to be too small
-    tmp = new int[n+12]();
-    sa = new int[n+12]();
+    rank = new int[2 * n + 1](); //not to be too small
+    tmp = new int[2 * n + 1]();
+    sa = new int[2 * n + 1]();
     construct_sa();
   }
 
@@ -129,7 +129,7 @@ public:
 
   int bsearch_first(const string& T){
     int lower = -1;
-    int upper = S.length();
+    int upper = S.length() + 1;
     while(lower + 1 < upper){
       int mid = lower + (upper - lower) / 2;
       if(S.compare(sa[mid],T.length(),T) < 0){
@@ -145,7 +145,7 @@ public:
 
   int bsearch_last(const string& T){
     int lower = -1;
-    int upper = S.length();
+    int upper = S.length() + 1;
     while(lower + 1 < upper){
       int mid = lower + (upper - lower) / 2;
       if(S.compare(sa[mid],T.length(),T) <= 0){
@@ -156,7 +156,7 @@ public:
       }
     }
 
-    if(lower > S.length() || S.compare(sa[lower],T.length(),T) != 0) return -1;
+    if(lower < 0 || S.compare(sa[lower],T.length(),T) != 0) return -1;
     return lower;
   }
   int hits(const string& T){
@@ -164,51 +164,14 @@ public:
     int last = bsearch_last(T);
 
     if(first == -1 || last == -1) return 0;
-    
+
+    cout << "query: " << T << endl;
+    disp();
+    cout << "lst: " << last << " fst: " << first << endl;
     return last - first + 1;
   }
 };
 
-
-int a[] = {5,5,5,104,5,5,5,1};
-bool comp(int i,int j){
-  return a[i] < a[j];
-}
-
-void quiclens(int a[10],int lhs,int rhs){
-  if(lhs >= rhs) return;
-
-  int pivot = lhs + (rhs - lhs) / 2;
-  for(int i=0;i<7;i++){
-    cout << a[i] << " ";
-  }
-  cout << "\n";
-
-  cout << "piv: " << pivot << endl;
-  cout << "a[piv]: " << a[pivot] << endl;
-  int i = lhs;
-  int j = rhs;
-  while(1){
-    while(comp(i,pivot)) i++;
-    while(comp(pivot,j)) j--;
-
-    if(i >= j) break;
-    cout << "a[i]: " << a[i] << endl;
-    cout << "a[j]: " << a[j] << endl;
-    swap(a[i],a[j]);
-    i++;
-    j--;
-  }
-
-  for(int i=0;i<7;i++){
-    cout << a[i] << " ";
-  }
-  cout << "\n";
-
-  quiclens(a,lhs,i-1);
-  quiclens(a,j+1,rhs);
-}
-  
 int main(){
   string from;
   while(cin >> from){
@@ -226,7 +189,4 @@ int main(){
     }
     printf("%d\n",res);
   }
-
-  // quiclens(a,0,6);
-  // cout << endl;
 }
