@@ -203,9 +203,15 @@ int main(){
 	    = from.substr(lhs,1) + query + from.substr(rhs,1);
 	}
 
-	int hit = sa.hits(query);
-	res += hit;
+	freq[query]++;
       }
+    }
+
+    for(map<string,int>::iterator it = freq.begin();
+	it != freq.end();
+	it++){
+      int hit = sa.hits(it->first);
+      res += it->second * hit;
     }
     
     printf("%d\n",res);
