@@ -59,7 +59,7 @@ private:
     }
 
     for(int len = 1; len <= n; len *= 2){
-      sa_sort(0,n,len);
+      sort_sa(0,n,len);
       
       tmp[sa[0]] = 0;
       for(int i=1;i<= n;i++){
@@ -71,7 +71,7 @@ private:
     }
   }
 
-  void sa_sort(int lhs,int rhs,int len){
+  void sort_sa(int lhs,int rhs,int len){
     if(lhs >= rhs) return;
     int i = lhs - 1;
     int j = rhs;
@@ -99,8 +99,8 @@ private:
     for(int k=lhs; k < p; k++, j--) swap(sa[k],sa[j]);
     for(int k=rhs-1; k > q; k--, i++) swap(sa[i],sa[k]);
     
-    sa_sort(lhs,j,len);
-    sa_sort(i,rhs,len);
+    sort_sa(lhs,j,len);
+    sort_sa(i,rhs,len);
   }
   
   //for debug
@@ -179,25 +179,24 @@ int main(){
     cin >> to;
     SuffixArray sa(to);
     int res = 0;
-    for(int i=0;i<from.size();i++){
-      string query = "";
 
-      for(int length=1;i + length<=from.size();length++){
+    map<string,int> freq;
+    for(int length=1;length<=from.size();length++){
+      for(int start=0;start+length<=from.size();start++){
 	bool isok = true;
-  	query += from[i + length - 1];
-
-	for(int i=0,j=query.size()-1;i<j;i++,j--){
-	  if(query[i] != query[j]) isok = false;
+	for(int i=start,j=start+length-1;i<j;i++,j--){
+	  if(from[i] != from[j]){
+	    isok = false;
+	    break;
+	  }
 	}
-
-  	if(query.size() > to.size()) break;
-
-	int hit = sa.hits(query);
-	if(hit == 0) break;
-  	if(isok) res += hit;
+	if(isok){
+	  int hit = sa.hits(from.substr(start,length));
+	  res += hit;
+	}
       }
-
     }
+    
     printf("%d\n",res);
   }
 }
