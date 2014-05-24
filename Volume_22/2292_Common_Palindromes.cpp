@@ -181,19 +181,30 @@ int main(){
     int res = 0;
 
     map<string,int> freq;
-    for(int length=1;length<=from.size();length++){
-      for(int start=0;start+length<=from.size();start++){
-	bool isok = true;
-	for(int i=start,j=start+length-1;i<j;i++,j--){
-	  if(from[i] != from[j]){
-	    isok = false;
-	    break;
+    for(double center_pos=0;center_pos < (double)from.size();center_pos += 0.5){
+      string query = "";
+      for(int radius=0;radius<=from.size();radius++){
+	int lhs = (int)(ceil(center_pos - (double)radius) + EPS);
+	int rhs = (int)(center_pos + (double)radius);
+	if(lhs < 0 || rhs >= from.size()) break;
+	if(from[lhs] != from[rhs]) break;
+
+	if(radius == 0){
+	  if((double)lhs < center_pos - EPS
+	     && center_pos + EPS < (double)rhs){
+	    // nothing to do
+	  }
+	  else{
+	    query = from.substr((int)(center_pos + EPS),1);
 	  }
 	}
-	if(isok){
-	  int hit = sa.hits(from.substr(start,length));
-	  res += hit;
+	else{
+	  query
+	    = from.substr(lhs,1) + query + from.substr(rhs,1);
 	}
+
+	int hit = sa.hits(query);
+	res += hit;
       }
     }
     
