@@ -17,6 +17,7 @@
 #include <list>
 #include <cctype>
 #include <utility>
+#include <cassert>
  
 using namespace std;
  
@@ -32,12 +33,12 @@ static const double EPS = 1e-8;
 class SegmentTree {
 private:
   int* dat;
-  static int n;
+  int n;
 public:
   SegmentTree(int _size){
-    dat = new int[n * 2 - 1];
     n = 1;
     while(n < _size) n *= 2;
+    dat = new int[n * 2 - 1];
     fill(dat,dat + n * 2 - 1,INF);
   }
 
@@ -51,7 +52,9 @@ public:
   }
 
   int query(int a,int b,int idx = 0,
-	    int l = 0,int r = n){
+	    int l = 0,int r = INF){
+    if(r == INF) r = n;
+
     if(r <= a || b <= l) return INF;
     
     if(a <= l && r <= b) return dat[idx];
@@ -156,23 +159,13 @@ private:
     }
   }
   
-  //for debug
-  void disp(){
-    for(int i=0;i<=S.length();i++){
-      printf("rank[%d] := %d",sa[i], rank[sa[i]]);
-      printf(" rank[%d + %d] := %d ",sa[i],S.length(),rank[sa[i] + S.length()]);
-      printf(" lcp[%d] := %d ",i, lcp[i]);
-      cout << S.substr(sa[i],S.length()) << endl;
-    }
-  }
-
 public:
   SuffixArray(const string& _S){
     S = _S;
     n = S.length();
-    rank = new int[2 * n + 1](); //not to be too small
-    sa = new int[2 * n + 1]();
-    lcp = new int[2 * n + 1]();
+    rank = new int[n + 12](); //not to be too small
+    sa = new int[n + 12]();
+    lcp = new int[n + 12]();
     construct_sa();
     construct_lcp();
   }
@@ -227,29 +220,32 @@ public:
     return last - first + 1;
   }
 
-  int solve(){
-    int delimiter_pos = 0;
-    for(int i=0;i<n;i++){
-      if(S[i] == '$'){
-	delimiter_pos = i;
-	break;
-      }
-    }
+  int get_lcp(int i) const{
+    assert(i < n);
+    return lcp[i];
+  }
 
-    int res = 0;
-    for(int start=0;start<n;start++){
-      for(int i=start;i<n;i++){
-	if(lcp[i] == 0) break;
-	if((sa[i] < delimiter_pos && sa[i+1] < delimiter_pos)
-	   || (sa[i] > delimiter_pos && sa[i+1] > delimiter_pos)){
-	  break;
-	}
-	res++;
-      }
-    }
+  int get_sa(int i) const{
+    assert(i < n);
+    return sa[i];
+  }
 
-    disp();
-    return res;
+  int get_rank(int i) const{
+    assert(i < n);
+    return rank[i];
+  }
+
+  int size() const{
+    return n;
+  }
+  //for debug
+  void disp() const{
+    for(int i=0;i<=S.length();i++){
+      printf("rank[%d] := %d",sa[i], rank[sa[i]]);
+      printf(" rank[%d + %d] := %d ",sa[i],S.length(),rank[sa[i] + S.length()]);
+      printf(" lcp[%d] := %d ",i, lcp[i]);
+      cout << S.substr(sa[i],S.length()) << endl;
+    }
   }
 };
 
@@ -258,10 +254,23 @@ int main(){
   while(cin >> from){
     string to;
     cin >> to;
-    reverse(to.begin(),to.end());
-    SuffixArray sa(from + "$" + to);
+
+    string rev_from = from;
+    string rev_to = to;
+
+    reverse(rev_to.begin(),rev_to.end());
+    reverse(rev_from.begin(),rev_from.end());
+
+    string query = from + "$" + rev_from + "$" + to + "$" + rev_to;
+    SuffixArray suf_array(query);
+
+    suf_array.disp();
+    SegmentTree seg_tree(query.size());
+    for(int i=0;i<suf_array.size();i++){
+      seg_tree.update(i,suf_array.get_lcp(i));
+    }
     int res = 0;
 
-    printf("%d\n",sa.solve());
+    printf("%d\n",res);
   }
 }
