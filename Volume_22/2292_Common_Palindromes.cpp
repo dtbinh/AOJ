@@ -75,6 +75,8 @@ private:
   int* sa;
   int* lcp;
   int n;
+  int n_front;
+  int n_rear;
 
   bool compare_sa(int i,int j,int len) const{
     if(rank[i] != rank[j]) return rank[i] < rank[j];
@@ -153,6 +155,7 @@ private:
       int j= sa[rank[i] - 1];
       if(h > 0) h--;
       for(; j + h < n && i + h < n; h++){
+	if(S[j + h] == '$' || S[i + h] == '$') break;
 	if(S[j + h] != S[i + h]) break;
       }
       lcp[rank[i] - 1] = h;
@@ -163,6 +166,25 @@ public:
   SuffixArray(const string& _S){
     S = _S;
     n = S.length();
+    rank = new int[n + 12](); //not to be too small
+    sa = new int[n + 12]();
+    lcp = new int[n + 12]();
+    construct_sa();
+    construct_lcp();
+  }
+
+  SuffixArray(const string& _S1,const string& _S2){
+    string rev_s1 = _S1;
+    reverse(rev_s1.begin(),rev_s1.end());
+
+    string rev_s2 = _S2;
+    reverse(rev_s2.begin(),rev_s2.end());
+
+    S = _S1 + "$" + rev_s1 + "$" + _S2 + "$" + rev_s2;
+    n = S.length();
+    n_front = _S1.size();
+    n_rear = _S2.size();
+
     rank = new int[n + 12](); //not to be too small
     sa = new int[n + 12]();
     lcp = new int[n + 12]();
@@ -241,10 +263,28 @@ public:
   //for debug
   void disp() const{
     for(int i=0;i<=S.length();i++){
-      printf("rank[%d] := %d",sa[i], rank[sa[i]]);
-      printf(" rank[%d + %d] := %d ",sa[i],S.length(),rank[sa[i] + S.length()]);
-      printf(" lcp[%d] := %d ",i, lcp[i]);
+      printf("rank[%02d] := %02d",sa[i], rank[sa[i]]);
+      printf(" lcp[%02d] := %02d ",i, lcp[i]);
+      printf(" type:%s ",detect_pos(sa[i]).c_str());
       cout << S.substr(sa[i],S.length()) << endl;
+    }
+  }
+
+  string detect_pos(int i) const{
+    if(i < n_front){
+      return "S";
+    }
+    else if(n_front < i && i < 2 * n_front + 1){
+      return "S'";
+    }
+    else if(2 *  n_front + 1 < i && i < 2 * n_front + 1 + n_rear + 1){
+      return "T";
+    }
+    else if(2 * n_front + 1 + n_rear + 1 < i && i < 2 * n_front + 2 * n_rear + 2 + 1){
+      return "T'";
+    }
+    else{
+      return "NA";
     }
   }
 };
@@ -255,17 +295,10 @@ int main(){
     string to;
     cin >> to;
 
-    string rev_from = from;
-    string rev_to = to;
-
-    reverse(rev_to.begin(),rev_to.end());
-    reverse(rev_from.begin(),rev_from.end());
-
-    string query = from + "$" + rev_from + "$" + to + "$" + rev_to;
-    SuffixArray suf_array(query);
+    SuffixArray suf_array(from,to);
 
     suf_array.disp();
-    SegmentTree seg_tree(query.size());
+    SegmentTree seg_tree(suf_array.size());
     for(int i=0;i<suf_array.size();i++){
       seg_tree.update(i,suf_array.get_lcp(i));
     }
