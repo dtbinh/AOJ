@@ -74,6 +74,7 @@ private:
   int* rank;
   int* sa;
   int* lcp;
+  int* type;
   int n;
   int n_front;
   int n_rear;
@@ -169,6 +170,7 @@ public:
     rank = new int[n + 12](); //not to be too small
     sa = new int[n + 12]();
     lcp = new int[n + 12]();
+    type = new int[n + 12]();
     construct_sa();
     construct_lcp();
   }
@@ -188,6 +190,8 @@ public:
     rank = new int[n + 12](); //not to be too small
     sa = new int[n + 12]();
     lcp = new int[n + 12]();
+    type = new int[n + 12]();
+
     construct_sa();
     construct_lcp();
   }
@@ -260,31 +264,58 @@ public:
   int size() const{
     return n;
   }
+
+  int get_type(int i) const{
+    return type[i];
+  }
+
   //for debug
   void disp() const{
     for(int i=0;i<=S.length();i++){
+      type[i] = detect_type(sa[i]);
+    }
+
+    for(int i=0;i<=S.length();i++){
       printf("rank[%02d] := %02d",sa[i], rank[sa[i]]);
       printf(" lcp[%02d] := %02d ",i, lcp[i]);
-      printf(" type:%s ",detect_pos(sa[i]).c_str());
+      printf(" type:%02d ",type[i]);
       cout << S.substr(sa[i],S.length()) << endl;
     }
   }
 
-  string detect_pos(int i) const{
-    if(i < n_front){
-      return "S";
+  int compute_pos(int type,int i) const {
+    if(type == 0){
+      return rank[i];
     }
-    else if(n_front < i && i < 2 * n_front + 1){
-      return "S'";
+    else if(type == 1){
+      return rank[2 * n_front + 1 - (i + 1)];
     }
-    else if(2 *  n_front + 1 < i && i < 2 * n_front + 1 + n_rear + 1){
-      return "T";
+    else if(type == 2){
+      return rank[2 * n_front + 2 + i];
     }
-    else if(2 * n_front + 1 + n_rear + 1 < i && i < 2 * n_front + 2 * n_rear + 2 + 1){
-      return "T'";
+    else if(type == 3){
+      return rank[2 * n_front + 2 + 2 * n_rear + 1 - (i + 1)];
     }
     else{
-      return "NA";
+      return -1;
+    }
+  }
+
+  int detect_type(int i) const{
+    if(i < n_front){
+      return 0; //S
+    }
+    else if(n_front < i && i < 2 * n_front + 1){
+      return 1; //S'
+    }
+    else if(2 *  n_front + 1 < i && i < 2 * n_front + 1 + n_rear + 1){
+      return 2; //T
+    }
+    else if(2 * n_front + 1 + n_rear + 1 < i && i < 2 * n_front + 2 * n_rear + 2 + 1){
+      return 3; //T'
+    }
+    else{
+      return -1;
     }
   }
 };
@@ -302,7 +333,24 @@ int main(){
     for(int i=0;i<suf_array.size();i++){
       seg_tree.update(i,suf_array.get_lcp(i));
     }
+
     int res = 0;
+    for(int type_pair = 0;type_pair < 2; type_pair++){
+      int len = (type_pair == 0 ? from.size() : to.size());
+
+      //(S,S'),(T,T')
+      int type1 = type_pair * 2;
+      int type2 = type_pair * 2 + 1;//reversed
+      for(int i=0;i<len;i++){
+	int lhs = suf_array.compute_pos(type1,i);
+	int rhs = suf_array.compute_pos(type2,i);
+
+	if(lhs > rhs) swap(lhs,rhs);
+	cout << lhs << " " << rhs << endl;
+	int lcp = seg_tree.query(lhs,rhs);
+	cout << lcp << endl;
+      }
+    }
 
     printf("%d\n",res);
   }
