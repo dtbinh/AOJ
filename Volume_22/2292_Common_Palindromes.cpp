@@ -284,16 +284,16 @@ public:
   }
 
   int compute_pos(int type,int i) const {
-    if(type == 0){
+    if(type == 0){ //S
       return rank[i];
     }
-    else if(type == 1){
+    else if(type == 1){ //S'
       return rank[2 * n_front + 1 - (i + 1)];
     }
-    else if(type == 2){
+    else if(type == 2){ //T
       return rank[2 * n_front + 2 + i];
     }
-    else if(type == 3){
+    else if(type == 3){ //T'
       return rank[2 * n_front + 2 + 2 * n_rear + 1 - (i + 1)];
     }
     else{
@@ -320,6 +320,60 @@ public:
   }
 };
 
+class UnionFindTree {
+private:
+  int* par;
+  int* rank;
+  int* weight;
+public:
+  UnionFindTree(int n){
+    par = new int[n]();
+    rank = new int[n]();
+    weight = new int[n]();
+    for(int i=0;i<n;i++){
+      par[i] = i;
+      rank[i] = 0;
+      weight[i] = 1;
+    }
+  }
+
+  ~UnionFindTree(){
+    delete[] rank;
+    delete[] par;
+    delete[] weight;
+  }
+
+  int find(int x){
+    if(par[x] == x){
+      return x;
+    } else {
+      return par[x] = find(par[x]);
+    }
+  }
+
+  void unite(int x,int y){
+    x = find(x);
+    y = find(y);
+    if (x == y) return;
+
+    if(rank[x] < rank[y]){
+      par[x] = y;
+      weight[y] += weight[x];
+    } else {
+      par[y] = x;
+      weight[x] += weight[y];
+      if (rank[x] == rank[y]) rank[x]++;
+    }
+  }
+
+  int count(int x){
+    return weight[find(x)];
+  }
+  bool same(int x,int y){
+    return find(x) == find(y);
+  }
+};
+
 int main(){
   string from;
   while(cin >> from){
@@ -329,26 +383,53 @@ int main(){
     SuffixArray suf_array(from,to);
 
     suf_array.disp();
+
+
     SegmentTree seg_tree(suf_array.size());
     for(int i=0;i<suf_array.size();i++){
       seg_tree.update(i,suf_array.get_lcp(i));
     }
-
+    
     int res = 0;
-    for(int type_pair = 0;type_pair < 2; type_pair++){
-      int len = (type_pair == 0 ? from.size() : to.size());
+    map<int,vector<P> > palindromes;
+    map<int,vector<P> > merge;
 
-      //(S,S'),(T,T')
-      int type1 = type_pair * 2;
-      int type2 = type_pair * 2 + 1;//reversed
-      for(int i=0;i<len;i++){
-	int lhs = suf_array.compute_pos(type1,i);
-	int rhs = suf_array.compute_pos(type2,i);
+    for(int odd_even = 0; odd_even < 2; odd_even++){
+      UnionFindTree uft(100001);
 
-	if(lhs > rhs) swap(lhs,rhs);
-	cout << lhs << " " << rhs << endl;
-	int lcp = seg_tree.query(lhs,rhs);
-	cout << lcp << endl;
+      for(int pair_type = 0;pair_type < 2; pair_type++){
+	int len = (pair_type == 0 ? from.size() : to.size());
+	
+	//pair_type:1 (S,S')
+	//pair_type:2 (T,T')
+	int type1 = pair_type * 2;
+	int type2 = pair_type * 2 + 1;//reversed
+
+	if(odd_even == 0){ //odd
+	  for(int i=0;i<len;i++){
+	    int lhs = suf_array.compute_pos(type1,i);
+	    int rhs = suf_array.compute_pos(type2,i);
+	    
+	    if(lhs > rhs) swap(lhs,rhs);
+	    cout << lhs << " " << rhs << endl;
+	    int lcp = seg_tree.query(lhs,rhs);
+	    palindromes[lcp].push_back(P(lhs,pair_type));
+	    cout << lcp << endl;
+	  }
+	}
+	else{ //even
+	  for(int i=0;i<len;i++){
+	    int lhs = suf_array.compute_pos(type1,i + 1);
+	    int rhs = suf_array.compute_pos(type2,i);
+	    
+	    if(lhs > rhs) swap(lhs,rhs);
+	    cout << lhs << " " << rhs << endl;
+	    int lcp = seg_tree.query(lhs,rhs);
+	    if(lcp == 0) continue;
+	    palindromes[lcp].push_back(P(lhs,pair_type));
+	    cout << lcp << endl;
+	  }
+	}
       }
     }
 
