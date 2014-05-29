@@ -325,11 +325,15 @@ private:
   int* par;
   int* rank;
   int* weight;
+  ll* a;
+  ll* b;
 public:
   UnionFindTree(int n){
     par = new int[n]();
     rank = new int[n]();
     weight = new int[n]();
+    a = new ll[n]();
+    b = new ll[n]();
     for(int i=0;i<n;i++){
       par[i] = i;
       rank[i] = 0;
@@ -341,6 +345,8 @@ public:
     delete[] rank;
     delete[] par;
     delete[] weight;
+    delete[] a;
+    delete[] b;
   }
 
   int find(int x){
@@ -351,19 +357,50 @@ public:
     }
   }
 
-  void unite(int x,int y){
+  ll unite(int x,int y){
     x = find(x);
     y = find(y);
-    if (x == y) return;
+    if (x == y) return 0;
 
+    ll res = -a[x] * b[x] - a[y] * b[y];
+
+    ll na = a[x] + a[y];
+    ll nb = b[x] + b[y];
+    
+    res += na * nb;
     if(rank[x] < rank[y]){
       par[x] = y;
       weight[y] += weight[x];
+      a[x] = -1;
+      b[x] = -1;
+      a[y] = na;
+      b[y] = nb;
+
     } else {
       par[y] = x;
+      a[x] = na;
+      b[x] = nb;
+      a[y] = -1;
+      b[y] = -1;
+
       weight[x] += weight[y];
       if (rank[x] == rank[y]) rank[x]++;
     }
+
+    return res;
+  }
+
+  ll calc(int x,int pair_type){
+    x = find(x);
+    ll res = - a[x] * b[x];
+    if(pair_type == 0){
+      a[x]++;
+    }
+    else{
+      b[x]++;
+    }
+    res += a[x] * b[x];
+    return res;
   }
 
   int count(int x){
@@ -384,55 +421,73 @@ int main(){
 
     suf_array.disp();
 
-
     SegmentTree seg_tree(suf_array.size());
     for(int i=0;i<suf_array.size();i++){
       seg_tree.update(i,suf_array.get_lcp(i));
     }
     
-    int res = 0;
     map<int,vector<P> > palindromes;
-    map<int,vector<P> > merge;
+    map<int,vector<P> > merges;
 
-    for(int odd_even = 0; odd_even < 2; odd_even++){
-      UnionFindTree uft(100001);
-
-      for(int pair_type = 0;pair_type < 2; pair_type++){
-	int len = (pair_type == 0 ? from.size() : to.size());
-	
-	//pair_type:1 (S,S')
-	//pair_type:2 (T,T')
-	int type1 = pair_type * 2;
-	int type2 = pair_type * 2 + 1;//reversed
-
-	if(odd_even == 0){ //odd
-	  for(int i=0;i<len;i++){
-	    int lhs = suf_array.compute_pos(type1,i);
-	    int rhs = suf_array.compute_pos(type2,i);
-	    
-	    if(lhs > rhs) swap(lhs,rhs);
-	    cout << lhs << " " << rhs << endl;
-	    int lcp = seg_tree.query(lhs,rhs);
-	    palindromes[lcp].push_back(P(lhs,pair_type));
-	    cout << lcp << endl;
-	  }
-	}
-	else{ //even
-	  for(int i=0;i<len;i++){
-	    int lhs = suf_array.compute_pos(type1,i + 1);
-	    int rhs = suf_array.compute_pos(type2,i);
-	    
-	    if(lhs > rhs) swap(lhs,rhs);
-	    cout << lhs << " " << rhs << endl;
-	    int lcp = seg_tree.query(lhs,rhs);
-	    if(lcp == 0) continue;
-	    palindromes[lcp].push_back(P(lhs,pair_type));
-	    cout << lcp << endl;
-	  }
-	}
+    UnionFindTree uft(200001);
+    
+    for(int i=1;i<suf_array.size();i++){
+      if(suf_array.get_lcp(i) > 0){
+	//pairing (S,S),(S',S'),(S,S'),(T,T),(T',T'),(T,T')
+	merges[suf_array.get_lcp(i)].push_back(P(i-1,i));
       }
     }
 
-    printf("%d\n",res);
+    ll res = 0;
+    for(int pair_type = 0;pair_type < 2; pair_type++){
+      int len = (pair_type == 0 ? from.size() : to.size());
+      
+      //pair_type:1 (S,S')
+      //pair_type:2 (T,T')
+      int normal = pair_type * 2;
+      int rev = pair_type * 2 + 1;//reversed
+      
+      //odd
+      for(int i=0;i<len;i++){
+	int lhs = suf_array.compute_pos(normal,i);
+	int rhs = suf_array.compute_pos(rev,i);
+	
+	if(lhs > rhs) swap(lhs,rhs);
+	cout << lhs << " " << rhs << endl;
+	int lcp = seg_tree.query(lhs,rhs);
+	palindromes[lcp].push_back(P(lhs,pair_type));
+	cout << lcp << endl;
+      }
+
+      //even
+      for(int i=0;i<len;i++){
+	int lhs = suf_array.compute_pos(normal,i);
+	int rhs = suf_array.compute_pos(rev,i-1);
+	
+	if(lhs > rhs) swap(lhs,rhs);
+	cout << lhs << " " << rhs << endl;
+	int lcp = seg_tree.query(lhs,rhs);
+	if(lcp == 0) continue;
+	palindromes[lcp].push_back(P(lhs,pair_type));
+	cout << lcp << endl;
+      }
+
+      for(int lcp = suf_array.size(); lcp >= 1; lcp--){
+      	for(int i=0; i< merges[lcp].size(); i++){
+      	  P m = merges[lcp][i];
+	  int lhs = m.first; //position in the suffix array
+	  int rhs = m.second; //position in the suffix array
+	  res += uft.unite(lhs,rhs);
+      	}
+      	for(int i=0; i < palindromes[lcp].size(); i++){
+      	  P p = palindromes[lcp][i];
+	  int lhs = p.first;
+	  int pair_type = p.second; //S or T
+	  res += uft.calc(lhs,pair_type);
+      	}
+      }
+    }
+
+    printf("%lld\n",res);
   }
 }
