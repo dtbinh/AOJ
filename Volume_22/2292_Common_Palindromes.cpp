@@ -156,7 +156,7 @@ private:
       int j= sa[rank[i] - 1];
       if(h > 0) h--;
       for(; j + h < n && i + h < n; h++){
-	if(S[j + h] == '$' || S[i + h] == '$') break;
+	// if(S[j + h] == '$' || S[i + h] == '$') break;
 	if(S[j + h] != S[i + h]) break;
       }
       lcp[rank[i] - 1] = h;
@@ -302,16 +302,16 @@ public:
   }
 
   int detect_type(int i) const{
-    if(i < n_front){
+    if(i <= n_front){
       return 0; //S
     }
-    else if(n_front < i && i < 2 * n_front + 1){
+    else if(n_front < i && i <= 2 * n_front + 1){
       return 1; //S'
     }
-    else if(2 *  n_front + 1 < i && i < 2 * n_front + 1 + n_rear + 1){
+    else if(2 *  n_front + 1 < i && i <= 2 * n_front + 1 + n_rear + 1){
       return 2; //T
     }
-    else if(2 * n_front + 1 + n_rear + 1 < i && i < 2 * n_front + 2 * n_rear + 2 + 1){
+    else if(2 * n_front + 1 + n_rear + 1 < i && i <= 2 * n_front + 2 * n_rear + 2 + 1){
       return 3; //T'
     }
     else{
@@ -330,21 +330,21 @@ private:
 public:
   UnionFindTree(int n){
     par = new int[n]();
-    rank = new int[n]();
     weight = new int[n]();
+    rank = new int[n]();
+
     a = new ll[n]();
     b = new ll[n]();
     for(int i=0;i<n;i++){
       par[i] = i;
-      rank[i] = 0;
       weight[i] = 1;
     }
   }
 
   ~UnionFindTree(){
     delete[] rank;
-    delete[] par;
     delete[] weight;
+    delete[] par;
     delete[] a;
     delete[] b;
   }
@@ -361,30 +361,31 @@ public:
     x = find(x);
     y = find(y);
     if (x == y) return 0;
-
-    ll res = -a[x] * b[x] - a[y] * b[y];
+    ll res = - a[x] * b[x] - a[y] * b[y];
 
     ll na = a[x] + a[y];
     ll nb = b[x] + b[y];
     
     res += na * nb;
+
     if(rank[x] < rank[y]){
       par[x] = y;
-      weight[y] += weight[x];
+      
       a[x] = -1;
       b[x] = -1;
       a[y] = na;
       b[y] = nb;
-
-    } else {
+    }
+    else{
       par[y] = x;
+      
       a[x] = na;
       b[x] = nb;
       a[y] = -1;
       b[y] = -1;
 
       weight[x] += weight[y];
-      if (rank[x] == rank[y]) rank[x]++;
+      if(rank[x] == rank[y]) rank[x]++;
     }
 
     return res;
@@ -403,9 +404,6 @@ public:
     return res;
   }
 
-  int count(int x){
-    return weight[find(x)];
-  }
   bool same(int x,int y){
     return find(x) == find(y);
   }
@@ -419,26 +417,23 @@ int main(){
 
     SuffixArray suf_array(from,to);
 
-    suf_array.disp();
+    // suf_array.disp();
 
     SegmentTree seg_tree(suf_array.size());
     for(int i=0;i<suf_array.size();i++){
       seg_tree.update(i,suf_array.get_lcp(i));
     }
     
-    map<int,vector<P> > palindromes;
+    map<int,vector<P> > palindromes[2];
     map<int,vector<P> > merges;
 
-    UnionFindTree uft(200001);
-    
     for(int i=1;i<suf_array.size();i++){
       if(suf_array.get_lcp(i) > 0){
 	//pairing (S,S),(S',S'),(S,S'),(T,T),(T',T'),(T,T')
-	merges[suf_array.get_lcp(i)].push_back(P(i-1,i));
+	merges[suf_array.get_lcp(i)].push_back(P(i,i+1));
       }
     }
-
-    ll res = 0;
+    
     for(int pair_type = 0;pair_type < 2; pair_type++){
       int len = (pair_type == 0 ? from.size() : to.size());
       
@@ -453,41 +448,43 @@ int main(){
 	int rhs = suf_array.compute_pos(rev,i);
 	
 	if(lhs > rhs) swap(lhs,rhs);
-	cout << lhs << " " << rhs << endl;
 	int lcp = seg_tree.query(lhs,rhs);
-	palindromes[lcp].push_back(P(lhs,pair_type));
-	cout << lcp << endl;
+	palindromes[0][lcp].push_back(P(lhs,pair_type));
       }
 
       //even
-      for(int i=0;i<len;i++){
+      for(int i=1;i<len;i++){
 	int lhs = suf_array.compute_pos(normal,i);
-	int rhs = suf_array.compute_pos(rev,i-1);
+	int rhs = suf_array.compute_pos(rev,i - 1);
 	
 	if(lhs > rhs) swap(lhs,rhs);
-	cout << lhs << " " << rhs << endl;
 	int lcp = seg_tree.query(lhs,rhs);
 	if(lcp == 0) continue;
-	palindromes[lcp].push_back(P(lhs,pair_type));
-	cout << lcp << endl;
-      }
-
-      for(int lcp = suf_array.size(); lcp >= 1; lcp--){
-      	for(int i=0; i< merges[lcp].size(); i++){
-      	  P m = merges[lcp][i];
-	  int lhs = m.first; //position in the suffix array
-	  int rhs = m.second; //position in the suffix array
-	  res += uft.unite(lhs,rhs);
-      	}
-      	for(int i=0; i < palindromes[lcp].size(); i++){
-      	  P p = palindromes[lcp][i];
-	  int lhs = p.first;
-	  int pair_type = p.second; //S or T
-	  res += uft.calc(lhs,pair_type);
-      	}
+	palindromes[1][lcp].push_back(P(lhs,pair_type));
       }
     }
 
+    ll res = 0;
+    for(int odd_even=0; odd_even < 2; odd_even++){
+      UnionFindTree uft(200020);
+      ll sum = 0;
+      for(int lcp = suf_array.size(); lcp >= 1; lcp--){
+	for(int i=0; i< merges[lcp].size(); i++){
+	  P m = merges[lcp][i];
+	  int lhs = m.first; //position in the suffix array
+	  int rhs = m.second; //position in the suffix array
+	  sum += uft.unite(lhs,rhs);
+	}
+
+	for(int i=0; i < palindromes[odd_even][lcp].size(); i++){
+	  P p = palindromes[odd_even][lcp][i];
+	  int lhs = p.first;
+	  int pair_type = p.second; //S or T
+	  sum += uft.calc(lhs,pair_type);
+	}
+	res += sum;
+      }
+    }
     printf("%lld\n",res);
   }
 }
