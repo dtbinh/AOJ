@@ -116,36 +116,23 @@ private:
     // disp();
   }
 
+  int partitioning(int lhs,int rhs,int len,int pivot){
+    int store_idx = lhs;
+    for(int i=lhs;i<rhs;i++){
+      if(compare_sa(sa[i],sa[rhs],len)){
+	swap(sa[i],sa[store_idx]);
+	store_idx++;
+      }
+    }
+    swap(sa[store_idx],sa[rhs]);
+    return store_idx;
+  }
+
   void sort_sa(int lhs,int rhs,int len){
     if(lhs >= rhs) return;
-    int i = lhs - 1;
-    int j = rhs;
-    int pivot = rhs;
-    int p = lhs - 1;
-    int q = rhs;
-    // cout << pivot << endl;
-
-    while(1){
-      while(compare_sa(sa[++i],sa[pivot],len));
-      while(compare_sa(sa[pivot],sa[--j],len)){
-	if(j == lhs)  break;
-      }
-      if(j <= i) break;
-      swap(sa[i],sa[j]);
-
-      if(equal_sa(sa[i],sa[pivot],len)) { p++; swap(sa[p],sa[i]); }
-      if(equal_sa(sa[j],sa[pivot],len)) { q--; swap(sa[j],sa[q]); }
-
-    }
-    swap(sa[i],sa[rhs]);
-    j = i - 1;
-    i = i + 1;
-
-    for(int k=lhs; k < p; k++, j--) swap(sa[k],sa[j]);
-    for(int k=rhs-1; k > q; k--, i++) swap(sa[i],sa[k]);
-    
-    sort_sa(lhs,j,len);
-    sort_sa(i,rhs,len);
+    int pivot = partitioning(lhs,rhs,len,rhs);
+    sort_sa(lhs,pivot-1,len);
+    sort_sa(pivot+1,rhs,len);
   }
 
   void construct_lcp(){
