@@ -67,6 +67,35 @@ public:
   }
 };
 
+class SuffixArray;
+class Compare{
+private:
+  const int len;
+  const int n;
+  const int* rank;
+public:
+  Compare(int _l,int _n,int* _r) :
+    len(_l),n(_n),rank(_r) {}
+  bool operator() (int i,int j) const{
+    return compare_sa(i,j,len);
+  }
+
+  bool compare_sa(int i,int j,int len) const{
+    if(rank[i] != rank[j]) return rank[i] < rank[j];
+    else{
+      int ri = (i + len <= n ? rank[i + len] : -1);
+      int rj = (j + len <= n ? rank[j + len] : -1);
+      return ri < rj;
+    }
+  }
+  
+  bool equal_sa(int i,int j,int len) const{
+    int ri = (i + len <= n ? rank[i + len] : -1);
+    int rj = (j + len <= n ? rank[j + len] : -1);
+    
+    return (rank[i] == rank[j] && ri == rj);
+  }
+};
 
 class SuffixArray {
 private:
@@ -79,21 +108,6 @@ private:
   int n_front;
   int n_rear;
 
-  bool compare_sa(int i,int j,int len) const{
-    if(rank[i] != rank[j]) return rank[i] < rank[j];
-    else{
-      int ri = (i + len <= n ? rank[i + len] : -1);
-      int rj = (j + len <= n ? rank[j + len] : -1);
-      return ri < rj;
-    }
-  }
-
-  bool equal_sa(int i,int j,int len) const{
-    int ri = (i + len <= n ? rank[i + len] : -1);
-    int rj = (j + len <= n ? rank[j + len] : -1);
-    
-    return (rank[i] == rank[j] && ri == rj);
-  }
   void construct_sa(){
     for(int i= 0; i <= n;i++){
       sa[i] = i;
@@ -101,38 +115,22 @@ private:
     }
 
     int* tmp = new int[2 * n + 1]();
+    Compare init(1,n,rank);
+    sort(sa,sa+n+1,init);
+
     for(int len = 1; len <= n; len *= 2){
-      sort_sa(0,n,len);
+      Compare comp(len,n,rank);
+      sort(sa,sa+n+1,comp);
       
       tmp[sa[0]] = 0;
       for(int i=1;i<= n;i++){
-	tmp[sa[i]] = tmp[sa[i-1]] + (compare_sa(sa[i-1],sa[i],len) ? 1 : 0);
+	tmp[sa[i]] = tmp[sa[i-1]] + (comp.compare_sa(sa[i-1],sa[i],len) ? 1 : 0);
       }
       for(int i=0;i<=n;i++){
 	rank[i] = tmp[i];
       }
     }
     delete[] tmp;
-    // disp();
-  }
-
-  int partitioning(int lhs,int rhs,int len,int pivot){
-    int store_idx = lhs;
-    for(int i=lhs;i<rhs;i++){
-      if(compare_sa(sa[i],sa[rhs],len)){
-	swap(sa[i],sa[store_idx]);
-	store_idx++;
-      }
-    }
-    swap(sa[store_idx],sa[rhs]);
-    return store_idx;
-  }
-
-  void sort_sa(int lhs,int rhs,int len){
-    if(lhs >= rhs) return;
-    int pivot = partitioning(lhs,rhs,len,rhs);
-    sort_sa(lhs,pivot-1,len);
-    sort_sa(pivot+1,rhs,len);
   }
 
   void construct_lcp(){
