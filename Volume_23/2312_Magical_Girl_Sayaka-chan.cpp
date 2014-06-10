@@ -40,11 +40,10 @@ ll dp[2001][2001];
 int notes[2001];
 ll beauty[100001];
 
-int compute(int i,int j){
+ll compute(int i,int j){
   ll lhs = sum[notes[i]];
-  ll rhs = (notes[j] - 1 < 0 ? 0 :sum[notes[j] - 1]);
+  ll rhs = (notes[j] - 1 < 0 ? 0 : sum[notes[j] - 1]);
 
-  printf("lhs:%d rhs:%d\n",lhs,rhs);
   return (lhs - rhs) / force_of_repulsion;
 }
 
@@ -66,48 +65,26 @@ int main(){
       sum[beauty_idx] = (beauty_idx - 1 >= 0 ? sum[beauty_idx - 1] : 0) + beauty[beauty_idx];
     }
 
-    printf("beauty:\n");
-    for(int beauty_idx = 0; beauty_idx < num_of_beauty; beauty_idx++){
-      printf("%d ",beauty[beauty_idx]);
-    }
-    printf("\n");
-
     sort(notes,notes + num_of_notes);
     reverse(notes,notes + num_of_notes);
-
-    printf("revised notes:\n");
-    for(int i=0;i<num_of_notes;i++){
-      printf("%d ",notes[i]);
-    }
-    printf("\n");
 
     memset(dp,0x3f,sizeof(dp));
 
     dp[0][0] = 0;
     for(int i=0;i<num_of_notes;i++){
+      int next = i + 1;
+      if(next >= num_of_notes) break;
       for(int j=0;j<=i;j++){
-	int next = i + 1;
-
-	printf("i=%d j=%d\n",i,j);
-	printf("\nnoteinfo: notes[%d] = %d, notes[%d] - 1 = %d\n",i,notes[i],next,notes[next] - 1);
-	printf("before0: dp[%d][%d] = %lld\n",next,j,dp[next][j]);
-
 	dp[next][j]
 	  = min(dp[next][j],dp[i][j] + compute(i,next));
 
-	printf("after0:  dp[%d][%d] = %lld\n",next,j,dp[next][j]);
-
-	printf("\nnoteinfo: notes[%d] = %d, notes[%d] - 1 = %d\n",j,notes[j],next,notes[next] - 1);
-	printf("before1: dp[%d][%d] = %lld\n",next,i,dp[next][i]);
 	dp[next][i]
 	  = min(dp[next][i],dp[i][j] + compute(j,next));
-	printf("after1:  dp[%d][%d] = %lld\n",next,i,dp[next][i]);
       }
     }
 
     ll res = LINF;
     for(int i=0;i<num_of_notes;i++){
-      printf("dp[%d][%d] = %lld, add = %lld\n",num_of_notes - 1,i,dp[num_of_notes - 1][i],(sum[notes[i]] - sum[notes[num_of_notes - 1] - 1]) / force_of_repulsion);
       res = min(dp[num_of_notes - 1][i] + compute(i,num_of_notes - 1),res);
     }
     
