@@ -86,27 +86,28 @@ int main(){
     dp[0][0] = 0;
     for(int i=0;i<num_of_notes;i++){
       for(int j=0;j<=i;j++){
-	int larger_idx = max(i,j) + 1;
+	int next = i + 1;
 
-	printf("noteinfo: notes[%d] = %d, notes[%d] - 1 = %d\n",i,notes[i],larger_idx,notes[larger_idx] - 1);
-	printf("before0: dp[%d][%d] = %lld\n",larger_idx,j,dp[larger_idx][j]);
+	printf("i=%d j=%d\n",i,j);
+	printf("\nnoteinfo: notes[%d] = %d, notes[%d] - 1 = %d\n",i,notes[i],next,notes[next] - 1);
+	printf("before0: dp[%d][%d] = %lld\n",next,j,dp[next][j]);
 
-	dp[larger_idx][j]
-	  = min(dp[larger_idx][j],dp[i][j] + compute(i,larger_idx));
+	dp[next][j]
+	  = min(dp[next][j],dp[i][j] + compute(i,next));
 
-	printf("after0:  dp[%d][%d] = %lld\n",larger_idx,j,dp[larger_idx][j]);
+	printf("after0:  dp[%d][%d] = %lld\n",next,j,dp[next][j]);
 
-	printf("noteinfo: notes[%d] = %d, notes[%d] - 1 = %d\n",j,notes[j],larger_idx,notes[larger_idx] - 1);
-	printf("before1: dp[%d][%d] = %lld\n",larger_idx,i,dp[larger_idx][i]);
-	dp[larger_idx][i]
-	  = min(dp[larger_idx][i],dp[i][j] + compute(j,larger_idx));
-	printf("after1:  dp[%d][%d] = %lld\n",larger_idx,i,dp[larger_idx][i]);
+	printf("\nnoteinfo: notes[%d] = %d, notes[%d] - 1 = %d\n",j,notes[j],next,notes[next] - 1);
+	printf("before1: dp[%d][%d] = %lld\n",next,i,dp[next][i]);
+	dp[next][i]
+	  = min(dp[next][i],dp[i][j] + compute(j,next));
+	printf("after1:  dp[%d][%d] = %lld\n",next,i,dp[next][i]);
       }
     }
 
     ll res = LINF;
     for(int i=0;i<num_of_notes;i++){
-      printf("dp[%d][%d] = %lld, add = %lld\n",num_of_notes - 1,i,dp[num_of_notes - 1][i],(sum[notes[i]] - sum[notes[num_of_notes - 1]]) / force_of_repulsion);
+      printf("dp[%d][%d] = %lld, add = %lld\n",num_of_notes - 1,i,dp[num_of_notes - 1][i],(sum[notes[i]] - sum[notes[num_of_notes - 1] - 1]) / force_of_repulsion);
       res = min(dp[num_of_notes - 1][i] + compute(i,num_of_notes - 1),res);
     }
     
