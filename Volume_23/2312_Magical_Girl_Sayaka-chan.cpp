@@ -32,15 +32,22 @@ const static int ty[] = {-1,-1,0,1,1,1,0,-1};
 static const double EPS = 1e-8;
 
 
+int num_of_notes;
+int num_of_beauty;
+ll force_of_repulsion;
 ll sum[200001];
 ll dp[2001][2001];
 int notes[2001];
 ll beauty[100001];
 
+ll compute(int i,int j){
+  ll lhs = sum[notes[i]];
+  ll rhs = (notes[j] - 1 < 0 ? 0 : sum[notes[j] - 1]);
+
+  return (lhs - rhs) / force_of_repulsion;
+}
+
 int main(){
-  int num_of_notes;
-  int num_of_beauty;
-  ll force_of_repulsion;
   while(~scanf("%d %d %lld",
 	       &num_of_notes,
 	       &num_of_beauty,
@@ -65,25 +72,22 @@ int main(){
 
     dp[0][0] = 0;
     for(int i=0;i<num_of_notes;i++){
+      int next = i + 1;
+      if(next >= num_of_notes) break;
       for(int j=0;j<=i;j++){
-	int larger_idx = max(i,j) + 1;
-	dp[larger_idx][j]
-	  = min(dp[larger_idx][j],
-		dp[i][j] + (sum[notes[i]] - sum[notes[larger_idx] - 1]) / force_of_repulsion);
+	dp[next][j]
+	  = min(dp[next][j],dp[i][j] + compute(i,next));
 
-	dp[larger_idx][i]
-	  = min(dp[larger_idx][i],
-		dp[i][j] + (sum[notes[j]] - sum[notes[larger_idx] - 1]) / force_of_repulsion);
+	dp[next][i]
+	  = min(dp[next][i],dp[i][j] + compute(j,next));
       }
     }
 
     ll res = LINF;
     for(int i=0;i<num_of_notes;i++){
-      res = min(dp[num_of_notes - 1][i]
-		+ (sum[notes[i]] - sum[notes[num_of_notes - 1] - 1]) / force_of_repulsion,
-		res);
+      res = min(dp[num_of_notes - 1][i] + compute(i,num_of_notes - 1),res);
     }
-
+    
     printf("%lld\n",res);
   }
 }
