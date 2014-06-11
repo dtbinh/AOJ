@@ -31,53 +31,25 @@ const static int ty[] = {-1,-1,0,1,1,1,0,-1};
  
 static const double EPS = 1e-8;
 
-class Condition{
-public:
-  int lower;
-  int upper;
-  Condition(int _l,int _u) : lower(_l), upper(_u) {}
-  bool operator<(const Condition& c) const{
-    if(lower != c.lower){
-      return lower < c.lower;
-    }else{
-      return upper < c.upper;
-    }
-  }
-  bool operator>(const Condition& c) const{
-    if(lower != c.lower){
-      return lower > c.lower;
-    }else{
-      return upper > c.upper;
-    }
-  }
-};
-
 int main(){
   int N;
   while(~scanf("%d",&N)){
-    priority_queue<Condition,vector<Condition>,greater<Condition> > ppl;
-    for(int i=0;i<N;i++){
-      int lower,upper;
-      scanf("%d %d",&lower,&upper);
-      ppl.push(Condition(lower,upper));
-    }
-    int current = 1;
-
-    int res = 0;
     int dp[100100];
     memset(dp,0,sizeof(dp));
 
-    while(!ppl.empty()){
-      Condition c = ppl.top();
-      ppl.pop();
-      if(current + 1 >= c.lower){
-	current++;
-	current -= dp[current];
-	dp[c.upper + 1]++;
-	res = max(current - 1,res);
-      }
+    for(int i=0;i<N;i++){
+      int lower,upper;
+      scanf("%d %d",&lower,&upper);
+      dp[lower - 1]++;
+      dp[upper]--;
     }
 
+    int res = 0;
+    int sum = 0;
+    for(int participants=0;participants<=100001;participants++){
+      sum += dp[participants];
+      if(sum >= participants) res = participants;
+    }
     printf("%d\n",res);
   }
 }
