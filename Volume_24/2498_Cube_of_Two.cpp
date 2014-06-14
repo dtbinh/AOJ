@@ -137,8 +137,8 @@ void opeF(char cube[6][9]){
   next[4][2] = cube[3][4];
 
   //orange
-  next[2][1] = cube[4][3];
-  next[3][1] = cube[4][2];
+  next[3][1] = cube[4][3];
+  next[2][1] = cube[4][2];
 
   //green
   next[1][3] = cube[2][1];
