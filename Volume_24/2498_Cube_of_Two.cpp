@@ -227,9 +227,6 @@ int main(){
 
   string command;
   while(cin >> command){
-    // char tmp[6][9];
-    // memcpy(tmp,cube,sizeof(char) * 6 * 9);
-
     for(int i=0;i<command.size();i++){
       if(command[i] == 'U'){
 	opeU(cube);
@@ -251,6 +248,5 @@ int main(){
       }
     }
     disp(cube);
-    // memcpy(cube,tmp,sizeof(char) * 6 * 9);
   }
 }
