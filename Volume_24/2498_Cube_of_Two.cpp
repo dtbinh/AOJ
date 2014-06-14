@@ -70,17 +70,17 @@ void opeR(char cube[6][9]){
   next[3][4] = cube[3][5];
   next[2][4] = cube[3][4];
 
+  //red
+  next[2][6] = cube[1][3];
+  next[3][6] = cube[0][3];
+
+  //white
+  next[5][3] = cube[2][6];
+  next[4][3] = cube[3][6];
+
   //orange
   next[2][3] = cube[4][3];
   next[3][3] = cube[5][3];
-
-  //red
-  next[2][6] = cube[0][3];
-  next[3][6] = cube[1][3];
-
-  //white
-  next[4][3] = cube[2][6];
-  next[5][3] = cube[3][6];
 
   //yellow
   next[0][3] = cube[2][3];
@@ -187,16 +187,16 @@ void opeB(char cube[6][9]){
   next[2][6] = cube[3][6];
 
   //red
-  next[2][0] = cube[0][2];
-  next[3][0] = cube[0][3];
+  next[3][0] = cube[0][2];
+  next[2][0] = cube[0][3];
 
   //green
   next[5][2] = cube[2][0];
   next[5][3] = cube[3][0];
 
   //orange
-  next[2][5] = cube[5][2];
-  next[3][5] = cube[5][3];
+  next[3][5] = cube[5][2];
+  next[2][5] = cube[5][3];
 
   //blue
   next[0][2] = cube[2][5];
