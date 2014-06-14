@@ -35,6 +35,12 @@ void opeU(char cube[6][9]){
   char next[6][9];
   memcpy(next,cube,sizeof(char) * 6 * 9);
 
+  //red
+  next[0][3] = cube[0][2];
+  next[1][3] = cube[0][3];
+  next[1][2] = cube[1][3];
+  next[0][2] = cube[1][2];
+
   //white
   next[2][5] = cube[2][6];
   next[2][4] = cube[2][7];
@@ -57,6 +63,12 @@ void opeU(char cube[6][9]){
 void opeR(char cube[6][9]){
   char next[6][9];
   memcpy(next,cube,sizeof(char) * 6 * 9);
+
+  //blue
+  next[2][5] = cube[2][4];
+  next[3][5] = cube[2][5];
+  next[3][4] = cube[3][5];
+  next[2][4] = cube[3][4];
 
   //orange
   next[2][3] = cube[4][3];
@@ -81,6 +93,12 @@ void opeL(char cube[6][9]){
   char next[6][9];
   memcpy(next,cube,sizeof(char) * 6 * 9);
 
+  //green
+  next[2][1] = cube[2][0];
+  next[3][1] = cube[2][1];
+  next[3][0] = cube[3][1];
+  next[2][0] = cube[3][0];
+
   //red
   next[2][2] = cube[0][2];
   next[3][2] = cube[1][2];
@@ -104,6 +122,12 @@ void opeF(char cube[6][9]){
   char next[6][9];
   memcpy(next,cube,sizeof(char) * 6 * 9);
 
+  //yellow
+  next[2][3] = cube[2][2];
+  next[3][3] = cube[2][3];
+  next[3][2] = cube[3][3];
+  next[2][2] = cube[3][2];
+  
   //red
   next[2][4] = cube[1][2];
   next[3][4] = cube[1][3];
@@ -127,6 +151,12 @@ void opeD(char cube[6][9]){
   char next[6][9];
   memcpy(next,cube,sizeof(char) * 6 * 9);
 
+  //orange
+  next[4][3] = cube[4][2];
+  next[5][3] = cube[4][3];
+  next[5][2] = cube[5][3];
+  next[4][2] = cube[5][2];
+
   //yellow
   next[3][4] = cube[3][2];
   next[3][5] = cube[3][3];
@@ -149,6 +179,12 @@ void opeD(char cube[6][9]){
 void opeB(char cube[6][9]){
   char next[6][9];
   memcpy(next,cube,sizeof(char) * 6 * 9);
+
+  //white
+  next[2][7] = cube[2][6];
+  next[3][7] = cube[2][7];
+  next[3][6] = cube[3][7];
+  next[2][6] = cube[3][6];
 
   //red
   next[2][0] = cube[0][2];
@@ -192,29 +228,31 @@ int main(){
 
   string command;
   while(cin >> command){
-    char tmp[6][9];
-    memcpy(tmp,cube,sizeof(char) * 6 * 9);
-    
-    if(command == "U"){
-      opeU(cube);
-    }
-    else if(command == "F"){
-      opeF(cube);
-    }
-    else if(command == "R"){
-      opeR(cube);
-    }
-    else if(command == "D"){
-      opeD(cube);
-    }
-    else if(command == "B"){
-      opeB(cube);
-    }
-    else if(command == "L"){
-      opeL(cube);
-    }
+    // char tmp[6][9];
+    // memcpy(tmp,cube,sizeof(char) * 6 * 9);
 
-    disp(cube);
-    memcpy(cube,tmp,sizeof(char) * 6 * 9);
+    for(int i=0;i<command.size();i++){
+      if(command[i] == 'U'){
+	opeU(cube);
+      }
+      else if(command[i] == 'F'){
+	opeF(cube);
+      }
+      else if(command[i] == 'R'){
+	opeR(cube);
+      }
+      else if(command[i] == 'D'){
+	opeD(cube);
+      }
+      else if(command[i] == 'B'){
+	opeB(cube);
+      }
+      else if(command[i] == 'L'){
+	opeL(cube);
+      }
+      
+      disp(cube);
+    }
+    // memcpy(cube,tmp,sizeof(char) * 6 * 9);
   }
 }
