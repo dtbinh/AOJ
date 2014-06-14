@@ -42,8 +42,8 @@ void opeU(char cube[6][9]){
   next[0][2] = cube[1][2];
 
   //white
-  next[2][5] = cube[2][6];
-  next[2][4] = cube[2][7];
+  next[2][4] = cube[2][6];
+  next[2][5] = cube[2][7];
 
   //blue
   next[2][2] = cube[2][4];
@@ -212,7 +212,6 @@ void disp(char cube[6][9]){
     }
     printf("\n");
   }
-  printf("\n");
 }
 
 int main(){
@@ -250,9 +249,8 @@ int main(){
       else if(command[i] == 'L'){
 	opeL(cube);
       }
-      
-      disp(cube);
     }
+    disp(cube);
     // memcpy(cube,tmp,sizeof(char) * 6 * 9);
   }
 }
