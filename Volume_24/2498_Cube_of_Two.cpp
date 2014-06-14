@@ -31,9 +31,9 @@ static const double EPS = 1e-8;
 int tx[] = {0,1,0,-1};
 int ty[] = {-1,0,1,0};
   
-void opeU(char cube[6][8]){
-  char next[6][8];
-  memset(next,cube,sizeof(char) * 6 * 8);
+void opeU(char cube[6][9]){
+  char next[6][9];
+  memcpy(next,cube,sizeof(char) * 6 * 9);
 
   //white
   next[2][5] = cube[2][6];
@@ -51,11 +51,12 @@ void opeU(char cube[6][8]){
   next[2][6] = cube[2][0];
   next[2][7] = cube[2][1];
 
+  memcpy(cube,next,sizeof(char) * 6 * 9);
 }
 
-void opeR(char cube[6][8]){
-  char next[6][8];
-  memset(next,cube,sizeof(char) * 6 * 8);
+void opeR(char cube[6][9]){
+  char next[6][9];
+  memcpy(next,cube,sizeof(char) * 6 * 9);
 
   //orange
   next[2][3] = cube[4][3];
@@ -70,13 +71,15 @@ void opeR(char cube[6][8]){
   next[5][3] = cube[3][6];
 
   //yellow
-  next[2][3] = cube[4][3];
-  next[3][3] = cube[5][3];
+  next[0][3] = cube[2][3];
+  next[1][3] = cube[3][3];
+
+  memcpy(cube,next,sizeof(char) * 6 * 9);
 }
 
-void opeL(char cube[6][8]){
-  char next[6][8];
-  memset(next,cube,sizeof(char) * 6 * 8);
+void opeL(char cube[6][9]){
+  char next[6][9];
+  memcpy(next,cube,sizeof(char) * 6 * 9);
 
   //red
   next[2][2] = cube[0][2];
@@ -94,11 +97,12 @@ void opeL(char cube[6][8]){
   next[0][2] = cube[3][7];
   next[1][2] = cube[2][7];
 
+  memcpy(cube,next,sizeof(char) * 6 * 9);
 }
 
-void opeF(char cube[6][8]){  
-  char next[6][8];
-  memset(next,cube,sizeof(char) * 6 * 8);
+void opeF(char cube[6][9]){  
+  char next[6][9];
+  memcpy(next,cube,sizeof(char) * 6 * 9);
 
   //red
   next[2][4] = cube[1][2];
@@ -115,11 +119,13 @@ void opeF(char cube[6][8]){
   //green
   next[1][3] = cube[2][1];
   next[1][2] = cube[3][1];
+
+  memcpy(cube,next,sizeof(char) * 6 * 9);
 }
 
-void opeD(char cube[6][8]){
-  char next[6][8];
-  memset(next,cube,sizeof(char) * 6 * 8);
+void opeD(char cube[6][9]){
+  char next[6][9];
+  memcpy(next,cube,sizeof(char) * 6 * 9);
 
   //yellow
   next[3][4] = cube[3][2];
@@ -136,40 +142,79 @@ void opeD(char cube[6][8]){
   //green
   next[3][2] = cube[3][0];
   next[3][3] = cube[3][1];
+
+  memcpy(cube,next,sizeof(char) * 6 * 9);
 }
 
-void opeB(char cube[6][8]){
-  char next[6][8];
-  memset(next,cube,sizeof(char) * 6 * 8);
+void opeB(char cube[6][9]){
+  char next[6][9];
+  memcpy(next,cube,sizeof(char) * 6 * 9);
 
   //red
-  next[2][5] = cube[0][2];
-  next[3][5] = cube[0][3];
-
-  //blue
-  next[5][2] = cube[2][5];
-  next[5][3] = cube[3][5];
-
-  //orange
-  next[2][0] = cube[5][2];
-  next[3][0] = cube[5][3];
+  next[2][0] = cube[0][2];
+  next[3][0] = cube[0][3];
 
   //green
-  next[0][2] = cube[2][0];
-  next[0][3] = cube[3][0];
+  next[5][2] = cube[2][0];
+  next[5][3] = cube[3][0];
 
+  //orange
+  next[2][5] = cube[5][2];
+  next[3][5] = cube[5][3];
+
+  //blue
+  next[0][2] = cube[2][5];
+  next[0][3] = cube[3][5];
+
+  memcpy(cube,next,sizeof(char) * 6 * 9);
+}
+
+void disp(char cube[6][9]){
+  for(int y=0;y<6;y++){
+    for(int x=0;x<8;x++){
+      printf("%c",cube[y][x]);
+    }
+    printf("\n");
+  }
+  printf("\n");
 }
 
 int main(){
-  string ope;
-  
-  char cube[6][8] = {"..rr....",
-		     "..rr....",
-		     "ggyybbww",
-		     "ggyybbww",
-		     "..oo....",
-		     "..oo...."};
-		   
-  while(cin >> ope){
+
+  char cube[][9] = {
+    "..rr....",
+    "..rr....",
+    "ggyybbww",
+    "ggyybbww",
+    "..oo....",
+    "..oo...."
+  };
+
+  string command;
+  while(cin >> command){
+    char tmp[6][9];
+    memcpy(tmp,cube,sizeof(char) * 6 * 9);
+    
+    if(command == "U"){
+      opeU(cube);
+    }
+    else if(command == "F"){
+      opeF(cube);
+    }
+    else if(command == "R"){
+      opeR(cube);
+    }
+    else if(command == "D"){
+      opeD(cube);
+    }
+    else if(command == "B"){
+      opeB(cube);
+    }
+    else if(command == "L"){
+      opeL(cube);
+    }
+
+    disp(cube);
+    memcpy(cube,tmp,sizeof(char) * 6 * 9);
   }
 }
