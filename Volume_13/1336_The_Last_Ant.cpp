@@ -81,19 +81,27 @@ int main(){
 	}
       }
 
+      int tmp_ant = -1;
       for(int ant_idx=0; ant_idx < total_ants; ant_idx++){
 	if(rem & (1<< ant_idx)){
 	  if(ants[ant_idx].dir == 'R'){
 	    ants[ant_idx].pos++;
+	    if(ants[ant_idx].pos == tunnel_length){
+	      if(tmp_ant == -1){
+		tmp_ant = ant_idx;
+	      }
+	    }
 	  }
 	  else if(ants[ant_idx].dir == 'L'){
 	    ants[ant_idx].pos--;
 	    if(ants[ant_idx].pos == 0){
-	      last_ant = ant_idx;
+	      tmp_ant = ant_idx;
 	    }
 	  }
 	}
       }
+
+      last_ant = tmp_ant;
       last_time = max(last_time,time);
     }
     
