@@ -61,7 +61,7 @@ int calc(const string& stage,char conv[256],
 }
 
 void bfs(int white_space_pos){
-  map<string,int> dp;
+  set<string> dp;
   char conv[256];
 
   int edges[10][10];
@@ -90,12 +90,16 @@ void bfs(int white_space_pos){
 
   que.push(State(white_space_pos,init,0,calc(init,conv,edges)));
 
+  int res = 0;
   while(!que.empty()){
     State s = que.top();
     que.pop();
-    // dp[s.stage] = s.cost;
+    dp.insert(s.stage);
 
-    if(s.stage == goal) break;
+    if(s.stage == goal){
+      res = s.cost;
+      break;
+    }
 
     int h = calc(s.stage,conv,edges);
     for(int i=0;i<4;i++){
@@ -119,16 +123,13 @@ void bfs(int white_space_pos){
       h += edges[s.white_space_pos][gpos_nsp];
 
       map<string,int>::iterator it;
-      if((it = dp.find(next)) != dp.end()
-	 && it->second <= s.cost + move_cost[i % 2]){
+      if(dp.count(next)){
 	continue;
       }
-      dp[next] = s.cost + move_cost[i % 2];
-
       que.push(State(from,next,s.cost + move_cost[i % 2],h));
     }
   }
-  printf("%d\n",dp[goal]);
+  printf("%d\n",res);
 }
 
 int main(){
