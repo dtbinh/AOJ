@@ -38,26 +38,62 @@ public:
   int white_space_pos;
   string stage;
   int cost;
-  State(int _w,const string& _st,int _c)
-    : white_space_pos(_w),stage(_st),cost(_c) {}
+  int heuristic;
+  State(int _w,const string& _st,int _c,int _h)
+    : white_space_pos(_w),stage(_st),cost(_c),heuristic(_h) {}
   bool operator <(const State& s) const {
-    return cost < s.cost;
+    return cost + heuristic < s.cost + s.heuristic;
   }
   bool operator >(const State& s) const {
-    return cost > s.cost;
+    return cost + heuristic > s.cost + s.heuristic;
   }
 };
 
+
+int calc(const string& stage,map<char,int>& conv,
+	 int edges[10][10]){
+  int res = 0;
+  for(int spos=0;spos<9;spos++){
+    int gpos = conv[stage[spos]];
+    res += edges[spos][gpos];
+  }
+  return res;
+}
+
 void bfs(int white_space_pos){
   map<string,int> dp;
+
+  map<char,int> conv;
+
+  int edges[10][10];
+  memset(edges,0x3f,sizeof(edges));
+
+
+  for(int i=0;i<9;i++){
+    conv[goal[i]] = i;
+    for(int j=0;j<4;j++){
+      edges[i][move[i][j]] = move_cost[j % 2];
+    }
+  }
+
+  for(int k=0;k<9;k++){
+    for(int i=0;i<9;i++){
+      for(int j=0;j<9;j++){
+	edges[i][j] = min(edges[i][j],
+			  edges[i][k] + edges[k][j]);
+      }
+    }
+  }
+
+
   priority_queue<State,vector<State>,greater<State> > que;
 
-  que.push(State(white_space_pos,init,0));
+  que.push(State(white_space_pos,init,0,calc(init,conv,edges)));
 
   while(!que.empty()){
     State s = que.top();
     que.pop();
-    dp[s.stage] = s.cost;
+    // dp[s.stage] = s.cost;
 
     if(s.stage == goal) break;
 
@@ -73,7 +109,8 @@ void bfs(int white_space_pos){
 	continue;
       }
       dp[next] = s.cost + move_cost[i % 2];
-      que.push(State(from,next,s.cost + move_cost[i % 2]));
+
+      que.push(State(from,next,s.cost + move_cost[i % 2],calc(next,conv,edges)));
     }
   }
   printf("%d\n",dp[goal]);
@@ -84,7 +121,7 @@ int main(){
     A,B,C,D,E,F,G,H,I
   };
 
-  //non-clockwise
+  //clockwise
   move[A].push_back(G);
   move[A].push_back(B);
   move[A].push_back(D);
