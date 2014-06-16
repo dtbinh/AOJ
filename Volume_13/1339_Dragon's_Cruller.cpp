@@ -33,22 +33,50 @@ int move_cost[2];
 string init;
 string goal;
 
-void dfs(map<string,int>& dp,string& stage,
-	 int to,int cost){
-
-  for(int i=0;i<4;i++){
-    int from = move[to][i];
-    swap(stage[to],stage[from]);
-    if(dp.find(stage) != dp.end()
-       && dp[stage] <= cost + move_cost[i % 2]){
-      swap(stage[to],stage[from]);
-      continue;
-    }
-
-    dp[stage] = cost + move_cost[i % 2];
-    dfs(dp,stage,from,cost + move_cost[i % 2]);
-    swap(stage[to],stage[from]);
+class State{
+public:
+  int white_space_pos;
+  string stage;
+  int cost;
+  State(int _w,const string& _st,int _c)
+    : white_space_pos(_w),stage(_st),cost(_c) {}
+  bool operator <(const State& s) const {
+    return cost < s.cost;
   }
+  bool operator >(const State& s) const {
+    return cost > s.cost;
+  }
+};
+
+void bfs(int white_space_pos){
+  map<string,int> dp;
+  priority_queue<State,vector<State>,greater<State> > que;
+
+  que.push(State(white_space_pos,init,0));
+
+  while(!que.empty()){
+    State s = que.top();
+    que.pop();
+    dp[s.stage] = s.cost;
+
+    if(s.stage == goal) break;
+
+    for(int i=0;i<4;i++){
+
+      int from = move[s.white_space_pos][i];
+      string next = s.stage;
+      next[from] = '0';
+      next[s.white_space_pos] = s.stage[from];
+
+      if(dp.find(next) != dp.end()
+	 && dp[next] <= s.cost + move_cost[i % 2]){
+	continue;
+      }
+      dp[next] = s.cost + move_cost[i % 2];
+      que.push(State(from,next,s.cost + move_cost[i % 2]));
+    }
+  }
+  printf("%d\n",dp[goal]);
 }
 
 int main(){
@@ -104,17 +132,19 @@ int main(){
 
   //0:vertical 1:horizontal
   while(~scanf("%d %d",&move_cost[1],&move_cost[0])){
+    if(move_cost[1] == 0 
+       && move_cost[0] == 0) break;
     init = "";
     goal = "";
 
-    int to = 0;
+    int white_space_pos = 0;
     for(int y=0;y<3;y++){
       for(int x=0;x<3;x++){
 	int num = 0;
 	scanf("%d",&num);
 	init.push_back('0' + num);
 	if(num == 0){
-	  to = y * W + x;
+	  white_space_pos = y * W + x;
 	}
       }
     }
@@ -125,8 +155,6 @@ int main(){
 	goal.push_back('0' + num);
       }
     }
-    map<string,int> dp;
-    dp[init] = 0;
-    dfs(dp,init,to,0);
+    bfs(white_space_pos);
   }
 }
