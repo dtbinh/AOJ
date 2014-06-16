@@ -50,7 +50,7 @@ public:
 };
 
 
-int calc(const string& stage,map<char,int>& conv,
+int calc(const string& stage,char conv[256],
 	 int edges[10][10]){
   int res = 0;
   for(int spos=0;spos<9;spos++){
@@ -62,8 +62,7 @@ int calc(const string& stage,map<char,int>& conv,
 
 void bfs(int white_space_pos){
   map<string,int> dp;
-
-  map<char,int> conv;
+  char conv[256];
 
   int edges[10][10];
   memset(edges,0x3f,sizeof(edges));
@@ -73,6 +72,7 @@ void bfs(int white_space_pos){
     conv[goal[i]] = i;
     for(int j=0;j<4;j++){
       edges[i][move[i][j]] = move_cost[j % 2];
+      edges[move[i][j]][i] = move_cost[j % 2];
     }
   }
 
@@ -97,20 +97,35 @@ void bfs(int white_space_pos){
 
     if(s.stage == goal) break;
 
+    int h = calc(s.stage,conv,edges);
     for(int i=0;i<4;i++){
 
       int from = move[s.white_space_pos][i];
       string next = s.stage;
+
+      int gpos_sp = conv[s.stage[s.white_space_pos]];
+      h -= edges[s.white_space_pos][gpos_sp];
+
+      int gpos_nsp = conv[s.stage[from]];
+      h -= edges[from][gpos_nsp];
+
       next[from] = '0';
       next[s.white_space_pos] = s.stage[from];
 
-      if(dp.find(next) != dp.end()
-	 && dp[next] <= s.cost + move_cost[i % 2]){
+      gpos_sp = conv[next[from]];
+      h += edges[from][gpos_sp];
+
+      gpos_nsp = conv[next[s.white_space_pos]];
+      h += edges[s.white_space_pos][gpos_nsp];
+
+      map<string,int>::iterator it;
+      if((it = dp.find(next)) != dp.end()
+	 && it->second <= s.cost + move_cost[i % 2]){
 	continue;
       }
       dp[next] = s.cost + move_cost[i % 2];
 
-      que.push(State(from,next,s.cost + move_cost[i % 2],calc(next,conv,edges)));
+      que.push(State(from,next,s.cost + move_cost[i % 2],h));
     }
   }
   printf("%d\n",dp[goal]);
