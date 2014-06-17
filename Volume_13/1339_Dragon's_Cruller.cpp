@@ -30,18 +30,17 @@ static const int H = 3;
 
 vector<int> move[9];
 int move_cost[2];
-string init;
-string goal;
+int init;
+int goal;
 
 class State{
 public:
   int white_space_pos;
-  string stage;
+  int stage;
   int cost;
   int heuristic;
-  short depth;
-  State(int _w,const string& _st,int _c,int _h,int _d)
-    : white_space_pos(_w),stage(_st),cost(_c),heuristic(_h),depth(_d) {}
+  State(int _w,int _st,int _c,int _h)
+    : white_space_pos(_w),stage(_st),cost(_c),heuristic(_h) {}
   bool operator <(const State& s) const {
     return cost + heuristic < s.cost + s.heuristic;
   }
@@ -51,29 +50,45 @@ public:
 };
 
 
-int calc(const string& stage,char conv[256],
+int fast_pow(int x, int n) {
+  int res = 1;
+  while(n > 0) {
+    if (n & 1) res = res * x;
+    x = x * x;
+    n >>= 1;
+  }
+  return res;
+}
+
+int idx2num(int target,int idx){
+  target = target / fast_pow(10,idx);
+  return target % 10;
+}
+
+int calc(int stage,int conv[10],
 	 int edges[10][10]){
   int res = 0;
   for(int spos=0;spos<9;spos++){
-    int gpos = conv[stage[spos]];
+    int gpos = conv[idx2num(stage,spos)];
     res += edges[spos][gpos];
   }
   return res;
 }
 
+int change(int stage,int pos,int num){
+  return stage - ((stage % fast_pow(10,pos + 1)) / fast_pow(10,pos))
+    * fast_pow(10,pos) + fast_pow(10,pos) * num;
+}
+
 void bfs(int white_space_pos_s,int white_space_pos_g){
-  map<string,int> s2g_dp;
-  map<string,int> g2s_dp;
-  char conv_g[256];
-  char conv_s[256];
+  map<int,int> dp;
+  int conv[10];
 
   int edges[10][10];
   memset(edges,0x3f,sizeof(edges));
 
-
   for(int i=0;i<9;i++){
-    conv_g[goal[i]] = i;
-    conv_g[init[i]] = i;
+    conv[idx2num(goal,i)] = i;
     for(int j=0;j<4;j++){
       edges[i][move[i][j]] = move_cost[j % 2];
       edges[move[i][j]][i] = move_cost[j % 2];
@@ -90,111 +105,46 @@ void bfs(int white_space_pos_s,int white_space_pos_g){
   }
 
   priority_queue<State,vector<State>,greater<State> > que;
+  que.push(State(white_space_pos_s,init,0,calc(init,conv,edges)));
 
-  que.push(State(white_space_pos_s,init,0,calc(init,conv_s,edges),0));
-
-  map<string,int>::iterator it;
+  map<int,int>::iterator it;
   int res = INF;
+
   while(!que.empty()){
     State s = que.top();
     que.pop();
 
-    if(s.depth >= 11) continue;
-    s2g_dp[s.stage] = s.cost;
-
+    dp[s.stage] = s.cost;
     if(s.stage == goal){
       res = s.cost;
       break;
     }
-
-    // int h = calc(s.stage,conv_s,edges);
-    int h = 0;
+    int h = calc(s.stage,conv,edges);
     for(int i=0;i<4;i++){
 
-      int from = move[s.white_space_pos][i];
-      string next = s.stage;
+      int neighbor = move[s.white_space_pos][i];
+      int next = s.stage;
+      int gpos_sp = conv[idx2num(s.stage,s.white_space_pos)];
+      h -= edges[s.white_space_pos][gpos_sp];
 
-      // int gpos_sp = conv_s[s.stage[s.white_space_pos]];
-      // h -= edges[s.white_space_pos][gpos_sp];
+      int gpos_nsp = conv[idx2num(s.stage,neighbor)];
+      h -= edges[neighbor][gpos_nsp];
 
-      // int gpos_nsp = conv_s[s.stage[from]];
-      // h -= edges[from][gpos_nsp];
+      next = change(s.stage,neighbor,0);
+      next = change(next,s.white_space_pos,idx2num(s.stage,neighbor));
 
-      next[from] = '0';
-      next[s.white_space_pos] = s.stage[from];
+      gpos_sp = conv[idx2num(next,neighbor)];
+      h += edges[neighbor][gpos_sp];
 
-      // gpos_sp = conv_s[next[from]];
-      // h += edges[from][gpos_sp];
+      gpos_nsp = conv[idx2num(next,s.white_space_pos)];
+      h += edges[s.white_space_pos][gpos_nsp];
 
-      // gpos_nsp = conv_s[next[s.white_space_pos]];
-      // h += edges[s.white_space_pos][gpos_nsp];
-
-      if(s2g_dp.find(next) != s2g_dp.end()
-	 && s2g_dp[next] <= s.cost + move_cost[i % 2]){
+      if((it = dp.find(next)) != dp.end()
+	 && it->second <= s.cost + move_cost[i % 2]){
 	continue;
       }
-      s2g_dp[next] = s.cost + move_cost[i % 2];
-      que.push(State(from,next,s.cost + move_cost[i % 2],h,s.depth+1));
-    }
-  }
-
-  priority_queue<State,vector<State>,greater<State> > empty;
-  swap(que,empty);
-
-  priority_queue<State,vector<State>,greater<State> > que2;
-  que2.push(State(white_space_pos_g,goal,0,calc(goal,conv_g,edges),0));
-
-  while(!que2.empty()){
-    State s = que2.top();
-    que2.pop();
-
-    if(s.depth >= 11) continue;
-    g2s_dp[s.stage] = s.cost;
-
-    if(s.stage == init){
-      res = s.cost;
-      break;
-    }
-
-    // int h = calc(s.stage,conv_g,edges);
-    int h = 0;
-    for(int i=0;i<4;i++){
-
-      int from = move[s.white_space_pos][i];
-      string next = s.stage;
-
-      // int gpos_sp = conv_g[s.stage[s.white_space_pos]];
-      // h -= edges[s.white_space_pos][gpos_sp];
-
-      // int gpos_nsp = conv_g[s.stage[from]];
-      // h -= edges[from][gpos_nsp];
-
-      next[from] = '0';
-      next[s.white_space_pos] = s.stage[from];
-
-      // gpos_sp = conv_g[next[from]];
-      // h += edges[from][gpos_sp];
-
-      // gpos_nsp = conv_g[next[s.white_space_pos]];
-      // h += edges[s.white_space_pos][gpos_nsp];
-
-      if(g2s_dp.find(next) != g2s_dp.end()
-	 && g2s_dp[next] <= s.cost + move_cost[i % 2]){
-	continue;
-      }
-      g2s_dp[next] = s.cost + move_cost[i % 2];
-      que2.push(State(from,next,s.cost + move_cost[i % 2],h,s.depth+1));
-    }
-  }
-
-  if(res == INF){
-    for(map<string,int>::iterator it = g2s_dp.begin();
-	it != g2s_dp.end();
-	it++){
-      map<string,int>::iterator it2;
-      if((it2 = s2g_dp.find(it->first)) != s2g_dp.end()){
-	res = min(res,it->second + it2->second);
-      }
+      dp[next] = s.cost + move_cost[i % 2];
+      que.push(State(neighbor,next,s.cost + move_cost[i % 2],h));
     }
   }
   printf("%d\n",res);
@@ -255,31 +205,41 @@ int main(){
   while(~scanf("%d %d",&move_cost[1],&move_cost[0])){
     if(move_cost[1] == 0 
        && move_cost[0] == 0) break;
-    init = "";
-    goal = "";
+    init = 0;
+    goal = 0;
 
     int white_space_pos_s = 0;
+    vector<int> rev_init;
+    vector<int> rev_goal;
     for(int y=0;y<3;y++){
       for(int x=0;x<3;x++){
 	int num = 0;
 	scanf("%d",&num);
-	init.push_back('0' + num);
+	rev_init.push_back(num);
 	if(num == 0){
 	  white_space_pos_s = y * W + x;
 	}
       }
+    }
+
+    for(int i=rev_init.size() - 1;i>=0;i--){
+      init = init * 10 + rev_init[i];
     }
     int white_space_pos_g = 0;
     for(int y=0;y<3;y++){
       for(int x=0;x<3;x++){
 	int num = 0;
 	scanf("%d",&num);
-	goal.push_back('0' + num);
+	rev_goal.push_back(num);
 	if(num == 0){
 	  white_space_pos_g = y * W + x;
 	}
       }
     }
+    for(int i=rev_goal.size() - 1;i>=0;i--){
+      goal = goal * 10 + rev_goal[i];
+    }
+
     bfs(white_space_pos_s,white_space_pos_g);
   }
 }
