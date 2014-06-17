@@ -38,14 +38,13 @@ public:
   int white_space_pos;
   int stage;
   int cost;
-  int heuristic;
-  State(int _w,int _st,int _c,int _h)
-    : white_space_pos(_w),stage(_st),cost(_c),heuristic(_h) {}
+  State(int _w,int _st,int _c)
+    : white_space_pos(_w),stage(_st),cost(_c) {}
   bool operator <(const State& s) const {
-    return cost + heuristic < s.cost + s.heuristic;
+    return cost < s.cost;
   }
   bool operator >(const State& s) const {
-    return cost + heuristic > s.cost + s.heuristic;
+    return cost > s.cost;
   }
 };
 
@@ -65,47 +64,21 @@ int idx2num(int target,int idx){
   return target % 10;
 }
 
-int calc(int stage,int conv[10],
-	 int edges[10][10]){
-  int res = 0;
-  for(int spos=0;spos<9;spos++){
-    int gpos = conv[idx2num(stage,spos)];
-    res += edges[spos][gpos];
-  }
-  return res;
-}
-
 int change(int stage,int pos,int num){
   return stage - ((stage % fast_pow(10,pos + 1)) / fast_pow(10,pos))
     * fast_pow(10,pos) + fast_pow(10,pos) * num;
 }
 
-void bfs(int white_space_pos_s,int white_space_pos_g){
+void bfs(int white_space_pos){
   map<int,int> dp;
   int conv[10];
 
-  int edges[10][10];
-  memset(edges,0x3f,sizeof(edges));
-
   for(int i=0;i<9;i++){
     conv[idx2num(goal,i)] = i;
-    for(int j=0;j<4;j++){
-      edges[i][move[i][j]] = move_cost[j % 2];
-      edges[move[i][j]][i] = move_cost[j % 2];
-    }
-  }
-
-  for(int k=0;k<9;k++){
-    for(int i=0;i<9;i++){
-      for(int j=0;j<9;j++){
-	edges[i][j] = min(edges[i][j],
-			  edges[i][k] + edges[k][j]);
-      }
-    }
   }
 
   priority_queue<State,vector<State>,greater<State> > que;
-  que.push(State(white_space_pos_s,init,0,calc(init,conv,edges)));
+  que.push(State(white_space_pos,init,0));
 
   map<int,int>::iterator it;
   int res = INF;
@@ -119,32 +92,21 @@ void bfs(int white_space_pos_s,int white_space_pos_g){
       res = s.cost;
       break;
     }
-    int h = calc(s.stage,conv,edges);
+
     for(int i=0;i<4;i++){
 
       int neighbor = move[s.white_space_pos][i];
       int next = s.stage;
-      int gpos_sp = conv[idx2num(s.stage,s.white_space_pos)];
-      h -= edges[s.white_space_pos][gpos_sp];
-
-      int gpos_nsp = conv[idx2num(s.stage,neighbor)];
-      h -= edges[neighbor][gpos_nsp];
 
       next = change(s.stage,neighbor,0);
       next = change(next,s.white_space_pos,idx2num(s.stage,neighbor));
-
-      gpos_sp = conv[idx2num(next,neighbor)];
-      h += edges[neighbor][gpos_sp];
-
-      gpos_nsp = conv[idx2num(next,s.white_space_pos)];
-      h += edges[s.white_space_pos][gpos_nsp];
 
       if((it = dp.find(next)) != dp.end()
 	 && it->second <= s.cost + move_cost[i % 2]){
 	continue;
       }
       dp[next] = s.cost + move_cost[i % 2];
-      que.push(State(neighbor,next,s.cost + move_cost[i % 2],h));
+      que.push(State(neighbor,next,s.cost + move_cost[i % 2]));
     }
   }
   printf("%d\n",res);
@@ -208,7 +170,7 @@ int main(){
     init = 0;
     goal = 0;
 
-    int white_space_pos_s = 0;
+    int white_space_pos = 0;
     vector<int> rev_init;
     vector<int> rev_goal;
     for(int y=0;y<3;y++){
@@ -217,7 +179,7 @@ int main(){
 	scanf("%d",&num);
 	rev_init.push_back(num);
 	if(num == 0){
-	  white_space_pos_s = y * W + x;
+	  white_space_pos = y * W + x;
 	}
       }
     }
@@ -231,15 +193,12 @@ int main(){
 	int num = 0;
 	scanf("%d",&num);
 	rev_goal.push_back(num);
-	if(num == 0){
-	  white_space_pos_g = y * W + x;
-	}
       }
     }
     for(int i=rev_goal.size() - 1;i>=0;i--){
       goal = goal * 10 + rev_goal[i];
     }
 
-    bfs(white_space_pos_s,white_space_pos_g);
+    bfs(white_space_pos);
   }
 }
