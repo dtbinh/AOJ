@@ -29,6 +29,8 @@ int N;
 int freq[401];
 int dist[401];
 
+set<vector<int> > res;
+
 int compute_max(){
   for(int i=400;i>=0;i--){
     if(freq[i] > 0) return i;
@@ -41,10 +43,12 @@ void dfs(int target,vector<int>& points){
   if(target == N){
     vector<int> tmp = points;
     sort(tmp.begin(),tmp.end());
+
+    vector<int> sub;
     for(int i=0;i+1<tmp.size();i++){
-      printf("%d ",tmp[i+1] - tmp[i]);
+      sub.push_back(tmp[i+1]-tmp[i]);
     }
-    printf("\n");
+    res.insert(sub);
     return;
   }
   
@@ -100,6 +104,7 @@ int main(){
 
   while(~scanf("%d",&N)){
     if(N == 0) break;
+    res.clear();
 
     memset(freq,0,sizeof(freq));
     for(int i=0;i < N * (N-1) / 2;i++){
@@ -114,6 +119,14 @@ int main(){
     points.push_back(dist[N*(N-1)/2 - 1]);
     
     dfs(2,points);
-    cout << "-----" << endl;
+    for(set<vector<int> >::iterator it = res.begin();
+	it != res.end();
+	it++){
+      for(int i=0;i < it->size();i++){
+	printf("%s%d",i==0 ? "" : " ",(*it)[i]);
+      }
+      printf("\n");
+    }
+    printf("-----\n");
   }
 }
