@@ -52,17 +52,17 @@ const char* compute_time_band(int minutes){
 
 
 int main(){
-  int time_to_hatch;
+  int wait_hatch;
   int num_of_egg;
-  int time_to_end_stage;
-  char mutation_weekday[12];
-  char mutation_time[12];
+  int stage_life;
+  char mutation_weekday[4];
+  char mutation_time[6];
   int inv_mutation_prob;
   int total_stages;
   while(~scanf("%d %d %d %s %s %d %d",
-	       &time_to_hatch,
+	       &wait_hatch,
 	       &num_of_egg,
-	       &time_to_end_stage,
+	       &stage_life,
 	       mutation_weekday,
 	       mutation_time,
 	       &inv_mutation_prob,
@@ -70,26 +70,31 @@ int main(){
     
     if(total_stages == 0) break;
 
-    double prob = 1.0;
+
+    double res = 0.0;
     for(int start=0; start < 60 * 24 * 7;){
+      int init_start = start;
       int time = start;
+      double prob = 1.0;
       for(int round = 0; round < total_stages; round++){
-	for(; time < start + time_to_end_stage; time++){
+	for(; time < init_start + stage_life; time++){
 	  if(strcmp(mutation_weekday,"All") != 0
 	     && strcmp(compute_weekday(time),mutation_weekday) != 0) continue;
 	  if(strcmp(mutation_time,"All") != 0
 	     && strcmp(compute_time_band(time),mutation_time) != 0) continue;
 
-	  if(time - start == time_to_hatch){
+	  if(time - init_start == wait_hatch){
 	    for(int i=0;i<num_of_egg;i++){
 	      prob *= (1.0 - 1.0/(double)inv_mutation_prob);
 	    }
 	  }
 	}
-	start = time;
+	init_start = time;
       }
-    }
 
-    cout << 1.0 - prob << endl;
+      start++;
+      res = max(res,1.0-prob);
+    }
+    printf("%.9lf\n",res);
   }
 }
