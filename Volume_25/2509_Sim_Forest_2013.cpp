@@ -31,14 +31,14 @@ static const double EPS = 1e-8;
 int tx[] = {0,1,0,-1};
 int ty[] = {-1,0,1,0};
 
+const static char weekdays[][4] = {"Sun","Mon","Tue","Wed","Thu","Fri","Sat"};
+const static char times[][6] = {"Day","Night"};
+
 const char* compute_weekday(int minutes){
-  const static char weekdays[][4] = {"Sun","Mon","Tue","Wed","Thu","Fri","Sat"};
   return weekdays[minutes / (60 * 24)];
 }
 
 const char* compute_time_band(int minutes){
-  const static char times[][6] = {"Day","Night"};
-  
   int idx = 0;
   if(minutes % (60 * 24) >= 6 * 60
      && minutes % (60 * 24) < 18 * 60){
@@ -70,29 +70,32 @@ int main(){
     
     if(total_stages == 0) break;
 
+    double probs[101];
+    probs[0] = 1.0;
+    for(int i=0;i<num_of_egg;i++){
+      probs[i+1] = probs[i] * (1.0 - 1.0/(double)inv_mutation_prob);
+    }
 
     double res = 0.0;
-    for(int start=0; start < 60 * 24 * 7;){
+    for(int start=0; start < 60 * 24 * 7;start++){
       int init_start = start;
-      int time = start;
       double prob = 1.0;
+      
       for(int round = 0; round < total_stages; round++){
-	for(; time < init_start + stage_life; time++){
-	  if(strcmp(mutation_weekday,"All") != 0
-	     && strcmp(compute_weekday(time),mutation_weekday) != 0) continue;
-	  if(strcmp(mutation_time,"All") != 0
-	     && strcmp(compute_time_band(time),mutation_time) != 0) continue;
-
-	  if(time - init_start == wait_hatch){
-	    for(int i=0;i<num_of_egg;i++){
-	      prob *= (1.0 - 1.0/(double)inv_mutation_prob);
-	    }
-	  }
+	int time = init_start + wait_hatch;
+	if(strcmp(mutation_weekday,"All") != 0
+	   && strcmp(compute_weekday(time % (60 * 24 * 7)),mutation_weekday) != 0){
+	  init_start += stage_life;
+	  continue;
 	}
-	init_start = time;
+	if(strcmp(mutation_time,"All") != 0
+	   && strcmp(compute_time_band(time % (60 * 24 * 7)),mutation_time) != 0){
+	  init_start += stage_life;
+	  continue;
+	}
+	prob *= probs[num_of_egg];
+	init_start += stage_life;
       }
-
-      start++;
       res = max(res,1.0-prob);
     }
     printf("%.9lf\n",res);
