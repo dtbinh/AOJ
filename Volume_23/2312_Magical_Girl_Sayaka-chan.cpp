@@ -66,7 +66,6 @@ int main(){
     }
 
     sort(notes,notes + num_of_notes);
-    reverse(notes,notes + num_of_notes);
 
     memset(dp,0x3f,sizeof(dp));
 
@@ -76,16 +75,16 @@ int main(){
       if(next >= num_of_notes) break;
       for(int j=0;j<=i;j++){
 	dp[next][j]
-	  = min(dp[next][j],dp[i][j] + compute(i,next));
+	  = min(dp[next][j],dp[i][j] + compute(next,i));
 
 	dp[next][i]
-	  = min(dp[next][i],dp[i][j] + compute(j,next));
+	  = min(dp[next][i],dp[i][j] + compute(next,j));
       }
     }
 
     ll res = LINF;
     for(int i=0;i<num_of_notes;i++){
-      res = min(dp[num_of_notes - 1][i] + compute(i,num_of_notes - 1),res);
+      res = min(dp[num_of_notes - 1][i] + compute(num_of_notes-1,i),res);
     }
     
     printf("%lld\n",res);
