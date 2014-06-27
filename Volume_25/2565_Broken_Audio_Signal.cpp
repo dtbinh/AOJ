@@ -1,5 +1,5 @@
 #define _USE_MATH_DEFINES
-#define INF 1000000000
+#define INF 1000000100
 
 #include <iostream>
 #include <cstdio>
@@ -61,23 +61,19 @@ int main(){
       
       //even
       if((idx+1) % 2 == 0){
-	if(idx > 0) {
-	  if(signals[lhs] != INF){
-	    lower = max(signals[lhs]+1,lower);
-	  }
+	if(lhs >= 0 && signals[lhs] != INF) {
+	  lower = max(signals[lhs]+1,lower);
 	}
-	if(signals[rhs] != INF){
+	if(rhs < signals.size() && signals[rhs] != INF){
 	  lower = max(signals[rhs]+1,lower);
 	}
       }
       //odd
       else{
-	if(idx < signals.size() -1){
-	  if(signals[rhs] != INF){
-	    upper = min(signals[rhs]-1,upper);
-	  }
+	if(rhs < signals.size() && signals[rhs] != INF){
+	  upper = min(signals[rhs]-1,upper);
 	}
-	if(signals[lhs] != INF){
+	if(lhs >= 0 && signals[lhs] != INF){
 	  upper = min(signals[lhs]-1,upper);
 	}
       }
@@ -119,6 +115,8 @@ int main(){
       }
     }
 
+    cout << "upper " << upper << endl;
+    cout << "lower " << lower << endl;
     if(!is_none && upper - lower > 0){
       printf("ambiguous\n");
     }
