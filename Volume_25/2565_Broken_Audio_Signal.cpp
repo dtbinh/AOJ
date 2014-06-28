@@ -36,13 +36,13 @@ bool check(vector<int> signals){
     int rhs = i + 1;
     if(lhs >= 0 && signals[lhs] != INF){
       if((i + 1) % 2 == 0){
-	if(signals[i] < signals[lhs]){
+	if(signals[i] <= signals[lhs]){
 	  is_none = true;
 	  break;
 	}
       }
       else{
-	if(signals[i] > signals[lhs]){
+	if(signals[i] >= signals[lhs]){
 	  is_none = true;
 	  break;
 	}
@@ -50,13 +50,13 @@ bool check(vector<int> signals){
     }
     if(rhs < signals.size() && signals[rhs] != INF){
       if((i + 1) % 2 == 0){
-	if(signals[i] < signals[rhs]){
+	if(signals[i] <= signals[rhs]){
 	  is_none = true;
 	  break;
 	}
       }
       else{
-	if(signals[i] > signals[rhs]){
+	if(signals[i] >= signals[rhs]){
 	  is_none = true;
 	  break;
 	}
@@ -126,11 +126,10 @@ int main(){
       if(upper > lower){
 	for(int i=0;i<signals.size();i++){
 	  if(signals[i] == INF){
-	    signals[i] = lower;
+	    signals[i] = (upper != INF ? upper : lower);
 	  }
 	}
 	bool isok = check(signals);
-
 	if(isok){
 	  printf("ambiguous\n");
 	}
