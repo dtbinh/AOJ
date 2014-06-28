@@ -28,6 +28,44 @@ typedef pair <int,P> PP;
   
 static const double EPS = 1e-8;
 
+
+bool check(vector<int> signals){
+  bool is_none = false;
+  for(int i=0;i<signals.size();i++){
+    int lhs = i - 1;
+    int rhs = i + 1;
+    if(lhs >= 0 && signals[lhs] != INF){
+      if((i + 1) % 2 == 0){
+	if(signals[i] < signals[lhs]){
+	  is_none = true;
+	  break;
+	}
+      }
+      else{
+	if(signals[i] > signals[lhs]){
+	  is_none = true;
+	  break;
+	}
+      }
+    }
+    if(rhs < signals.size() && signals[rhs] != INF){
+      if((i + 1) % 2 == 0){
+	if(signals[i] < signals[rhs]){
+	  is_none = true;
+	  break;
+	}
+      }
+      else{
+	if(signals[i] > signals[rhs]){
+	  is_none = true;
+	  break;
+	}
+      }
+    }
+  }
+  return !is_none;
+}
+
 int main(){
   int N;
   while(~scanf("%d",&N)){
@@ -85,13 +123,36 @@ int main(){
 	}
       }
 
-      if(upper - lower > 0){
-	printf("ambiguous\n");
+      if(upper > lower){
+	for(int i=0;i<signals.size();i++){
+	  if(signals[i] == INF){
+	    signals[i] = lower;
+	  }
+	}
+	bool isok = check(signals);
+
+	if(isok){
+	  printf("ambiguous\n");
+	}
+	else{
+	  printf("none\n");
+	}
       }
       else if(upper == lower){
-	printf("%d\n",upper);
+	for(int i=0;i<signals.size();i++){
+	  if(signals[i] == INF){
+	    signals[i] = lower;
+	  }
+	}
+	bool isok = check(signals);
+	if(isok){
+	  printf("%d\n",lower);
+	}
+	else{
+	  printf("none\n");
+	}
       }
-      else if(upper - lower < 0){
+      else if(upper < lower){
 	printf("none\n");
       }
     }
@@ -103,42 +164,8 @@ int main(){
     else if(has_num && !has_x){
       //1 2 3
       
-      bool is_none = false;
-      for(int i=0;i<signals.size();i++){
-	int lhs = i - 1;
-	int rhs = i + 1;
-	if(lhs >= 0 && signals[lhs] != INF){
-	  if((i + 1) % 2 == 0){
-	    if(signals[i] - signals[lhs] < 0){
-	      is_none = true;
-	      break;
-	    }
-	  }
-	  else{
-	    if(signals[i] - signals[lhs] > 0){
-	      is_none = true;
-	      break;
-	    }
-	  }
-	}
-	if(rhs < signals.size() && signals[rhs] != INF){
-	  if((i + 1) % 2 == 0){
-	    if(signals[i] - signals[rhs] < 0){
-	      is_none = true;
-	      break;
-	    }
-	  }
-	  else{
-	    if(signals[i] - signals[rhs] > 0){
-	      is_none = true;
-	      break;
-	    }
-	  }
-	}
-	
-      }
-     
-      printf("%s\n",is_none ? "none" : "ambiguous");
+      bool isok = check(signals);
+      printf("%s\n", !isok ? "none" : "ambiguous");
     }
   }
 }
