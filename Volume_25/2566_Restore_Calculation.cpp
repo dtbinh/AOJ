@@ -69,7 +69,7 @@ int main(){
 	if(q_count == 2){
 	  for(int i=0; i<10;i++){
 	    for(int j=0; j<10;j++){
-	      
+	      if(x == N - 1 && (i==0 || j==0)) continue;
 	      //C is not known
 	      if(right == -1){
 		dp[x+1][(i+j+carry) / 10] += dp[x][carry] % MOD;
@@ -87,6 +87,7 @@ int main(){
 	//num of ? eq 1
 	if(q_count == 1){
 	  for(int i=0; i<10;i++){
+	    if(x == N - 1 && i==0) continue;
 	    //C is not known
 	    if(right == -1){
 	      dp[x+1][(i+left+carry) / 10] += dp[x][carry] % MOD;
@@ -102,7 +103,12 @@ int main(){
 	
 	//num of ? eq 0
 	if(q_count == 0){
-	  if((left + carry) % 10 == right){
+	  if(right != -1 && (left + carry) % 10 == right){
+	    dp[x+1][(left+carry) / 10] += dp[x][carry] % MOD;
+	    dp[x+1][(left+carry) / 10] %= MOD;
+	  }
+	  if(right == -1){
+	    if(x == N - 1 && (left+carry) % 10 == 0) continue;
 	    dp[x+1][(left+carry) / 10] += dp[x][carry] % MOD;
 	    dp[x+1][(left+carry) / 10] %= MOD;
 	  }
@@ -111,7 +117,6 @@ int main(){
       
     }
 
-    printf("%d\n",(dp[strlen(numbers[0])][0] % MOD
-		   + dp[strlen(numbers[0])][1] % MOD) % MOD);
+    printf("%d\n",(dp[strlen(numbers[0])][0] % MOD));
   }
 }
