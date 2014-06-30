@@ -116,7 +116,6 @@ int main(){
 	}
       }
     }
-  found:;
     printf("%d\n",dp[max_level+1][gy * W + gx]);
   }
 }
