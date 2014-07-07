@@ -55,7 +55,7 @@ enum Type{
 
 Type type;
 
-ll dfs(int pos,ll sum,int len,ll center){
+ll dfs(ll pos,ll sum,ll len,ll center){
   if(pos == len/2){
     sum += (type == EVEN ? 0 : center * fast_pow(10,len/2));
     if(is_prime(sum)){
@@ -66,7 +66,7 @@ ll dfs(int pos,ll sum,int len,ll center){
   ll res = 0;
   
   for(ll i=0;i<=9;i++){
-    if(pos == 0 && i== 0) continue;
+    if(pos == 0 && i == 0) continue;
     ll lhs = i * fast_pow(10,pos);
     ll rhs = i * fast_pow(10,len-pos-1);
     res = max(dfs(pos + 1,sum + lhs + rhs,len,center),res);
@@ -80,20 +80,25 @@ int main(){
     //odd
     if(center < 0){
       type = EVEN;
+
+      if(n == 1){
+	cout << "11" << endl;
+      }
+      else{
+	cout << string(2*n,'9') << endl;
+      }
     }
     //even
     else{
       type = ODD;
+      ll len = 2 * n + (type == ODD ? 1 : 0);      
+      ll ans = 0;
+      ll none_ans = 0;
+      
+      for(int i=0;i<len;i++){
+	none_ans += 9 * fast_pow(10,i);
+      }
+      printf("%lld\n",(ans = dfs(0,0,len,center)) == 0 ? none_ans : ans);
     }
-    
-    ll len = 2 * n + (type == ODD ? 1 : 0);
-
-    ll ans = 0;
-
-    ll none_ans = 0;
-    for(int i=0;i<len;i++){
-      none_ans += 9 * fast_pow(10,i);
-    }
-    printf("%lld\n",(ans = dfs(0,0,len,center)) == 0 ? none_ans : ans);
   }
 }
