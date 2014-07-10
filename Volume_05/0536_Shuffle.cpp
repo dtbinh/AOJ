@@ -34,6 +34,7 @@ static const int ty[] = {-1,0,1,0};
 int main(){
   int total_cards;
   while(~scanf("%d",&total_cards)){
+    if(total_cards == 0) break;
     int total_shuffles;
     int first,last,upper;
 
@@ -43,7 +44,7 @@ int main(){
     vector<P> cards;
     cards.push_back(P(1,total_cards));
 
-    for(int i=0;i<total_shuffles;i++){
+    for(int shuffle_idx=0;shuffle_idx<total_shuffles;shuffle_idx++){
       int x,y;
       scanf("%d %d",&x,&y);
       //x -> none
@@ -53,6 +54,7 @@ int main(){
       vector<P> A;
       vector<P> B;
       vector<P> C;
+      vector<P> next;
 
       int sum = 0;
       int prev_sum = 0;
@@ -64,38 +66,65 @@ int main(){
 	    A.push_back(cards[j]);
 	  }
 	  else if(sum > x && sum <= y){
-	    A.push_back(P(cards[j].first,cards[j].first + (x - prev_sum)));
-	    B.push_back(P(cards[j].first + (x - prev_sum + 1),
+	    A.push_back(P(cards[j].first,cards[j].first + (x - prev_sum - 1)));
+	    B.push_back(P(cards[j].first + (x - prev_sum),
 			  cards[j].second));
 	  }
 	  else if(sum > y){
-	    A.push_back(P(cards[j].first,cards[j].first + (x - prev_sum)));
-	    B.push_back(P(cards[j].first + (x - prev_sum + 1),
-			  cards[j].first + (x - prev_sum + 1) + (y - x)));
-	    B.push_back(P(cards[j].first + (x - prev_sum + 1) + (y - x) + 1,
+	    A.push_back(P(cards[j].first,cards[j].first + (x - prev_sum - 1)));
+	    B.push_back(P(cards[j].first + (x - prev_sum),
+			  cards[j].first + (x - prev_sum) + (y - x - 1)));
+	    C.push_back(P(cards[j].first + (x - prev_sum) + (y - x),
 			  cards[j].second));
 	  }
 	}
 	else if(prev_sum >= x){
-	  if(sum <= y){
-	    B.push_back(P(cards[j].first,cards[j].second));
+	  if(prev_sum < y){
+	    if(sum <= y){
+	      B.push_back(P(cards[j].first,cards[j].second));
+	    }
+	    else if(sum > y){
+	      B.push_back(P(cards[j].first,cards[j].first + (y - prev_sum - 1)));
+	      C.push_back(P(cards[j].first + (y - prev_sum),cards[j].second));
+	    }
 	  }
-	  else if(sum > y){
-	    B.push_back(P(cards[j].first,cards[j].first + (y - prev_sum)));
-	    C.push_back(P(cards[j].first + (y - prev_sum + 1),cards[j].second));
+	  else if(prev_sum >= y){
+	    C.push_back(P(cards[j].first,cards[j].second));
 	  }
-	}
-
-	for(int i=0;i<A.size();i++){
-	  cout << "A<f,s>=" << A[i].first << "," << A[i].second << endl;
-	}
-	for(int i=0;i<B.size();i++){
-	  cout << "B<f,s>=" << B[i].first << "," << B[i].second << endl;
-	}
-	for(int i=0;i<C.size();i++){
-	  cout << "C<f,s>=" << C[i].first << "," << C[i].second << endl;
 	}
       }
+      for(int i=0;i<C.size();i++){
+	next.push_back(C[i]);
+	// cout << "C<f,s>=" << C[i].first << "," << C[i].second << endl;
+      }
+      for(int i=0;i<B.size();i++){
+	next.push_back(B[i]);
+	// cout << "B<f,s>=" << B[i].first << "," << B[i].second << endl;
+      }
+      for(int i=0;i<A.size();i++){
+	next.push_back(A[i]);
+	// cout << "A<f,s>=" << A[i].first << "," << A[i].second << endl;
+      }
+      // cout << endl;
+      cards = next;
     }
+
+    int offset = 0;
+    int res = 0;
+    for(int i=0;i<cards.size();i++){
+      int current = cards[i].second - cards[i].first + 1;
+      // cout << "offset " << offset << endl;
+      // cout << "<f,s>=" << cards[i].first << "," << cards[i].second << endl;
+
+      for(int j=0;j<=cards[i].second - cards[i].first;j++){
+	if(offset + j + 1 > last) break;
+	if(cards[i].first + j <= upper){
+	  res++;
+	}
+      }
+      offset += current;
+    }
+    printf("%d\n",res);
+
   }
 }
