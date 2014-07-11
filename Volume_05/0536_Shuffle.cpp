@@ -113,15 +113,38 @@ int main(){
     int res = 0;
     for(int i=0;i<cards.size();i++){
       int current = cards[i].second - cards[i].first + 1;
-      // cout << "offset " << offset << endl;
-      // cout << "<f,s>=" << cards[i].first << "," << cards[i].second << endl;
+      if(offset + current < first){
+	offset += current;
+	continue;
+      }
+      if(offset > last){
+	offset += current;
+	continue;
+      }
 
-      for(int j=0;j<=cards[i].second - cards[i].first;j++){
-	if(offset + j + 1 > last) break;
-	if(cards[i].first + j <= upper){
-	  res++;
+      int lhs = -1;
+      int rhs = 1000000010;
+
+      for(int round = 0; round < 50; round++){
+	int mid = (lhs + rhs) / 2;
+	if(cards[i].first + mid > upper){
+	  rhs = mid;
+	}
+	if(cards[i].first + mid <= upper){
+	  lhs = mid;
 	}
       }
+
+      int count = min(rhs - 1,cards[i].second - cards[i].first + 1);
+      if(offset + count >= last){
+	count = offset + count - last;
+      }
+      res += count;
+
+      // cout << "offset " << offset << endl;
+      // cout << "<f,s>=" << cards[i].first << "," << cards[i].second << endl;
+      // cout << "lhs=" << lhs << endl;
+
       offset += current;
     }
     printf("%d\n",res);
