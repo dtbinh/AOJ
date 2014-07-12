@@ -135,15 +135,21 @@ int main(){
 	}
       }
 
-      int count = min(rhs - 1,cards[i].second - cards[i].first + 1);
-      if(offset + count >= last){
-	count = offset + count - last;
-      }
-      res += count;
+      int count = min(lhs + 1,cards[i].second - cards[i].first + 1);
 
-      // cout << "offset " << offset << endl;
-      // cout << "<f,s>=" << cards[i].first << "," << cards[i].second << endl;
-      // cout << "lhs=" << lhs << endl;
+      cout << "not considering last count: " << count << endl;
+      
+      if(offset + count >= last){
+	count -= offset + count - last;
+      }
+
+      if(count > 0){
+	res += count;
+      }
+
+      cout << "offset " << offset << endl;
+      cout << "<f,s>=" << cards[i].first << "," << cards[i].second << endl;
+      cout << "count=" << count << endl;
 
       offset += current;
     }
