@@ -24,7 +24,6 @@ using namespace std;
   
 typedef long long ll;
 typedef pair <int,int> P;
-typedef pair <int,P> PP;
   
 static const double EPS = 1e-8;
   
@@ -47,10 +46,6 @@ int main(){
     for(int shuffle_idx=0;shuffle_idx<total_shuffles;shuffle_idx++){
       int x,y;
       scanf("%d %d",&x,&y);
-      //x -> none
-      //y -> 1
-      //n -> x+1
-      //C -> B -> A
       vector<P> A;
       vector<P> B;
       vector<P> C;
@@ -95,17 +90,13 @@ int main(){
       }
       for(int i=0;i<C.size();i++){
 	next.push_back(C[i]);
-	// cout << "C<f,s>=" << C[i].first << "," << C[i].second << endl;
       }
       for(int i=0;i<B.size();i++){
 	next.push_back(B[i]);
-	// cout << "B<f,s>=" << B[i].first << "," << B[i].second << endl;
       }
       for(int i=0;i<A.size();i++){
 	next.push_back(A[i]);
-	// cout << "A<f,s>=" << A[i].first << "," << A[i].second << endl;
       }
-      // cout << endl;
       cards = next;
     }
 
@@ -135,21 +126,19 @@ int main(){
 	}
       }
 
-      int count = min(lhs + 1,cards[i].second - cards[i].first + 1);
+      int count = min(rhs,cards[i].second - cards[i].first + 1);
 
-      cout << "not considering last count: " << count << endl;
-      
       if(offset + count >= last){
 	count -= offset + count - last;
+      }
+
+      if(offset < first){
+	count -= first - offset - 1;
       }
 
       if(count > 0){
 	res += count;
       }
-
-      cout << "offset " << offset << endl;
-      cout << "<f,s>=" << cards[i].first << "," << cards[i].second << endl;
-      cout << "count=" << count << endl;
 
       offset += current;
     }
