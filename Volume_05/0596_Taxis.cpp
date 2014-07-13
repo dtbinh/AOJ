@@ -31,7 +31,7 @@ static const double EPS = 1e-8;
 static const int tx[] = {0,1,0,-1};
 static const int ty[] = {-1,0,1,0};
 
-bool dp[5001][5001]; //dp[city][life] ::= bool
+int dp[5001][5001]; //dp[city][life] ::= cost
 
 class State{
 public:
@@ -41,10 +41,10 @@ public:
   State(int _ci,int _co,int _l) :
     city(_ci),cost(_co),life(_l) {}
   bool operator<(const State& s) const {
-    cost < s.cost;
+    return cost < s.cost;
   }
   bool operator>(const State& s) const {
-    cost > s.cost;
+    return cost > s.cost;
   }
 };
 
@@ -60,7 +60,7 @@ int main(){
   int total_roads;
   while(~scanf("%d %d",&total_cities,&total_roads)){
     Taxi taxi[5001];
-    memset(dp,false,sizeof(dp));
+    memset(dp,0x3f,sizeof(dp));
     for(int city_idx = 0; city_idx < total_cities; city_idx++){
       int cost;
       int life;
@@ -85,31 +85,37 @@ int main(){
       State s = que.top();
       que.pop();
 
-      if(dp[s.city][s.life]) continue;
-      dp[s.city][s.life] = true;
+      // cout << s.city << endl;
       if(s.city == total_cities - 1){
 	res = min(res,s.cost);
+	break;
       }
-      for(int i=0; i < roads[s.city].size(); i++){
 
+      for(int i=0; i < roads[s.city].size(); i++){
 	int next_city = roads[s.city][i];
-	int next_life = s.life - 1;
-	if(next_life < 0){
+	if(s.life == 0){
 	  //have to ride
 	  int next_cost = s.cost + taxi[s.city].cost;
-	  next_life = taxi[s.city].life - 1;
+	  int next_life = taxi[s.city].life - 1;
+	  if(dp[next_city][next_cost] <= next_cost) continue;
 	  que.push(State(next_city,next_cost,next_life));
 	}
 	else{
 	  //ride
 	  int next_cost = s.cost + taxi[s.city].cost;
-	  next_life = taxi[s.city].life - 1;
-	  que.push(State(next_city,next_cost,next_life));
+	  int next_life = taxi[s.city].life - 1;
+	  if(dp[next_city][next_life] > next_cost){
+	    dp[next_city][next_life] = next_cost;
+	    que.push(State(next_city,next_cost,next_life));
+	  }
 
 	  //don't ride
 	  next_cost = s.cost;
 	  next_life = s.life - 1;
-	  que.push(State(next_city,next_cost,next_life));
+	  if(dp[next_city][next_life] > next_cost){
+	    dp[next_city][next_life] = next_cost;
+	    que.push(State(next_city,next_cost,next_life));
+	  }
 	}
       }
     }
