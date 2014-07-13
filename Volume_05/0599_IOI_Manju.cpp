@@ -31,7 +31,7 @@ static const double EPS = 1e-8;
 static const int tx[] = {0,1,0,-1};
 static const int ty[] = {-1,0,1,0};
 
-int dp[5000001]; //dp[capacity] ::= min_price
+int dp[5000002]; //dp[capacity] ::= min_price
 
 int main(){
   int total_manju;
@@ -59,8 +59,7 @@ int main(){
       int capacity;
       int price;
       scanf("%d %d",&capacity,&price);
-      for(int prev_manju_num = 500*10000; prev_manju_num >=0; prev_manju_num--){
-	if(prev_manju_num + capacity > 500*10000) continue;
+      for(int prev_manju_num = 10000; prev_manju_num >=0; prev_manju_num--){
 	dp[prev_manju_num + capacity]
 	  = min(dp[prev_manju_num + capacity],
 		dp[prev_manju_num] + price);
@@ -68,7 +67,6 @@ int main(){
     }
 
     for(int prev_manju_num = 500*10000; prev_manju_num >=0; prev_manju_num--){
-      if(prev_manju_num + 1 >= 500*10000) continue;
       dp[prev_manju_num] = min(dp[prev_manju_num],dp[prev_manju_num + 1]);
     }
     
