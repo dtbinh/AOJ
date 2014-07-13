@@ -31,7 +31,7 @@ static const double EPS = 1e-8;
 static const int tx[] = {0,1,0,-1};
 static const int ty[] = {-1,0,1,0};
 
-int dp[5001][5001]; //dp[city][life] ::= cost
+bool dp[5001][5001]; //dp[city][life] ::= cost
 
 class State{
 public:
@@ -60,7 +60,7 @@ int main(){
   int total_roads;
   while(~scanf("%d %d",&total_cities,&total_roads)){
     Taxi taxi[5001];
-    memset(dp,0x3f,sizeof(dp));
+    memset(dp,false,sizeof(dp));
     vector<short> roads[5001];
 
     for(int city_idx = 0; city_idx < total_cities; city_idx++){
@@ -85,7 +85,9 @@ int main(){
     while(!que.empty()){
       State s = que.top();
       que.pop();
+      if(dp[s.city][s.life]) continue;
 
+      dp[s.city][s.life] = true;
       // cout << s.city << endl;
       if(s.city == total_cities - 1){
 	res = min(res,s.cost);
@@ -98,23 +100,22 @@ int main(){
 	  //have to ride
 	  int next_cost = s.cost + taxi[s.city].cost;
 	  short next_life = taxi[s.city].life - 1;
-	  if(dp[next_city][next_life] <= next_cost) continue;
-	  que.push(State(next_city,next_cost,next_life));
+	  if(!dp[next_city][next_life]){
+	    que.push(State(next_city,next_cost,next_life));
+	  }
 	}
 	else{
 	  //ride
 	  int next_cost = s.cost + taxi[s.city].cost;
 	  short next_life = taxi[s.city].life - 1;
-	  if(dp[next_city][next_life] > next_cost){
-	    dp[next_city][next_life] = next_cost;
+	  if(!dp[next_city][next_life]){
 	    que.push(State(next_city,next_cost,next_life));
 	  }
 
 	  //don't ride
 	  next_cost = s.cost;
 	  next_life = s.life - 1;
-	  if(dp[next_city][next_life] > next_cost){
-	    dp[next_city][next_life] = next_cost;
+	  if(!dp[next_city][next_life]){
 	    que.push(State(next_city,next_cost,next_life));
 	  }
 	}
