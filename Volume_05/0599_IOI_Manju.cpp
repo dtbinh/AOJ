@@ -31,6 +31,8 @@ static const double EPS = 1e-8;
 static const int tx[] = {0,1,0,-1};
 static const int ty[] = {-1,0,1,0};
 
+int dp[5000001]; //dp[capacity] ::= min_price
+
 int main(){
   int total_manju;
   int total_box;
@@ -42,7 +44,7 @@ int main(){
       manju.push_back(price);
     }
 
-    sort(manju.begin(),manju.end(),less<int>());
+    sort(manju.begin(),manju.end(),greater<int>());
     int sum[10001];
     memset(sum,0,sizeof(sum));
     for(int manju_idx=0;manju_idx<total_manju;manju_idx++){
@@ -50,7 +52,6 @@ int main(){
     }
 
 
-    int dp[10001]; //dp[capacity] ::= min_price
     memset(dp,0x3f,sizeof(dp));
 
     dp[0] = 0;
@@ -58,16 +59,16 @@ int main(){
       int capacity;
       int price;
       scanf("%d %d",&capacity,&price);
-      for(int prev_manju_num = 10000; prev_manju_num >=0; prev_manju_num--){
-	if(prev_manju_num + capacity > 10000) continue;
+      for(int prev_manju_num = 500*10000; prev_manju_num >=0; prev_manju_num--){
+	if(prev_manju_num + capacity > 500*10000) continue;
 	dp[prev_manju_num + capacity]
 	  = min(dp[prev_manju_num + capacity],
 		dp[prev_manju_num] + price);
       }
     }
 
-    for(int prev_manju_num = 10000; prev_manju_num >=0; prev_manju_num--){
-      if(prev_manju_num + 1 >= 10000) continue;
+    for(int prev_manju_num = 500*10000; prev_manju_num >=0; prev_manju_num--){
+      if(prev_manju_num + 1 >= 500*10000) continue;
       dp[prev_manju_num] = min(dp[prev_manju_num],dp[prev_manju_num + 1]);
     }
     
