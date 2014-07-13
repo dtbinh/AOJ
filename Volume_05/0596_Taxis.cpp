@@ -35,10 +35,10 @@ int dp[5001][5001]; //dp[city][life] ::= cost
 
 class State{
 public:
-  int city;
+  short city;
   int cost;
-  int life;
-  State(int _ci,int _co,int _l) :
+  short life;
+  State(short _ci,int _co,short _l) :
     city(_ci),cost(_co),life(_l) {}
   bool operator<(const State& s) const {
     return cost < s.cost;
@@ -50,9 +50,9 @@ public:
 
 struct Taxi{
   int cost;
-  int life;
+  short life;
   Taxi() : cost(0),life(0) {}
-  Taxi(int _c,int _l) : cost(_c), life(_l) {}
+  Taxi(int _c,short _l) : cost(_c), life(_l) {}
 };
 
 int main(){
@@ -61,17 +61,18 @@ int main(){
   while(~scanf("%d %d",&total_cities,&total_roads)){
     Taxi taxi[5001];
     memset(dp,0x3f,sizeof(dp));
+    vector<short> roads[5001];
+
     for(int city_idx = 0; city_idx < total_cities; city_idx++){
       int cost;
-      int life;
-      scanf("%d %d",&cost,&life);
+      short life;
+      scanf("%d %hd",&cost,&life);
       taxi[city_idx] = Taxi(cost,life);
     }
 
-    vector<int> roads[5001];
     for(int road_idx = 0;road_idx < total_roads;road_idx++){
-      int from,to;
-      scanf("%d %d",&from,&to);
+      short from,to;
+      scanf("%hd %hd",&from,&to);
       from--; to--;
       roads[from].push_back(to);
       roads[to].push_back(from);
@@ -92,18 +93,18 @@ int main(){
       }
 
       for(int i=0; i < roads[s.city].size(); i++){
-	int next_city = roads[s.city][i];
+	short next_city = roads[s.city][i];
 	if(s.life == 0){
 	  //have to ride
 	  int next_cost = s.cost + taxi[s.city].cost;
-	  int next_life = taxi[s.city].life - 1;
-	  if(dp[next_city][next_cost] <= next_cost) continue;
+	  short next_life = taxi[s.city].life - 1;
+	  if(dp[next_city][next_life] <= next_cost) continue;
 	  que.push(State(next_city,next_cost,next_life));
 	}
 	else{
 	  //ride
 	  int next_cost = s.cost + taxi[s.city].cost;
-	  int next_life = taxi[s.city].life - 1;
+	  short next_life = taxi[s.city].life - 1;
 	  if(dp[next_city][next_life] > next_cost){
 	    dp[next_city][next_life] = next_cost;
 	    que.push(State(next_city,next_cost,next_life));
