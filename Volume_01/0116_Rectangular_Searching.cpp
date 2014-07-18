@@ -37,34 +37,37 @@ int main(){
   int H,W;
   while(~scanf("%d %d",&H,&W)){
     if(H == 0 && W == 0) break;
-
     memset(dp,0,sizeof(dp));
 
     for(int y=0;y<H;y++){
-      char line[501];
+      char line[505];
       scanf("%s",line);
       for(int x=0;x<W;x++){
-	dp[y+1][x+1] = dp[y][x+1] + dp[y+1][x] - dp[y][x];
+	dp[y+1][x+1] = dp[y][x+1];
 	if(line[x] == '.'){
 	  dp[y+1][x+1]++;
+	}
+	else{
+	  dp[y+1][x+1] = 0;
 	}
       }
     }
 
     int res = 0;
-    for(int ly=1;ly<=H;ly++){
-      for(int lx=1;lx<=W;lx++){
-	for(int ry=ly;ry<=H;ry++){
-	  for(int rx=lx;rx<=W;rx++){
-	    int count = dp[ry][rx] - dp[ly-1][rx] - dp[ry][lx-1] + dp[ly-1][lx-1];
-	    if(count == (ry - ly + 1) * (rx - lx + 1)){
-	      res = max(count,res);
-	    }
-	  }
+    for(int y=0;y<H;y++){
+      priority_queue<P> que;
+      for(int x=0;x<=W;x++){
+	int next = dp[y+1][x+1];
+	int len = 0;
+	while(!que.empty() && que.top().first >= next){
+	  len += que.top().second;
+	  res = max(res,len * que.top().first);
+	  que.pop();
 	}
+	len++;
+	que.push(P(next,len));
       }
     }
-
     printf("%d\n",res);
   }
 }
