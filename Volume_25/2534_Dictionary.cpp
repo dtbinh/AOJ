@@ -23,7 +23,7 @@
 using namespace std;
   
 typedef long long ll;
-typedef pair <int,int> P;
+typedef pair <string,int> P;
 typedef pair <int,P> PP;
   
 static const double EPS = 1e-8;
@@ -35,29 +35,47 @@ int main(){
   int N;
   while(~scanf("%d",&N)){
     if(N == 0) break;
-    vector<string> dict;
-    vector<string> asc;
-    vector<string> desc;
+    vector<P> dict;
+    
+    char mapping[256];
+    bool used[256];
+    memset(mapping,0,sizeof(mapping));
+    memset(used,false,sizeof(used));
 
     for(int i=0;i<N;i++){
       string str;      
       cin >> str;
-      dict.push_back(str);
-      asc.push_back(str);
-      desc.push_back(str);
+
+      for(int j=0;j<str.size();j++){
+	if(mapping[str[j]] == 0){
+	  for(char alter='a';alter<='z';alter++){
+	    if(!used[alter]){
+	      mapping[str[j]] = alter;
+	      used[alter] = true;
+	      break;
+	    }
+	  }
+	}
+      }
+      
+      string next = "";
+      for(int j=0;j<str.size();j++){
+	next.push_back(mapping[str[j]]);
+      }
+      dict.push_back(P(next,i));
     }
 
-    sort(asc.begin(),asc.end());
-    sort(desc.begin(),desc.end(),greater<string>());
+    stable_sort(dict.begin(),dict.end());
 
-    int flag = 0;
-    for(int i=0;i<N;i++){
-      if(asc[i] != dict[i]) flag |= (1<<0);
-      if(desc[i] != dict[i]) flag |= (1<<1);
+    bool isok = true;
+    for(int i=0;i<dict.size();i++){
+      if(dict[i].second != i){
+      	isok = false;
+      	break;
+      }
     }
 
-    printf("%s\n",(flag != (1<<2)-1) ? "yes" : "no");
-
+    printf("%s\n",isok ? "yes" : "no");
   }
 }
 
