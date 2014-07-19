@@ -35,47 +35,60 @@ int main(){
   int N;
   while(~scanf("%d",&N)){
     if(N == 0) break;
-    vector<P> dict;
-    
-    char mapping[256];
-    bool used[256];
-    memset(mapping,0,sizeof(mapping));
-    memset(used,false,sizeof(used));
-
-    for(int i=0;i<N;i++){
-      string str;      
-      cin >> str;
-
-      for(int j=0;j<str.size();j++){
-	if(mapping[str[j]] == 0){
-	  for(char alter='a';alter<='z';alter++){
-	    if(!used[alter]){
-	      mapping[str[j]] = alter;
-	      used[alter] = true;
-	      break;
-	    }
-	  }
-	}
-      }
-      
-      string next = "";
-      for(int j=0;j<str.size();j++){
-	next.push_back(mapping[str[j]]);
-      }
-      dict.push_back(P(next,i));
-    }
-
-    stable_sort(dict.begin(),dict.end());
+    vector<string> dict;
+    int prior[256][256]; // prior[A][B] ::= A is prior to B or not
+    memset(prior,-1,sizeof(prior));
 
     bool isok = true;
-    for(int i=0;i<dict.size();i++){
-      if(dict[i].second != i){
-      	isok = false;
-      	break;
-      }
-    }
+    bool res = true;
+    for(int current_idx=0;current_idx<N;current_idx++){
+      string current;
+      cin >> current;
 
-    printf("%s\n",isok ? "yes" : "no");
+      for(int prev_idx=0;prev_idx<dict.size();prev_idx++){
+	for(int char_idx=0;
+	    char_idx < current.size() && char_idx < dict[prev_idx].size();
+	    char_idx++){
+	  if(current[char_idx] == dict[prev_idx][char_idx]) continue;
+
+	  if(prior[dict[prev_idx][char_idx]][current[char_idx]] == 1){
+	    break;
+	  }
+
+	  if(prior[dict[prev_idx][char_idx]][current[char_idx]] == -1){
+	    prior[dict[prev_idx][char_idx]][current[char_idx]] = 1;
+	    prior[current[char_idx]][dict[prev_idx][char_idx]] = 0;
+	    break;
+	  }
+	}
+
+	bool isok = true;
+	bool is_first = true;
+	for(int char_idx=0;
+	    char_idx < current.size() && char_idx < dict[prev_idx].size();
+	    char_idx++){
+	  if(current[char_idx] == dict[prev_idx][char_idx]) continue;
+	  if(is_first && prior[current[char_idx]][dict[prev_idx][char_idx]] == 1){
+	    isok = false;
+	    break;
+	  }
+	  is_first = false;
+	}
+
+	if(isok){
+	  if(current.size() < dict[prev_idx].size()
+	     && dict[prev_idx].substr(0,current.size()) == current){
+	    isok = false;
+	  }
+	}
+
+	res &= isok;
+      }
+
+      dict.push_back(current);
+    }
+  found:;
+    printf("%s\n",res ? "yes" : "no");
   }
 }
 
