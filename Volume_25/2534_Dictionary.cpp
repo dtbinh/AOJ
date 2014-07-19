@@ -41,7 +41,7 @@ int main(){
 
     bool isok = true;
     bool res = true;
-    for(int current_idx=0;current_idx<N;current_idx++){
+    for(int current_idx = 0;current_idx<N;current_idx++){
       string current;
       cin >> current;
 
@@ -83,6 +83,13 @@ int main(){
 	}
 
 	res &= isok;
+	if(!res){
+	  current_idx++;
+	  for(;current_idx < N;current_idx++){
+	    cin >> current;
+	  }
+	  goto found;
+	}
       }
 
       dict.push_back(current);
