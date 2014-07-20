@@ -71,13 +71,13 @@ public:
     
     if(mRank[lhs] > mRank[rhs]){
       mParent[lhs] = rhs;
+      mRank[rhs] += mRank[lhs];
       mRank[lhs] = 0;
-      mRank[rhs]++;
     }
     else{
       mParent[rhs] = lhs;
+      mRank[lhs] += mRank[rhs];
       mRank[rhs] = 0;
-      mRank[lhs]++;
     }
   }
 
