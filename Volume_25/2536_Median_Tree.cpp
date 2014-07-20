@@ -31,6 +31,54 @@ static const double EPS = 1e-8;
 static const int tx[] = {0,1,0,-1};
 static const int ty[] = {-1,0,1,0};
 
+class UnionFindTree{
+private:
+  int* mParent;
+  int* mRank;
+  int mSize;
+
+public:
+  UnionFindTree(int n){
+    mSize = n;
+    mParent = new int[n];
+    mRank = new int[n];
+
+    for(int i=0; i < n; i++){
+      mParent[i] = i;
+      mRank[i] = 0;
+    }
+  }
+
+  bool same(int lhs,int rhs){
+    return (find(lhs) == find(rhs) ? true : false);
+  }
+
+  int find(int pos){
+    if(pos == mParent[pos]) return pos;
+    return find(mParent[pos]);
+  }
+  
+  void unite(int lhs,int rhs){
+    lhs = find(lhs);
+    rhs = find(rhs);
+    
+    if(mRank[lhs] > mRank[rhs]){
+      mParent[lhs] = rhs;
+      mRank[lhs] = 0;
+      mRank[rhs]++;
+    }
+    else{
+      mParent[rhs] = lhs;
+      mRank[rhs] = 0;
+      mRank[lhs]++;
+    }
+  }
+
+  int size() const{
+    return mSize;
+  }
+};
+
 int main(){
   int num_of_nodes;
   int num_of_edges;
