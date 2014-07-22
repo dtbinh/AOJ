@@ -31,42 +31,61 @@ static const double EPS = 1e-8;
 static const int tx[] = {0,1,0,-1};
 static const int ty[] = {-1,0,1,0};
 
-int dp[20][1<<20];
-int edges[20][20];
+
+struct Edge{
+  int to;
+  int cost;
+  Edge(int _to,int _cost) : 
+    to(_to), cost(_cost) {}
+  Edge() : to(0), cost(0) {}
+};
+
+vector<Edge> edges[20];
+bool visited[20];
+int sum;
+int max_dist;
+
+void dfs(int current,int prev_cost,int total_cost){
+  if(visited[current]) return;
+
+  if(current != 0 && edges[current].size() == 1){
+    max_dist = max(max_dist,total_cost - prev_cost);
+    return;
+  }
+
+  visited[current] = true;
+  sum += prev_cost;
+
+  for(int i=0;i<edges[current].size();i++){
+    dfs(edges[current][i].to,
+	edges[current][i].cost,
+	total_cost + edges[current][i].cost);
+  }
+}
 
 int main(){
   int N;
   while(~scanf("%d",&N)){
     if(N == 0) break;
+    for(int i=0;i<20;i++){
+      edges[i].clear();
+    }
 
-    memset(edges,0x3f,sizeof(edges));
+    memset(visited,false,sizeof(visited));
+    sum = 0;
+    max_dist = 0;
+
+    int total_cost = 0;
     for(int i=0;i<N-1;i++){
       int from,to,cost;
       scanf("%d %d %d",&from,&to,&cost);
 
       from--; to--;
-      edges[from][to] = cost;
-      edges[to][from] = cost;
+      edges[from].push_back(Edge(to,cost));
+      edges[to].push_back(Edge(from,cost));
     }
 
-    memset(dp,0x3f,sizeof(dp));
-    dp[0][(1<<0)] = 0;
-    for(int S = 0; S < (1<<N); S++){
-      for(int from=0;from < N; from++){
-	if(!(S & (1<<from))) continue; 
-	for(int to=0;to < N; to++){
-	  if(S & (1<<to)) continue;
-	  dp[to][S | (1<<to)] = min(dp[to][S | (1<<to)],
-				    dp[from][S] + edges[from][to]);
-	}
-      }
-    }
-
-    int res = INF;
-    for(int i=0;i<N;i++){
-      res = min(dp[i][(1<<N)-1],res);
-    }
-
-    printf("%d\n",res);
+    dfs(0,0,0);
+    printf("%d\n",2 * sum - max_dist);
   }
 }
