@@ -19,6 +19,7 @@
 #include <cctype>
 #include <utility>
 #include <complex>
+#include <assert.h>
  
 using namespace std;
  
@@ -66,6 +67,22 @@ bool intersectSS(const Line &s, const Line &t) {
     ccw(t[0],t[1],s[0])*ccw(t[0],t[1],s[1]) <= 0;
 }
 
+Point crosspoint(const Line &l, const Line &m) {
+  double A = cross(l[1] - l[0], m[1] - m[0]);
+  double B = cross(l[1] - l[0], l[1] - m[0]);
+  if (abs(A) < EPS && abs(B) < EPS) return m[0]; // same line
+  if (abs(A) < EPS) assert(false); // !!!PRECONDITION NOT SATISFIED!!!
+  return m[0] + B / A * (m[1] - m[0]);
+}
+
+double compute_area(const vector<Point>& polygon){
+  double area = 0;
+  for (int i = 0; i < polygon.size(); ++i) {
+    area += cross(polygon[i], polygon[(i+1) % polygon.size()]);
+  }
+  return area;
+}
+
 int main(){
   int x1,y1,x2,y2;
   while(~scanf("%d %d %d %d",&x1,&y1,&x2,&y2)){
@@ -76,6 +93,44 @@ int main(){
     for(int i = 0; i < 2; i++){
       scanf("%d %d %d %d",&x1,&y1,&x2,&y2);
       lines.push_back(Line(Point(x1,y1),Point(x2,y2)));
+    }
+
+    bool isok = true;
+    
+    vector<Point> polygon;
+    for(int i=0;i<3;i++){
+      for(int j=i+1;j<3;j++){
+	if(intersectSS(lines[i],lines[j])){
+	  Point p = crosspoint(lines[i],lines[j]);
+	  polygon.push_back(p);
+	}
+	else{
+	  isok = false;
+	  goto ng;
+	}
+      }
+    }
+  ng:;
+
+    double area = -1.0;
+    if(isok){
+      area = compute_area(polygon);
+    }
+
+    if(1900000.0 - EPS <= area){
+      printf("%s\n","dai-kichi");
+    }
+    else if(1000000.0 - EPS <= area && area < 1900000.0){
+      printf("%s\n","chu-kichi");
+    }
+    else if(100000.0 - EPS <= area && area < 1000000.0){
+      printf("%s\n","kichi");
+    }
+    else if(0 - EPS <= area && area < 100000.0){
+      printf("%s\n","syo-kichi");
+    }
+    else {
+      printf("%s\n","kyo");
     }
   }
 }
