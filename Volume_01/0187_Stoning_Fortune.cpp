@@ -75,12 +75,12 @@ Point crosspoint(const Line &l, const Line &m) {
   return m[0] + B / A * (m[1] - m[0]);
 }
 
-double compute_area(const vector<Point>& polygon){
-  double area = 0;
-  for (int i = 0; i < polygon.size(); ++i) {
-    area += cross(polygon[i], polygon[(i+1) % polygon.size()]);
-  }
-  return area;
+double compute_area(const Point &l,const Point &m){
+  return abs(cross(l,m)) / 2.0;
+}
+
+bool is_equal(const Point &l,const Point &m){
+  return ((abs(real(l) - real(m)) < EPS) && (abs(imag(l) - imag(m) < EPS)));
 }
 
 int main(){
@@ -112,21 +112,37 @@ int main(){
     }
   ng:;
 
-    double area = -1.0;
+    sort(polygon.begin(),polygon.end());
+    
     if(isok){
-      area = compute_area(polygon);
+      bool tmp = false;
+      for(int i=0;i<3;i++){
+	for(int j=i+1;j<3;j++){
+	  if(!is_equal(polygon[i],polygon[j])){
+	    tmp = true;
+	    break;
+	  }
+	}
+      }
+
+      isok = tmp;
     }
 
-    if(1900000.0 - EPS <= area){
+    double area = -1.0;
+    if(isok){
+      area = compute_area(polygon[1] - polygon[0],polygon[2] - polygon[0]);
+    }
+
+    if(1900000.0 <= area){
       printf("%s\n","dai-kichi");
     }
-    else if(1000000.0 - EPS <= area && area < 1900000.0){
+    else if(1000000.0 <= area && area < 1900000.0){
       printf("%s\n","chu-kichi");
     }
-    else if(100000.0 - EPS <= area && area < 1000000.0){
+    else if(100000.0 <= area && area < 1000000.0){
       printf("%s\n","kichi");
     }
-    else if(0 - EPS <= area && area < 100000.0){
+    else if(0.0 <= area && area < 100000.0){
       printf("%s\n","syo-kichi");
     }
     else {
