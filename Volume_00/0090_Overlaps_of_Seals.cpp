@@ -74,34 +74,27 @@ bool intersectSS(const Line &s, const Line &t) {
 
 vector<Point> crosspointsCC(const Circle& s,const Circle& t){
   //ax + by + c = 0
-  double a = real(s.p) - real(t.p); //x1-x2;
-  double b = imag(s.p) - imag(t.p); //y1-y2;
-  double c = 0.5 * ((s.r - t.r)*(s.r + t.r)
-		    - a * (real(s.p)+real(t.p))
-		    - b * (imag(s.p)+imag(t.p)));
+  double a = real(t.p) - real(s.p); //x1-x2;
+  double b = imag(t.p) - imag(s.p); //y1-y2;
+  double d = sqrt(a * a + b * b);
+  double theta = 0.0;
 
-  double l = a * a + b * b;
-  double k = a * real(s.p) + b * imag(s.p) + c;
-  double d = l * s.r * s.r - k * k;
-
-  vector<Point> res;
-  if(d > EPS){
-    double ds = sqrt(d);
-    double apl = a/l;
-    double bpl = b/l;
-    double xc = real(s.p) - apl * k;
-    double yc = imag(s.p) - bpl * k;
-    double xd = bpl * ds;
-    double yd = apl * ds;
-
-    res.push_back(Point(xc - xd,yc + yd));
-    res.push_back(Point(xc + xd,yc - yd));
-  }else if(-EPS <= d && d <= EPS){
-    res.push_back(Point(real(s.p) - a * k/l,imag(s.p) - b * k/l));
-  }else{
-    //nothing to do
+  if(d > 0) {
+    theta = acos((d * d + s.r * s.r - t.r * t.r) / (2 * d * s.r));
   }
 
+  double angle = atan2(b,a);
+  
+  vector<Point> res;
+  if(d < s.r + t.r){
+    res.push_back(Point(s.p.real() + s.r * cos(angle + theta), s.p.imag() + s.r * sin(angle + theta)));
+    res.push_back(Point(s.p.real() + s.r * cos(angle - theta), s.p.imag() + s.r * sin(angle - theta)));
+  }
+
+  else if(s.r + t.r - EPS <= d && d <= s.r + t.r + EPS){
+    res.push_back(Point(s.p.real() + s.r * cos(angle), s.p.imag() + s.r * sin(angle)));
+  }
+  
   return res;
 }
 
