@@ -119,9 +119,66 @@ bool remove_small_dye(int cx,int cy) {
   return true;
 }
 
+ class State{
+ public:
+   int x;
+   int y;
+   int type;
+   State(int _x,int _y,int _t)
+     : x(_x),y(_y),type(_t) {}
+ };
+
+ vector<State> logs;
+ vector<State> ans;
+ bool check(){
+   for(int y = 0; y < 10; y++){
+     for(int x = 0; x < 10; x++){
+       if(stage[y][x] > 0) return false;
+     }
+   }
+   return true;
+ }
+
+ void dfs(int pos){
+   if(pos > W*H) return;
+   int x = pos % W;
+   int y = pos / W;
+
+   if(pos == W * H && check()){
+     ans = logs;
+     return;
+   }
+
+   int tmp[11][11];
+   memcpy(tmp,stage,sizeof(int)*11*11);
+   if(remove_small_dye(x,y)){
+     logs.push_back(State(x,y,1));
+     dfs(pos+1);
+     logs.pop_back();
+     memcpy(stage,tmp,sizeof(int)*11*11);
+   }
+
+   if(remove_medium_dye(x,y)){
+     logs.push_back(State(x,y,2));
+     dfs(pos+1);
+     logs.pop_back();
+     memcpy(stage,tmp,sizeof(int)*11*11);
+   }
+
+   if(remove_large_dye(x,y)){
+     logs.push_back(State(x,y,3));
+     dfs(pos+1);
+     logs.pop_back();
+     memcpy(stage,tmp,sizeof(int)*11*11);
+   }
+
+   dfs(pos+1);
+ }
+
 int main(){
   int n;
   while(~scanf("%d",&n)){
+    logs.clear();
     for(int y = 0; y < 10; y++){
       for(int x = 0; x < 10; x++){
 	int density;
@@ -129,18 +186,9 @@ int main(){
 	stage[y][x] = density;
       }
     }
-    for(int y = 0; y < 10; y++){
-      for(int x = 0; x < 10; x++){
-	if(remove_large_dye(x,y)){
-	  printf("%d %d %d\n",x,y,3);
-	}
-	if(remove_medium_dye(x,y)){
-	  printf("%d %d %d\n",x,y,2);
-	}
-	if(remove_small_dye(x,y)){
-	  printf("%d %d %d\n",x,y,1);
-	}
-      }
+    dfs(0);
+    for(int i = 0; i < ans.size(); i++){
+      printf("%d %d %d\n",ans[i].x,ans[i].y,ans[i].type);
     }
   }
 }
