@@ -46,7 +46,6 @@ public:
 };
 
 vector<State> logs;
-vector<State> ans;
 
 bool check(){
   for(int y = 0; y < 10; y++){
@@ -166,48 +165,68 @@ public:
   }
 };
 
+class None : public Strategy{
+public:
+  bool remove(int x,int y){
+    return true;
+  }
+};
+
 StrategyMedium stm;
 StrategyLarge stl;
 StrategySmall sts;
+None none;
 Strategy* dye[5];
 
-
-void dfs(int pos){
+void dfs(int pos,int life){
   if(pos > W*H) return;
-  if(logs.size() > 12) return;
+  if(life < 0) return;
+
   int x = pos % W;
   int y = pos / W;
 
   if(pos == W * H && check()){
-    ans = logs;
-    cout << ans.size() << endl;
+    for(int i = 0; i < logs.size(); i++){
+      printf("%d %d %d\n",logs[i].x,logs[i].y,logs[i].type);
+    }
+    // exit(0);
     return;
   }
   
   int tmp[11][11];
   memcpy(tmp,stage,sizeof(int)*11*11);
 
-  for(int dye_size = 1; dye_size <= 3; dye_size++){
-    //push
-    if(dye[dye_size]->remove(x,y)){
-      logs.push_back(State(x,y,dye_size));
-      dfs(pos+1);
-      logs.pop_back();
-      memcpy(stage,tmp,sizeof(int)*11*11);
+  for(int S=0;S<=(1<<3)-1;S++){
+    bool isok = true;
+
+    int count =0;
+    for(int i=0;i<3;i++){
+      if(S & (1<<i)){
+	isok &= dye[i+1]->remove(x,y);
+	logs.push_back(State(x,y,i+1));
+	count++;
+      }
     }
-    dfs(pos+1);
+
+    if(isok){
+      dfs(pos+1,life - count);
+    }
+    while(count-- > 0){
+      logs.pop_back();
+    }
+    memcpy(stage,tmp,sizeof(int)*11*11);
   }
 }
 
 int main(){
   int n;
+  dye[0] = &none;
   dye[1] = &sts;
   dye[2] = &stm;
   dye[3] = &stl;
 
   while(~scanf("%d",&n)){
     logs.clear();
-    ans.clear();
 
     for(int y = 0; y < 10; y++){
       for(int x = 0; x < 10; x++){
@@ -216,9 +235,6 @@ int main(){
 	stage[y][x] = density;
       }
     }
-    dfs(0);
-    for(int i = 0; i < ans.size(); i++){
-      printf("%d %d %d\n",ans[i].x,ans[i].y,ans[i].type);
-    }
+    dfs(0,n);
   }
 }
