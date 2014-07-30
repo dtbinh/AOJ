@@ -36,149 +36,179 @@ int stage[11][11];
 static const int H = 10;
 static const int W = 10;
 
-bool remove_large_dye(int cx,int cy);
-bool can_remove_large_dye(int cx,int cy);
+class State{
+public:
+  int x;
+  int y;
+  int type;
+  State(int _x,int _y,int _t)
+    : x(_x),y(_y),type(_t) {}
+};
 
-bool remove_medium_dye(int cx,int cy);
-bool can_remove_medium_dye(int cx,int cy);
+vector<State> logs;
+vector<State> ans;
 
-bool remove_small_dye(int cx,int cy);
-bool can_remove_small_dye(int cx,int cy);
-
-bool can_remove_large_dye(int cx,int cy) {
-  if(cy < 0 || cy >= H
-       || cx < 0 || cx >= W) return false;
-
-  if(cy + 2 >= H) return false;
-  if(stage[cy + 2][cx] <= 0) return false;
-
-  if(cx + 2 >= W) return false;
-  if(stage[cy][cx + 2] <= 0) return false;
-
-  if(cy - 2 < 0) return false;
-  if(stage[cy - 2][cx] <= 0) return false;
-
-  if(cx - 2 < 0) return false;
-  if(stage[cy][cx - 2] <= 0) return false;
-
-  if(!can_remove_medium_dye(cx,cy)){
-    return false;
-  }
-
-  return true;
-}
-
-bool remove_large_dye(int cx,int cy) {
-  if(!can_remove_large_dye(cx,cy)) return false;
-
-  stage[cy + 2][cx]--;
-  stage[cy][cx + 2]--;
-  stage[cy - 2][cx]--;
-  stage[cy][cx - 2]--;
-  remove_medium_dye(cx,cy);
-
-  return true;
-}
-
-bool can_remove_medium_dye(int cx,int cy) {
-  for(int dx = -1;dx <= 1;dx++){
-    for(int dy = -1;dy <= 1;dy++){
-      if(cy + dy < 0 || cy + dy >= H
-	   || cx + dx < 0 || cx + dx >= W) return false;
-      if(stage[cy + dy][cx + dx] <= 0) return false;
-    }    
-  }
-  return true;
-}
-
-bool remove_medium_dye(int cx,int cy) {
-  if(!can_remove_medium_dye(cx,cy)) return false;
-  for(int dx = -1;dx <= 1;dx++){
-    for(int dy = -1;dy <= 1;dy++){
-      stage[cy + dy][cx + dx]--;
+bool check(){
+  for(int y = 0; y < 10; y++){
+    for(int x = 0; x < 10; x++){
+      if(stage[y][x] > 0) return false;
     }
   }
   return true;
 }
 
-bool can_remove_small_dye(int cx,int cy) {
-  for(int i=0;i<5;i++){
-    if(cy + ty[i] < 0 || cy + ty[i] >= H
-       || cx + tx[i] < 0 || cx + tx[i] >= W) return false;
-    if(stage[cy + ty[i]][cx + tx[i]] <= 0) return false;
+class Strategy{
+public:
+  virtual bool remove(int x,int y) = 0;
+};
+
+class StrategySmall : public Strategy {
+private:
+  bool can_remove_small_dye(int cx,int cy) {
+    for(int i=0;i<5;i++){
+      if(cy + ty[i] < 0 || cy + ty[i] >= H
+	 || cx + tx[i] < 0 || cx + tx[i] >= W) return false;
+      if(stage[cy + ty[i]][cx + tx[i]] <= 0) return false;
+    }
+    
+    return true;
+  }
+public:
+  bool remove(int cx,int cy) {
+    if(!can_remove_small_dye(cx,cy)) return false;
+    for(int i=0;i<5;i++){
+      stage[cy + ty[i]][cx + tx[i]]--;
+    }
+    return true;
+  }
+};
+
+class StrategyMedium : public Strategy {
+private:
+  bool can_remove_medium_dye(int cx,int cy) {
+    for(int dx = -1;dx <= 1;dx++){
+      for(int dy = -1;dy <= 1;dy++){
+	if(cy + dy < 0 || cy + dy >= H
+	   || cx + dx < 0 || cx + dx >= W) return false;
+	if(stage[cy + dy][cx + dx] <= 0) return false;
+      }    
+    }
+    return true;
+  }
+public:
+  bool remove(int cx,int cy) {
+    if(!can_remove_medium_dye(cx,cy)) return false;
+    for(int dx = -1;dx <= 1;dx++){
+      for(int dy = -1;dy <= 1;dy++){
+	stage[cy + dy][cx + dx]--;
+      }
+    }
+    return true;
+  }
+};
+
+class StrategyLarge : public Strategy {
+private:
+  bool can_remove_medium_dye(int cx,int cy) {
+    for(int dx = -1;dx <= 1;dx++){
+      for(int dy = -1;dy <= 1;dy++){
+	if(cy + dy < 0 || cy + dy >= H
+	   || cx + dx < 0 || cx + dx >= W) return false;
+	if(stage[cy + dy][cx + dx] <= 0) return false;
+      }    
+    }
+    return true;
+  }
+
+  bool can_remove_large_dye(int cx,int cy) {
+    if(cy < 0 || cy >= H
+       || cx < 0 || cx >= W) return false;
+    
+    if(cy + 2 >= H) return false;
+    if(stage[cy + 2][cx] <= 0) return false;
+    
+    if(cx + 2 >= W) return false;
+    if(stage[cy][cx + 2] <= 0) return false;
+    
+    if(cy - 2 < 0) return false;
+    if(stage[cy - 2][cx] <= 0) return false;
+    
+    if(cx - 2 < 0) return false;
+    if(stage[cy][cx - 2] <= 0) return false;
+    
+    if(can_remove_medium_dye(cx,cy)){
+      return false;
+    }
+    
+    return true;
+  }
+  bool remove_medium_dye(int cx,int cy) {
+    if(!can_remove_medium_dye(cx,cy)) return false;
+    for(int dx = -1;dx <= 1;dx++){
+      for(int dy = -1;dy <= 1;dy++){
+	stage[cy + dy][cx + dx]--;
+      }
+    }
+    return true;
+  }
+
+public:
+  bool remove(int cx,int cy) {
+    if(!can_remove_large_dye(cx,cy)) return false;
+    
+    stage[cy + 2][cx]--;
+    stage[cy][cx + 2]--;
+    stage[cy - 2][cx]--;
+    stage[cy][cx - 2]--;
+    remove_medium_dye(cx,cy);
+    
+    return true;
+  }
+};
+
+StrategyMedium stm;
+StrategyLarge stl;
+StrategySmall sts;
+Strategy* dye[5];
+
+
+void dfs(int pos){
+  if(pos > W*H) return;
+  if(logs.size() > 12) return;
+  int x = pos % W;
+  int y = pos / W;
+
+  if(pos == W * H && check()){
+    ans = logs;
+    cout << ans.size() << endl;
+    return;
   }
   
-  return true;
-}
+  int tmp[11][11];
+  memcpy(tmp,stage,sizeof(int)*11*11);
 
-bool remove_small_dye(int cx,int cy) {
-  if(!can_remove_small_dye(cx,cy)) return false;
-  for(int i=0;i<5;i++){
-    stage[cy + ty[i]][cx + tx[i]]--;
+  for(int dye_size = 1; dye_size <= 3; dye_size++){
+    //push
+    if(dye[dye_size]->remove(x,y)){
+      logs.push_back(State(x,y,dye_size));
+      dfs(pos+1);
+      logs.pop_back();
+      memcpy(stage,tmp,sizeof(int)*11*11);
+    }
+    dfs(pos+1);
   }
-  return true;
 }
-
- class State{
- public:
-   int x;
-   int y;
-   int type;
-   State(int _x,int _y,int _t)
-     : x(_x),y(_y),type(_t) {}
- };
-
- vector<State> logs;
- vector<State> ans;
- bool check(){
-   for(int y = 0; y < 10; y++){
-     for(int x = 0; x < 10; x++){
-       if(stage[y][x] > 0) return false;
-     }
-   }
-   return true;
- }
-
- void dfs(int pos){
-   if(pos > W*H) return;
-   int x = pos % W;
-   int y = pos / W;
-
-   if(pos == W * H && check()){
-     ans = logs;
-     return;
-   }
-
-   int tmp[11][11];
-   memcpy(tmp,stage,sizeof(int)*11*11);
-   if(remove_small_dye(x,y)){
-     logs.push_back(State(x,y,1));
-     dfs(pos+1);
-     logs.pop_back();
-     memcpy(stage,tmp,sizeof(int)*11*11);
-   }
-
-   if(remove_medium_dye(x,y)){
-     logs.push_back(State(x,y,2));
-     dfs(pos+1);
-     logs.pop_back();
-     memcpy(stage,tmp,sizeof(int)*11*11);
-   }
-
-   if(remove_large_dye(x,y)){
-     logs.push_back(State(x,y,3));
-     dfs(pos+1);
-     logs.pop_back();
-     memcpy(stage,tmp,sizeof(int)*11*11);
-   }
-
-   dfs(pos+1);
- }
 
 int main(){
   int n;
+  dye[1] = &sts;
+  dye[2] = &stm;
+  dye[3] = &stl;
+
   while(~scanf("%d",&n)){
     logs.clear();
+    ans.clear();
+
     for(int y = 0; y < 10; y++){
       for(int x = 0; x < 10; x++){
 	int density;
