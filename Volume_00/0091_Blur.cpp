@@ -27,8 +27,8 @@ typedef long long ll;
 typedef pair <int,int> P;
 typedef pair <int,P > PP;
  
-static const int tx[] = {0,0,1,0,-1};
-static const int ty[] = {0,-1,0,1,0};
+static const int tx[] = {+0,+0,+1,+0,-1};
+static const int ty[] = {+0,-1,+0,+1,+0};
 
 static const double EPS = 1e-10;
 
@@ -135,7 +135,7 @@ private:
     if(cx - 2 < 0) return false;
     if(stage[cy][cx - 2] <= 0) return false;
     
-    if(can_remove_medium_dye(cx,cy)){
+    if(!can_remove_medium_dye(cx,cy)){
       return false;
     }
     
@@ -172,54 +172,59 @@ public:
   }
 };
 
-StrategyMedium stm;
-StrategyLarge stl;
-StrategySmall sts;
-None none;
 Strategy* dye[5];
+
+void disp(){
+  for(int y=0; y < H; y++){
+    for(int x=0; x < W; x++){
+      printf("%d ",stage[y][x]);
+    }
+    printf("\n");
+  }
+}
 
 void dfs(int pos,int life){
   if(pos > W*H) return;
   if(life < 0) return;
+  // cout << pos << endl;
+  if(life == 0 && check()){
+    for(int i = 0; i < logs.size(); i++){
+      printf("%d %d %d\n",logs[i].x,logs[i].y,logs[i].type);
+    }
+    exit(0);
+  }
 
   int x = pos % W;
   int y = pos / W;
 
-  if(pos == W * H && check()){
-    for(int i = 0; i < logs.size(); i++){
-      printf("%d %d %d\n",logs[i].x,logs[i].y,logs[i].type);
-    }
-    // exit(0);
+  // cout << pos << endl;
+  // disp();
+  if(stage[y][x] == 0){
+    dfs(pos+1,life);
     return;
   }
-  
+
   int tmp[11][11];
   memcpy(tmp,stage,sizeof(int)*11*11);
-
-  for(int S=0;S<=(1<<3)-1;S++){
-    bool isok = true;
-
-    int count =0;
-    for(int i=0;i<3;i++){
-      if(S & (1<<i)){
-	isok &= dye[i+1]->remove(x,y);
-	logs.push_back(State(x,y,i+1));
-	count++;
-      }
-    }
-
-    if(isok){
-      dfs(pos+1,life - count);
-    }
-    while(count-- > 0){
+    
+  for(int i=0;i<3;i++){
+    if(dye[i+1]->remove(x,y)){
+      logs.push_back(State(x,y,i+1));
+      dfs(pos,life-1);
       logs.pop_back();
     }
     memcpy(stage,tmp,sizeof(int)*11*11);
   }
+  dfs(pos+1,life);
 }
 
 int main(){
   int n;
+  StrategyMedium stm;
+  StrategyLarge stl;
+  StrategySmall sts;
+  None none;
+
   dye[0] = &none;
   dye[1] = &sts;
   dye[2] = &stm;
