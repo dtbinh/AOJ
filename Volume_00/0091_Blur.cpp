@@ -202,9 +202,6 @@ void disp(){
   }
 }
 
-
-// bool visited[100][50][50];
-
 bool dfs(int pos,int life){
   if(life == 0 && sum == 0){
     return true;
@@ -212,21 +209,12 @@ bool dfs(int pos,int life){
 
   else{
     if(life == 0) return false;
-    // if(visited[pos][life][sum]) return;
-    // visited[pos][life][sum] = true;
-    
-    // cout << pos << endl;
-    if(pos >= W*H){
-      return false;
-    }
+    if(pos >= W*H) return false;
   }
 
   int x = pos % W;
   int y = pos / W;
 
-  // cout << x << " " << y << endl;
-  // cout << pos << endl;
-  // disp();
   if(stage[y][x] == 0){
     if(dfs(pos+1,life)){
       return true;
@@ -247,9 +235,6 @@ bool dfs(int pos,int life){
       dye[i+1]->recover(cx,cy);
     }
   }
-
-  // cout << pos << endl;
-  // return dfs(pos+1,life);
   return false;
 }
 
@@ -268,7 +253,6 @@ int main(){
   while(~scanf("%d",&n)){
     logs.clear();
 
-    // memset(visited,false,sizeof(visited));
     for(int y = 0; y < 10; y++){
       for(int x = 0; x < 10; x++){
 	int density;
