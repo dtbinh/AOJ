@@ -32,7 +32,7 @@ static const int ty[] = {+0,-1,+0,+1,+0};
 
 static const double EPS = 1e-10;
 
-int stage[11][11];
+char stage[10][10];
 static const int H = 10;
 static const int W = 10;
 
@@ -46,19 +46,12 @@ public:
 };
 
 vector<State> logs;
-
-bool check(){
-  for(int y = 0; y < 10; y++){
-    for(int x = 0; x < 10; x++){
-      if(stage[y][x] > 0) return false;
-    }
-  }
-  return true;
-}
+int sum;
 
 class Strategy{
 public:
   virtual bool remove(int x,int y) = 0;
+  virtual void recover(int x,int y) = 0;
 };
 
 class StrategySmall : public Strategy {
@@ -79,6 +72,11 @@ public:
       stage[cy + ty[i]][cx + tx[i]]--;
     }
     return true;
+  }
+  void recover(int cx,int cy) {
+    for(int i=0;i<5;i++){
+      stage[cy + ty[i]][cx + tx[i]]++;
+    }
   }
 };
 
@@ -103,6 +101,13 @@ public:
       }
     }
     return true;
+  }
+  void recover(int cx,int cy) {
+    for(int dx = -1;dx <= 1;dx++){
+      for(int dy = -1;dy <= 1;dy++){
+	stage[cy + dy][cx + dx]++;
+      }
+    }
   }
 };
 
@@ -163,12 +168,26 @@ public:
     
     return true;
   }
+  void recover(int cx,int cy) {
+    stage[cy + 2][cx]++;
+    stage[cy][cx + 2]++;
+    stage[cy - 2][cx]++;
+    stage[cy][cx - 2]++;
+    for(int dx = -1;dx <= 1;dx++){
+      for(int dy = -1;dy <= 1;dy++){
+	stage[cy + dy][cx + dx]++;
+      }
+    }
+  }
 };
 
 class None : public Strategy{
 public:
   bool remove(int x,int y){
     return true;
+  }
+  void recover(int x,int y){
+    return;
   }
 };
 
@@ -183,11 +202,18 @@ void disp(){
   }
 }
 
+
+// bool visited[100][50][50];
+
 void dfs(int pos,int life){
-  if(pos > W*H) return;
+  if(pos > W*(H-1)) return;
   if(life < 0) return;
+  if(life == 0 && sum > 0) return;
+  // if(visited[pos][life][sum]) return;
+  // visited[pos][life][sum] = true;
+
   // cout << pos << endl;
-  if(life == 0 && check()){
+  if(life == 0 && sum == 0){
     for(int i = 0; i < logs.size(); i++){
       printf("%d %d %d\n",logs[i].x,logs[i].y,logs[i].type);
     }
@@ -204,16 +230,16 @@ void dfs(int pos,int life){
     return;
   }
 
-  int tmp[11][11];
-  memcpy(tmp,stage,sizeof(int)*11*11);
-    
-  for(int i=0;i<3;i++){
+  for(int i=2;i>=0;i--){
     if(dye[i+1]->remove(x,y)){
       logs.push_back(State(x,y,i+1));
+      sum -= (i+1) * 5 - i;
       dfs(pos,life-1);
+      sum += (i+1) * 5 - i;
       logs.pop_back();
+      dye[i+1]->recover(x,y);
+      break;
     }
-    memcpy(stage,tmp,sizeof(int)*11*11);
   }
   dfs(pos+1,life);
 }
@@ -233,11 +259,13 @@ int main(){
   while(~scanf("%d",&n)){
     logs.clear();
 
+    // memset(visited,false,sizeof(visited));
     for(int y = 0; y < 10; y++){
       for(int x = 0; x < 10; x++){
 	int density;
 	scanf("%d",&density);
 	stage[y][x] = density;
+	sum += density;
       }
     }
     dfs(0,n);
