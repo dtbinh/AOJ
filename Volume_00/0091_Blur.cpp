@@ -205,43 +205,52 @@ void disp(){
 
 // bool visited[100][50][50];
 
-void dfs(int pos,int life){
-  if(pos > W*(H-1)) return;
-  if(life < 0) return;
-  if(life == 0 && sum > 0) return;
-  // if(visited[pos][life][sum]) return;
-  // visited[pos][life][sum] = true;
-
-  // cout << pos << endl;
+bool dfs(int pos,int life){
   if(life == 0 && sum == 0){
-    for(int i = 0; i < logs.size(); i++){
-      printf("%d %d %d\n",logs[i].x,logs[i].y,logs[i].type);
+    return true;
+  }
+
+  else{
+    if(life == 0) return false;
+    // if(visited[pos][life][sum]) return;
+    // visited[pos][life][sum] = true;
+    
+    // cout << pos << endl;
+    if(pos >= W*H){
+      return false;
     }
-    exit(0);
   }
 
   int x = pos % W;
   int y = pos / W;
 
+  // cout << x << " " << y << endl;
   // cout << pos << endl;
   // disp();
   if(stage[y][x] == 0){
-    dfs(pos+1,life);
-    return;
+    if(dfs(pos+1,life)){
+      return true;
+    }
   }
 
   for(int i=2;i>=0;i--){
-    if(dye[i+1]->remove(x,y)){
-      logs.push_back(State(x,y,i+1));
+    int cx = x + (i <= 1 ? 1 : 2);
+    int cy = y + (i <= 1 ? 1 : 2);
+    if(dye[i+1]->remove(cx,cy)){
+      logs.push_back(State(cx,cy,i+1));
       sum -= (i+1) * 5 - i;
-      dfs(pos,life-1);
+      if(dfs(pos,life-1)){
+	return true;
+      }
       sum += (i+1) * 5 - i;
       logs.pop_back();
-      dye[i+1]->recover(x,y);
-      break;
+      dye[i+1]->recover(cx,cy);
     }
   }
-  dfs(pos+1,life);
+
+  // cout << pos << endl;
+  // return dfs(pos+1,life);
+  return false;
 }
 
 int main(){
@@ -269,5 +278,8 @@ int main(){
       }
     }
     dfs(0,n);
+    for(int i = 0; i < logs.size(); i++){
+      printf("%d %d %d\n",logs[i].x,logs[i].y,logs[i].type);
+    }
   }
 }
