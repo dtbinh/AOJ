@@ -84,12 +84,25 @@ int main(){
       }
     }
 
-    for(int player = 1; player <= total_players; player++){
-      memset(visited,false,sizeof(visited));
-      vector<int> logs;
-      visited[player] = true;
-      logs.push_back(player);
-      dfs(player,logs);
+    bool is_top[21];
+    memset(is_top,true,sizeof(is_top));
+    for(int i=1;i<=total_players;i++){
+      for(int j=1;j<=total_players;j++){
+	if(dp[i][j] == -1) is_top[i] = false;
+      }
     }
+
+    int start = 1;
+    for(int i=1;i<=total_players;i++){
+      if(is_top[i]){
+	start = i;
+	break;
+      }
+    }
+    memset(visited,false,sizeof(visited));
+    vector<int> logs;
+    visited[start] = true;
+    logs.push_back(start);
+    dfs(start,logs);
   }
 }
