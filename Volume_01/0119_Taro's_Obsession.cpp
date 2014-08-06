@@ -34,75 +34,83 @@ static const double EPS = 1e-10;
 
 int total_players;
 int total_messages;
-int dp[21][21];
-bool visited[21];
 
-bool check(vector<int>& logs){
-  for(int i=0;i<logs.size();i++){
-    for(int j=0;j<i;j++){
-      //logs[i] entered the room earlier than logs[j]
-      if(dp[logs[j]][logs[i]] == -1){
-	return false;
-      }
-    }
-  }
-  return true;
+int find(int idx,int parent[21]){
+  if(parent[idx] == idx) return idx;
+  else return find(parent[idx],parent);
 }
 
-void dfs(int player,vector<int>& logs){
-  if(!check(logs)) return;
-  
-  if(logs.size() == total_players){
-    for(int i=0;i<logs.size();i++){
-      printf("%d\n",logs[i]);
-    }
-    exit(0);
-  }
 
-  for(int next = 1; next <= total_players; next++){
-    if(visited[next]) continue;
-    visited[next] = true;
-    logs.push_back(next);
-    dfs(next,logs);
-    logs.pop_back();
-    visited[next] = false;
+vector<int> child[21];
+int level[21];
+bool visited[21];
+
+class State {
+public:
+  int node;
+  int level;
+  State(int _n,int _l)
+    : node(_n), level(_l) {}
+  bool operator<(const State& s) const{
+    return level < s.level;
+  }
+  bool operator>(const State& s) const{
+    return level > s.level;
+  }
+};
+
+int bfs(int root){
+  queue<State> que;
+  que.push(State(root,0));
+  while(!que.empty()){
+    State current = que.front();
+    que.pop();
+
+    for(int i=0;i<child[current.node].size();i++){
+      int next = child[current.node][i];
+      level[next] = max(current.level + 1,level[next]);
+      que.push(State(next,current.level + 1));
+    }
   }
 }
 
 int main(){
   while(~scanf("%d %d",&total_players,&total_messages)){
+    for(int i=1;i<=20;i++){
+      child[i].clear();
+    }
 
-    memset(dp,0,sizeof(dp));
+    bool has_parent[21];
 
+    memset(has_parent,false,sizeof(has_parent));
+    for(int i=1;i<=20;i++){
+      level[i] = 1;
+    }
+    
     for(int message_idx = 0; message_idx < total_messages; message_idx++){
       int x,y;
       //x entered the room earlier than y
       scanf("%d %d",&x,&y);
-      if(dp[x][y] == 0){
-	dp[x][y] = 1;
-	dp[y][x] = -1;
-      }
+      child[x].push_back(y);
+      has_parent[y] = true;
     }
 
-    bool is_top[21];
-    memset(is_top,true,sizeof(is_top));
-    for(int i=1;i<=total_players;i++){
-      for(int j=1;j<=total_players;j++){
-	if(dp[i][j] == -1) is_top[i] = false;
-      }
-    }
-
-    int start = 1;
-    for(int i=1;i<=total_players;i++){
-      if(is_top[i]){
-	start = i;
-	break;
-      }
-    }
     memset(visited,false,sizeof(visited));
-    vector<int> logs;
-    visited[start] = true;
-    logs.push_back(start);
-    dfs(start,logs);
+
+    for(int i=1;i<=total_players;i++){
+      if(has_parent[i]) continue;
+      child[0].push_back(i);
+    }
+
+    bfs(0);
+    
+    vector<State> res;
+    for(int i=1;i<=total_players;i++){
+      res.push_back(State(i,level[i]));
+    }
+    sort(res.begin(),res.end());
+    for(int i=0;i<res.size();i++){
+      printf("%d\n",res[i].node);
+    }
   }
 }
