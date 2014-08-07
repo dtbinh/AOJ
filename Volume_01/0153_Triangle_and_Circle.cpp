@@ -76,6 +76,15 @@ Point crosspoint(const Line &l, const Line &m) {
   return m[0] + B / A * (m[1] - m[0]);
 }
 
+Point projection(const Line &l, const Point &p) {
+  double t = dot(p-l[0], l[0]-l[1]) / norm(l[0]-l[1]);
+  return l[0] + t*(l[0]-l[1]);
+}
+
+double distanceLP(const Line &l, const Point &p) {
+  return abs(p - projection(l, p));
+}
+
 double compute_area(const Point &l,const Point &m){
   return abs(cross(l,m)) / 2.0;
 }
@@ -84,10 +93,16 @@ bool is_equal(const Point &l,const Point &m){
   return ((abs(real(l) - real(m)) < EPS) && (abs(imag(l) - imag(m) < EPS)));
 }
 
+Point compute_circumcenter(Point &l ,Point& m,Point &r){
+  
+}
+
 int main(){
   int x[4];
   int y[4];
   while(~scanf("%d %d",&x[0],&y[0])){
+    if(x[0] == 0 && y[0] == 0) break;
+
     for(int i=1;i<4;i++){
       scanf("%d %d",&x[i],&y[i]);
     }
@@ -100,5 +115,14 @@ int main(){
 	lines.push_back(Line(Point(x[i],y[i]),Point(x[j],y[j])));
       }
     }
+
+    double dist = 0.0;
+    cout << "r " << r << endl;
+    for(int i=0;i<3;i++){
+      cout << distanceLP(lines[i],Point(x[3],y[3])) << endl;
+    }
+    cout << endl;
+    Point H = Point(x[0],y[0]) + Point(x[1],y[1]) + Point(x[2],y[2]);
+    cout << H.real() << " " << H.imag() << endl;
   }
 }
