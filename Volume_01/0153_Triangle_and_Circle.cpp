@@ -93,8 +93,21 @@ bool is_equal(const Point &l,const Point &m){
   return ((abs(real(l) - real(m)) < EPS) && (abs(imag(l) - imag(m) < EPS)));
 }
 
-Point compute_circumcenter(Point &l ,Point& m,Point &r){
+Point compute_circumcenter(const Point &l ,const Point & m,const Point &r){
+  double angle_l = (atan2((m-l).imag(),(m-l).real()) - atan2((r-l).imag(),(r-l).real()));// * 180.0/M_PI;
+  double angle_m = (atan2((l-m).imag(),(l-m).real()) - atan2((r-m).imag(),(r-m).real()));// * 180.0/M_PI;
+  double angle_r = (atan2((l-r).imag(),(l-r).real()) - atan2((m-r).imag(),(m-r).real()));// * 180.0/M_PI;
   
+  angle_l = (abs(angle_l) >= M_PI - EPS ? 2.0 * M_PI - abs(angle_l) : abs(angle_l));
+  angle_m = (abs(angle_m) >= M_PI - EPS ? 2.0 * M_PI - abs(angle_m) : abs(angle_m));
+  angle_r = (abs(angle_r) >= M_PI - EPS ? 2.0 * M_PI - abs(angle_r) : abs(angle_r));
+  
+  double length_m = dot(l - r,l - r);
+  double length_l = dot(m - r,m - r);
+  double length_r = dot(m - l,m - l);
+
+  Point h = (l * tan(angle_l) + m * tan(angle_m) + r * tan(angle_r))/(tan(angle_l) + tan(angle_m) + tan(angle_r));
+  return h;
 }
 
 int main(){
@@ -116,13 +129,11 @@ int main(){
       }
     }
 
-    double dist = 0.0;
-    cout << "r " << r << endl;
+    double dist = 1000000000.0;
     for(int i=0;i<3;i++){
-      cout << distanceLP(lines[i],Point(x[3],y[3])) << endl;
+      dist = min(distanceLP(lines[i],Point(x[3],y[3])),dist);
     }
-    cout << endl;
-    Point H = Point(x[0],y[0]) + Point(x[1],y[1]) + Point(x[2],y[2]);
-    cout << H.real() << " " << H.imag() << endl;
+    
+    Point H = compute_circumcenter(Point(x[0],y[0]),Point(x[1],y[1]),Point(x[2],y[2]));
   }
 }
