@@ -85,29 +85,29 @@ double distanceLP(const Line &l, const Point &p) {
   return abs(p - projection(l, p));
 }
 
-double compute_area(const Point &l,const Point &m){
-  return abs(cross(l,m)) / 2.0;
-}
-
 bool is_equal(const Point &l,const Point &m){
   return ((abs(real(l) - real(m)) < EPS) && (abs(imag(l) - imag(m) < EPS)));
 }
 
-Point compute_circumcenter(const Point &l ,const Point & m,const Point &r){
-  double angle_l = (atan2((m-l).imag(),(m-l).real()) - atan2((r-l).imag(),(r-l).real()));// * 180.0/M_PI;
-  double angle_m = (atan2((l-m).imag(),(l-m).real()) - atan2((r-m).imag(),(r-m).real()));// * 180.0/M_PI;
-  double angle_r = (atan2((l-r).imag(),(l-r).real()) - atan2((m-r).imag(),(m-r).real()));// * 180.0/M_PI;
-  
-  angle_l = (abs(angle_l) >= M_PI - EPS ? 2.0 * M_PI - abs(angle_l) : abs(angle_l));
-  angle_m = (abs(angle_m) >= M_PI - EPS ? 2.0 * M_PI - abs(angle_m) : abs(angle_m));
-  angle_r = (abs(angle_r) >= M_PI - EPS ? 2.0 * M_PI - abs(angle_r) : abs(angle_r));
-  
-  double length_m = dot(l - r,l - r);
-  double length_l = dot(m - r,m - r);
-  double length_r = dot(m - l,m - l);
+bool cmp_x(const Point& p, const Point& q){
+  if(p.real() != q.real()) return p.real() < q.real();
+  return p.imag() < q.imag();
+}
 
-  Point h = (l * tan(angle_l) + m * tan(angle_m) + r * tan(angle_r))/(tan(angle_l) + tan(angle_m) + tan(angle_r));
-  return h;
+vector<Point> compute_convex_hull(vector<Point>& ps){
+  sort(ps.begin(), ps.end(), cmp_x);
+  int k = 0;
+  vector<Point> qs(ps.size() * 2);
+  for(int i=0; i < ps.size(); i++){
+    while(k > 1 && cross(qs[k - 1] - qs[k - 2],ps[i] - qs[k - 1]) <= 0) k--;
+    qs[k++] = ps[i];
+  }
+  for(int i = ps.size() - 2,t = k; i >= 0; i--){
+    while(k > t && cross(qs[k - 1] - qs[k - 2],ps[i] - qs[k - 1]) <= 0) k--;
+    qs[k++] = ps[i];
+  }
+  qs.resize(k-1);
+  return qs;
 }
 
 int main(){
@@ -123,17 +123,76 @@ int main(){
     scanf("%d",&r);
 
     vector<Line> lines;
+    vector<Point> points;
+
+    for(int i=0;i<4;i++){
+      points.push_back(Point(x[i],y[i]));
+    }
+
     for(int i=0;i<3;i++){
       for(int j=i+1;j<3;j++){
 	lines.push_back(Line(Point(x[i],y[i]),Point(x[j],y[j])));
       }
     }
 
-    double dist = 1000000000.0;
-    for(int i=0;i<3;i++){
-      dist = min(distanceLP(lines[i],Point(x[3],y[3])),dist);
+    vector<Point> convex_hull = compute_convex_hull(points);
+
+    if(convex_hull.size() == 3){
+      double dist = numeric_limits<double>::max();
+      for(int i=0;i<3;i++){
+	dist = min(distanceLP(lines[i],Point(x[3],y[3])),dist);
+      }
+
+      if(r <= dist + EPS){
+	//a
+	printf("a\n");
+      }
+      else{
+	dist = numeric_limits<double>::min();
+	for(int i=0;i<3;i++){
+	  dist = max(sqrt(dot(points[i]-points[3],points[i]-points[3])),dist);
+	}
+	if(r >= dist - EPS){
+	  //b
+	  printf("b\n");
+	}
+	else{
+	  //c
+	  printf("c\n");
+	}
+
+      }
     }
-    
-    Point H = compute_circumcenter(Point(x[0],y[0]),Point(x[1],y[1]),Point(x[2],y[2]));
+
+    else if(convex_hull.size() == 4){
+      double dist = numeric_limits<double>::max();
+      for(int i=0;i<3;i++){
+	dist = min(distanceLP(lines[i],Point(x[3],y[3])),dist);
+      }
+
+      if(dist > r){
+	//d
+	printf("d\n");
+      }
+      else{
+	dist = numeric_limits<double>::min();
+	for(int i=0;i<3;i++){
+	  dist = max(sqrt(dot(points[i]-points[3],points[i]-points[3])),dist);
+	}
+	
+	if(r <= dist + EPS){
+	  //b
+	  printf("b\n");
+	}
+	else{
+	  //c
+	  printf("c\n");
+	}
+      }
+    }
+
+    else{
+      assert(0);
+    }
   }
 }
