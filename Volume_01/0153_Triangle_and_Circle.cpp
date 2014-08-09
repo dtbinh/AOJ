@@ -81,6 +81,11 @@ Point projection(const Line &l, const Point &p) {
   return l[0] + t*(l[0]-l[1]);
 }
 
+bool onLine(const Line &l, const Point &p) {
+  Point pj = projection(l,p);
+  return ccw(l[0],pj,l[1]) == -2;
+}
+
 double distanceLP(const Line &l, const Point &p) {
   return abs(p - projection(l, p));
 }
@@ -94,7 +99,7 @@ bool cmp_x(const Point& p, const Point& q){
   return p.imag() < q.imag();
 }
 
-vector<Point> compute_convex_hull(vector<Point>& ps){
+vector<Point> compute_convex_hull(vector<Point> ps){
   sort(ps.begin(), ps.end(), cmp_x);
   int k = 0;
   vector<Point> qs(ps.size() * 2);
@@ -110,17 +115,24 @@ vector<Point> compute_convex_hull(vector<Point>& ps){
   return qs;
 }
 
+bool is_convex_hull(vector<Point>& ps,const Point& c){
+  for(int i=0;i<ps.size();i++){
+    if(is_equal(ps[i],c)) return true;
+  }
+  return false;
+}
+
 int main(){
-  int x[4];
-  int y[4];
-  while(~scanf("%d %d",&x[0],&y[0])){
-    if(x[0] == 0 && y[0] == 0) break;
+  double x[4];
+  double y[4];
+  while(~scanf("%lf %lf",&x[0],&y[0])){
+    if(is_equal(Point(x[0],y[0]),Point(0.0,0.0))) break;
 
     for(int i=1;i<4;i++){
-      scanf("%d %d",&x[i],&y[i]);
+      scanf("%lf %lf",&x[i],&y[i]);
     }
-    int r;
-    scanf("%d",&r);
+    double r;
+    scanf("%lf",&r);
 
     vector<Line> lines;
     vector<Point> points;
@@ -137,12 +149,12 @@ int main(){
 
     vector<Point> convex_hull = compute_convex_hull(points);
 
-    if(convex_hull.size() == 3){
+    if(!is_convex_hull(convex_hull,points[3])){
       double dist = numeric_limits<double>::max();
       for(int i=0;i<3;i++){
 	dist = min(distanceLP(lines[i],Point(x[3],y[3])),dist);
       }
-
+      
       if(r <= dist + EPS){
 	//a
 	printf("a\n");
@@ -160,16 +172,19 @@ int main(){
 	  //c
 	  printf("c\n");
 	}
-
       }
     }
-
-    else if(convex_hull.size() == 4){
+    else {
       double dist = numeric_limits<double>::max();
       for(int i=0;i<3;i++){
-	dist = min(distanceLP(lines[i],Point(x[3],y[3])),dist);
+	if(onLine(lines[i],Point(x[3],y[3]))){
+	  dist = min(distanceLP(lines[i],Point(x[3],y[3])),dist);
+	}
       }
-
+      for(int i=0;i<3;i++){
+	dist = min(sqrt(dot(points[i]-points[3],points[i]-points[3])),dist);
+      }
+      
       if(dist > r){
 	//d
 	printf("d\n");
@@ -178,21 +193,21 @@ int main(){
 	dist = numeric_limits<double>::min();
 	for(int i=0;i<3;i++){
 	  dist = max(sqrt(dot(points[i]-points[3],points[i]-points[3])),dist);
+	  // cout << points[i].imag() << " " << points[i].real() << endl;
+	  // cout << points[3].imag() << " " << points[3].real() << endl;
+	  // cout << dist << endl;
 	}
 	
-	if(r <= dist + EPS){
+	if(r >= dist - EPS){
 	  //b
 	  printf("b\n");
 	}
 	else{
 	  //c
+	  // cout << dist << endl;
 	  printf("c\n");
 	}
       }
-    }
-
-    else{
-      assert(0);
     }
   }
 }
