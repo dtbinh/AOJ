@@ -86,10 +86,8 @@ Point projection(const Line &l, const Point &p) {
   return l[0] + t*(l[0]-l[1]);
 }
 
-bool onLine(const Line &l, const Point &p) {
+bool is_projection_on_line(const Line &l, const Point &p) {
   Point pj = projection(l,p);
-  // cout << pj.real() << " "<< pj.imag() << endl;
-  // cout << "ccw " << ccw(l[0],l[1],pj) << endl;
   return is_inner(pj,l[0],l[1]);
 }
 
@@ -157,21 +155,21 @@ int main(){
     vector<Point> convex_hull = compute_convex_hull(points);
 
     if(!is_convex_hull(convex_hull,points[3])){
-      double dist = numeric_limits<double>::max();
+      double dist2line = numeric_limits<double>::max();
       for(int i=0;i<3;i++){
-	dist = min(distanceLP(lines[i],Point(x[3],y[3])),dist);
+	dist2line = min(distanceLP(lines[i],Point(x[3],y[3])),dist2line);
       }
       
-      if(r <= dist + EPS){
+      if(r <= dist2line + EPS){
 	//a
 	printf("a\n");
       }
       else{
-	dist = numeric_limits<double>::min();
+	double dist2point = numeric_limits<double>::min();
 	for(int i=0;i<3;i++){
-	  dist = max(sqrt(dot(points[i]-points[3],points[i]-points[3])),dist);
+	  dist2point = max(sqrt(dot(points[i]-points[3],points[i]-points[3])),dist2point);
 	}
-	if(r >= dist - EPS){
+	if(r >= dist2point - EPS){
 	  //b
 	  printf("b\n");
 	}
@@ -182,38 +180,32 @@ int main(){
       }
     }
     else {
-      double dist = numeric_limits<double>::max();
+      double dist2LP = numeric_limits<double>::max();
       for(int i=0;i<3;i++){
-	if(onLine(lines[i],Point(x[3],y[3]))){
-	  dist = min(distanceLP(lines[i],Point(x[3],y[3])),dist);
-	  // cout << dist << endl;
+	if(is_projection_on_line(lines[i],Point(x[3],y[3]))){
+	  dist2LP = min(distanceLP(lines[i],Point(x[3],y[3])),dist2LP);
 	}
       }
       for(int i=0;i<3;i++){
-	dist = min(sqrt(dot(points[i]-points[3],points[i]-points[3])),dist);
+	dist2LP = min(sqrt(dot(points[i]-points[3],points[i]-points[3])),dist2LP);
       }
       
-      if(dist > r){
+      if(dist2LP > r){
 	//d
-	// cout << dist << endl;
 	printf("d\n");
       }
       else{
-	dist = numeric_limits<double>::min();
+	double dist2point = numeric_limits<double>::min();
 	for(int i=0;i<3;i++){
-	  dist = max(sqrt(dot(points[i]-points[3],points[i]-points[3])),dist);
-	  // cout << points[i].imag() << " " << points[i].real() << endl;
-	  // cout << points[3].imag() << " " << points[3].real() << endl;
-	  // cout << dist << endl;
+	  dist2point = max(sqrt(dot(points[i]-points[3],points[i]-points[3])),dist2point);
 	}
 	
-	if(r >= dist - EPS){
+	if(r >= dist2point - EPS){
 	  //b
 	  printf("b\n");
 	}
 	else{
 	  //c
-	  // cout << dist << endl;
 	  printf("c\n");
 	}
       }
