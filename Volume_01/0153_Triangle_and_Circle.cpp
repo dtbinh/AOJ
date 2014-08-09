@@ -63,6 +63,11 @@ int ccw(Point a, Point b, Point c) {
   return 0;
 }
 
+bool is_inner(Point a, Point b, Point c) {
+  b -= a; c -= a;
+  return (dot(b,c) <= 0);
+}
+
 bool intersectSS(const Line &s, const Line &t) {
   return ccw(s[0],s[1],t[0])*ccw(s[0],s[1],t[1]) <= 0 &&
     ccw(t[0],t[1],s[0])*ccw(t[0],t[1],s[1]) <= 0;
@@ -83,7 +88,9 @@ Point projection(const Line &l, const Point &p) {
 
 bool onLine(const Line &l, const Point &p) {
   Point pj = projection(l,p);
-  return ccw(l[0],pj,l[1]) == -2;
+  // cout << pj.real() << " "<< pj.imag() << endl;
+  // cout << "ccw " << ccw(l[0],l[1],pj) << endl;
+  return is_inner(pj,l[0],l[1]);
 }
 
 double distanceLP(const Line &l, const Point &p) {
@@ -179,6 +186,7 @@ int main(){
       for(int i=0;i<3;i++){
 	if(onLine(lines[i],Point(x[3],y[3]))){
 	  dist = min(distanceLP(lines[i],Point(x[3],y[3])),dist);
+	  // cout << dist << endl;
 	}
       }
       for(int i=0;i<3;i++){
@@ -187,6 +195,7 @@ int main(){
       
       if(dist > r){
 	//d
+	// cout << dist << endl;
 	printf("d\n");
       }
       else{
