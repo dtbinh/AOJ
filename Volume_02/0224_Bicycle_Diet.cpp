@@ -36,11 +36,27 @@ public:
   bool is_cake_store;
   int cal;
   vector<int> to;
-  Facility() {}
+  Facility() : is_cake_store(false),cal(0) {}
 };
 
-int edges[201][201];
-Facility nodes[101];
+class State {
+public:
+  int pos;
+  int cal;
+  int visited_cake_store;
+
+  State() : pos(0),cal(0),visited_cake_store(0) {}
+  State(int _p,int _c,int _v) : pos(_p),cal(_c),visited_cake_store(_v) {}
+  
+  bool operator<(const class State& s) const{
+    return cal < s.cal;
+  }
+
+  bool operator>(const class State& s) const{
+    return cal > s.cal;
+  }
+
+};
 
 int main(){
   int num_of_cake_stores;
@@ -52,6 +68,19 @@ int main(){
 	       &num_of_landmarks,
 	       &consume_cal_per_unit,
 	       &num_of_distance_datas)){
+
+    if(num_of_cake_stores == 0
+       && num_of_landmarks == 0
+       && consume_cal_per_unit == 0
+       && num_of_distance_datas == 0) break;
+
+    int edges[201][201];
+    int dp[201][1<<10];
+    Facility nodes[201];
+
+    memset(dp,0x3f,sizeof(dp));
+    memset(edges,0x3f,sizeof(edges));
+
     for(int cake_store_idx = 0; cake_store_idx < num_of_cake_stores; cake_store_idx++){
       int cal;
       scanf("%d",&cal);
@@ -71,15 +100,15 @@ int main(){
       }
 
       else if(from[0] == 'D'){
-	from_pos = num_of_landmarks + num_of_cake_stores;
+	from_pos = 1 + num_of_landmarks + num_of_cake_stores;
       }
 
       else if(from[0] == 'L'){
-	from_pos = atoi(from.substr(1,from.size()-1).c_str());
+	from_pos = 1 + (atoi(from.substr(1,from.size()-1).c_str()) - 1);
       }
 
       else if(from[0] == 'C'){
-	from_pos = atoi(from.substr(1,from.size()-1).c_str()) + num_of_landmarks;
+	from_pos = 1 + num_of_landmarks + (atoi(from.substr(1,from.size()-1).c_str()) - 1);
       }
 
       if(to[0] == 'H'){
@@ -87,15 +116,15 @@ int main(){
       }
 
       else if(to[0] == 'D'){
-	to_pos = num_of_landmarks + num_of_cake_stores;
+	to_pos = 1 + num_of_landmarks + num_of_cake_stores;
       }
 
       else if(to[0] == 'L'){
-	to_pos = atoi(to.substr(1,to.size()-1).c_str());
+	to_pos = 1 + (atoi(to.substr(1,to.size()-1).c_str()) - 1);
       }
 
       else if(to[0] == 'C'){
-	to_pos = atoi(to.substr(1,to.size()-1).c_str()) + num_of_landmarks;
+	to_pos = 1 + num_of_landmarks + (atoi(to.substr(1,to.size()-1).c_str()) - 1);
       }
       
       edges[from_pos][to_pos] = distance;
@@ -104,5 +133,45 @@ int main(){
       nodes[from_pos].to.push_back(to_pos);
       nodes[to_pos].to.push_back(from_pos);
     }
+
+    
+    priority_queue<State,vector<State>,greater<State> > que;
+    que.push(State(0,0,0));
+    dp[0][0] = 0;
+
+    while(!que.empty()){
+      State s = que.top();
+      que.pop();
+      for(int i = 0; i < nodes[s.pos].to.size(); i++){
+	int next = nodes[s.pos].to[i];
+	if(nodes[next].is_cake_store){
+	  int cake_store_idx = next - num_of_landmarks - 1;
+	  if(s.visited_cake_store & (1 << cake_store_idx)){
+	    continue;
+	  }
+
+	  int next_cal = s.cal + edges[s.pos][next] * consume_cal_per_unit - nodes[next].cal;
+	  if(dp[next][s.visited_cake_store] > next_cal){
+
+	    dp[next][s.visited_cake_store | (1 << cake_store_idx)]
+	      = next_cal;
+	    que.push(State(next,next_cal,s.visited_cake_store | (1 << cake_store_idx)));
+	  }
+	}
+	else{
+	  int next_cal = s.cal + edges[s.pos][next] * consume_cal_per_unit;
+	  if(dp[next][s.visited_cake_store] > next_cal){
+	    dp[next][s.visited_cake_store] = next_cal;
+	    que.push(State(next,next_cal,s.visited_cake_store));
+	  }
+	}
+      }
+    }
+    
+    int res = numeric_limits<int>::max();
+    for(int S = 0; S <= (1<<num_of_cake_stores)-1; S++){
+      res = min(dp[num_of_landmarks + num_of_cake_stores + 1][S],res);
+    }
+    printf("%d\n",res);
   }
 }
