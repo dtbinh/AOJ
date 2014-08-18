@@ -37,16 +37,16 @@ int main(){
   while(~scanf("%d",&total_lines)){
     if(total_lines == 0) break;
 
-    char responses[1024][64];
+    vector<string> responses;
     int parent[1024];
     int depth_log[1024];
     memset(parent,-1,sizeof(parent));
 
     for(int line_idx = 0; line_idx < total_lines; line_idx++){
-      char buf[64];
-      scanf("%s",buf);
-      strcpy(responses[line_idx],buf);
-      int depth = count(buf,buf + strlen(buf),'.');
+      string buf;
+      cin >> buf;
+      responses.push_back(buf);
+      int depth = count(buf.begin(),buf.end(),'.');
       depth_log[line_idx] = depth;
       for(int prev_idx = line_idx - 1; prev_idx >= 0; prev_idx--){
 	if(depth_log[prev_idx] < depth){
@@ -82,12 +82,12 @@ int main(){
     }
 
     for(int line_idx = 0; line_idx < total_lines; line_idx++){
-      for(int i = 0; i < (int)strlen(responses[line_idx]); i++){
+      for(int i = 0; i < (int)responses[line_idx].size(); i++){
 	if(responses[line_idx][i] == '.'){
 	  responses[line_idx][i] = ' ';
 	}
       }
-      printf("%s",responses[line_idx]);
+      printf("%s\n",responses[line_idx].c_str());
     }
   }
 }
