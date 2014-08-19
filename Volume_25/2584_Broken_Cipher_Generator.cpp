@@ -40,8 +40,8 @@ PS Cipher(int pos,const string& str){
   while(pos < str.size()){
     PS p = String(pos,str);
     pos = p.first;
-    if(str[pos] == ']') pos++;
     res += p.second;
+    while(str[pos] == ']') pos++;
   }
   return PS(pos,res);
 }
@@ -77,13 +77,13 @@ PS String(int pos,const string& str){
   }
 }
 
-
-string dfs(string str,const vector<int>& question_pos,int idx = 0){
+string dfs(string str,
+	   const vector<int>& question_pos,int idx){
   if(idx == question_pos.size()){
     return Cipher(0,str).second;
   }
-
   string res = string(500,'Z');
+
   for(char i = 'A'; i <= 'Z'; i++){
     str[question_pos[idx]] = i;
     res = min(res,dfs(str,question_pos,idx+1));
@@ -102,6 +102,6 @@ int main(){
 	question_pos.push_back(i);
       }
     }
-    cout << dfs(str,question_pos) << endl;
+    cout << dfs(str,question_pos,0) << endl;
   }
 }
