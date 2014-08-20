@@ -37,11 +37,10 @@ PC Letter(int pos,const string& str);
 
 PS Cipher(int pos,const string& str){
   string res="";
-  while(pos < str.size()){
+  while(pos < str.size() && str[pos] != ']'){
     PS p = String(pos,str);
     pos = p.first;
     res += p.second;
-    while(str[pos] == ']') pos++;
   }
   return PS(pos,res);
 }
