@@ -93,38 +93,39 @@ int main(){
     int num_of_passports;
     scanf("%d",&num_of_passports);
 
-    int passports[10];
-    memset(passports,0x3f,sizeof(passports));
+    int init_cost[1<<num_of_JAG_companies];
+    memset(init_cost,0x3f,sizeof(init_cost));
+    init_cost[0] = 0;
+
     for(int passport_idx = 0; passport_idx < num_of_passports; passport_idx++){
       int num_of_companies;
       int fare;
       scanf("%d %d",&num_of_companies,&fare);
+
+      int S = 0;
       for(int company_idx=0; company_idx < num_of_companies; company_idx++){
 	int company_id;
 	scanf("%d",&company_id);
 	company_id--;
-	passports[company_id] = min(passports[company_id],fare);
+
+	S |= (1 << company_id);
+      }
+      init_cost[S] = fare;
+    }
+
+    for(int S1 = 0; S1 <= (1<<num_of_JAG_companies) -1; S1++){
+      for(int S2 = 0; S2 <= (1<<num_of_JAG_companies) -1; S2++){
+	init_cost[S1 | S2] = min(init_cost[S1 | S2],
+				 init_cost[S1] + init_cost[S2]);
       }
     }
 
     int res = INF;
     for(int S = 0; S <= (1<<num_of_JAG_companies) -1; S++){
-      int init_cost = 0;
-      map<int,int> freq;
-      for(int i=0;i<num_of_JAG_companies;i++){
-	if(S & (1<<i)){
-	  init_cost += passports[i];
-	  freq[passports[i]]++;
-	}
-      }
-      for(map<int,int>::iterator it = freq.begin(); it != freq.end(); it++){
-	if(it->second > 1){
-	  init_cost -= it->first * (it->second - 1);
-	}
-      }
+      if(init_cost[S] >= INF) continue;
 
       priority_queue<State,vector<State>,greater<State> > que;
-      que.push(State(0,init_cost,station_S));
+      que.push(State(0,init_cost[S],station_S));
 
       memset(dp,false,sizeof(dp));
 
@@ -155,7 +156,7 @@ int main(){
 	  que.push(State(next_time,next_cost,to));
 	}
       }
-
+      
     found:;
     }
 
