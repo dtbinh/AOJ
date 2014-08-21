@@ -110,8 +110,17 @@ int main(){
     int res = INF;
     for(int S = 0; S <= (1<<num_of_JAG_companies) -1; S++){
       int init_cost = 0;
+      map<int,int> freq;
       for(int i=0;i<num_of_JAG_companies;i++){
-	if(S & (1<<i)) init_cost += passports[i];
+	if(S & (1<<i)){
+	  init_cost += passports[i];
+	  freq[passports[i]]++;
+	}
+      }
+      for(map<int,int>::iterator it = freq.begin(); it != freq.end(); it++){
+	if(it->second > 1){
+	  init_cost -= it->first * (it->second - 1);
+	}
       }
 
       priority_queue<State,vector<State>,greater<State> > que;
