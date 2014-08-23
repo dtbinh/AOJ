@@ -236,6 +236,19 @@ public:
   }
 };
 
+class Palindrome{
+public:
+  int pos;
+  string str;
+  Palindrome(int p,const string& s) : pos(p),str(s) {}
+  bool operator<(const Palindrome& p) const {
+    return pos < p.pos;
+  }
+  bool operator>(const Palindrome& p) const {
+    return pos > p.pos;
+  }
+};
+
 int main(){
   string input;
   while(getline(cin,input)){
@@ -252,10 +265,13 @@ int main(){
     SuffixArray sa(str + "$" + r_str);
     SegmentTree segtree(sa.size());
 
-    for(int i=0; i+1 < sa.size(); i++){
+    for(int i=0; i < sa.size(); i++){
       segtree.update(i,sa.get_lcp(i));
     }
 
+
+    set<string> visited;
+    vector<Palindrome> res;
     //odd
     for(int center=0;center<str.size();center++){
       int r_center = sa.size() - center - 1;
@@ -273,8 +289,12 @@ int main(){
       if(lcp == INF) continue;
       if(lcp <= 1) continue;
 
-      int len = (lcp % 2 == 0 ? 2 * lcp - 1 : lcp);
-      cout << str.substr(center-lcp + 1,len) << endl;
+      if(visited.count(str.substr(center-lcp + 1,2 * lcp - 1))) continue;
+      visited.insert(str.substr(center-lcp + 1,2 * lcp - 1));
+      res.push_back(
+	Palindrome(center-lcp+1,
+		   str.substr(center-lcp + 1,2 * lcp - 1))
+      );
     }
 
     //even
@@ -295,7 +315,20 @@ int main(){
       if(lcp == INF) continue;
       if(lcp <= 1) continue;
 
-      cout << str.substr(center_lhs - lcp + 1,lcp * 2) << endl;
+      if(visited.count(str.substr(center_lhs - lcp + 1,lcp * 2))) continue;
+      visited.insert(str.substr(center_lhs - lcp + 1,lcp * 2));
+
+      res.push_back(
+	Palindrome(center_lhs - lcp + 1,
+		   str.substr(center_lhs - lcp + 1,lcp * 2))
+      );
+
     }
+
+    sort(res.begin(),res.end());
+    for(int i=0; i < res.size(); i++){
+      printf("%s%s",i == 0 ? "" : " ", res[i].str.c_str());
+    }
+    printf("\n");
   }
 }
