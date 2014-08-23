@@ -236,18 +236,9 @@ public:
   }
 };
 
-class Palindrome{
-public:
-  int pos;
-  string str;
-  Palindrome(int p,const string& s) : pos(p),str(s) {}
-  bool operator<(const Palindrome& p) const {
-    return pos < p.pos;
-  }
-  bool operator>(const Palindrome& p) const {
-    return pos > p.pos;
-  }
-};
+bool comp(const string& s1,const string& s2){
+  return s1.size() > s2.size();
+}
 
 int main(){
   string input;
@@ -269,9 +260,9 @@ int main(){
       segtree.update(i,sa.get_lcp(i));
     }
 
-
     set<string> visited;
-    vector<Palindrome> res;
+    vector<string> palindromes;
+
     //odd
     for(int center=0;center<str.size();center++){
       int r_center = sa.size() - center - 1;
@@ -289,12 +280,11 @@ int main(){
       if(lcp == INF) continue;
       if(lcp <= 1) continue;
 
-      if(visited.count(str.substr(center-lcp + 1,2 * lcp - 1))) continue;
-      visited.insert(str.substr(center-lcp + 1,2 * lcp - 1));
-      res.push_back(
-	Palindrome(center-lcp+1,
-		   str.substr(center-lcp + 1,2 * lcp - 1))
-      );
+      string tmp = str.substr(center-lcp + 1,2 * lcp - 1);
+      if(visited.count(tmp)) continue;
+
+      visited.insert(tmp);
+      palindromes.push_back(tmp);
     }
 
     //even
@@ -315,20 +305,37 @@ int main(){
       if(lcp == INF) continue;
       if(lcp <= 1) continue;
 
-      if(visited.count(str.substr(center_lhs - lcp + 1,lcp * 2))) continue;
-      visited.insert(str.substr(center_lhs - lcp + 1,lcp * 2));
-
-      res.push_back(
-	Palindrome(center_lhs - lcp + 1,
-		   str.substr(center_lhs - lcp + 1,lcp * 2))
-      );
-
+      string tmp = str.substr(center_lhs - lcp + 1,lcp * 2);
+      if(visited.count(tmp)) continue;
+      visited.insert(tmp);
+      palindromes.push_back(tmp);
     }
 
-    sort(res.begin(),res.end());
-    for(int i=0; i < res.size(); i++){
-      printf("%s%s",i == 0 ? "" : " ", res[i].str.c_str());
+
+    sort(palindromes.begin(),palindromes.end(),comp);
+    visited.clear();
+    
+    bool is_first = true;
+    for(int i = 0; i < palindromes.size();i++){
+      if(visited.count(palindromes[i])) continue;
+      
+      printf("%s%s",is_first ? "" : " ",palindromes[i].c_str());
+      is_first = false;
+
+      if(palindromes[i].size() % 2 == 0){
+	for(int len = 2,offset=0; len <= palindromes[i].size(); len += 2,offset++){
+	  string tmp = palindromes[i].substr(palindromes[i].size()/2 - 1 - offset,len);
+	  visited.insert(tmp);
+	}
+      }
+      else if(palindromes[i].size() % 2 == 1){
+	for(int len = 3,offset=0; len <= palindromes[i].size(); len += 2,offset++){
+	  string tmp = palindromes[i].substr(palindromes[i].size()/2 - 1 - offset,len);
+	  visited.insert(tmp);
+	}
+      }
     }
+
     printf("\n");
   }
 }
