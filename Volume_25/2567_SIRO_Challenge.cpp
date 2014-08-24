@@ -57,6 +57,7 @@ int main(){
     memset(edges,0x3f,sizeof(edges));
     starting_point--;
 
+    vector<int> candidates[301];
     for(int i = 0; i < num_of_pairs; i++){
       int from,to;
       int time;
@@ -65,6 +66,8 @@ int main(){
       to--;
       edges[from][to] = time;
       edges[to][from] = time;
+      candidates[from].push_back(to);
+      candidates[to].push_back(from);
     }
 
     for(int mid = 0; mid < num_of_stations; mid++){
@@ -78,26 +81,31 @@ int main(){
     int SIRO_idx[301];
     memset(SIRO_idx,-1,sizeof(SIRO_idx));
     memset(ramen_time,0x3f,sizeof(ramen_time));
+    vector<int> SIROs;
+    SIROs.push_back(starting_point);
     for(int i = 0; i < num_of_SIRO; i++){
       int station,time;
       scanf("%d %d",&station,&time);
       station--;
       ramen_time[i] = time;
       SIRO_idx[station] = i;
+      SIROs.push_back(station);
     }
 
     memset(dp,0x3f,sizeof(dp));
     dp[starting_point][0] = 0;
 
     for(int S = 0; S < (1<<num_of_SIRO); S++){
-      for(int from = 0; from < num_of_stations; from++){
+      for(int from_idx = 0; from_idx < SIROs.size(); from_idx++){
+	int from = SIROs[from_idx];
 	if(SIRO_idx[from] != -1){
 	  dp[from][S | (1<<SIRO_idx[from])]
 	    = min(dp[from][S | (1<<SIRO_idx[from])],
 		  dp[from][S] + ramen_time[SIRO_idx[from]]);
 	}
 
-	for(int to = 0; to < num_of_stations; to++){
+	for(int to_idx = 0; to_idx < SIROs.size(); to_idx++){
+	  int to = SIROs[to_idx];
 	  if(from == to) continue;
 
 	  if(SIRO_idx[to] == -1){
