@@ -116,10 +116,8 @@ int main(){
 
     int res = 0;
     for(int S = 0; S < (1<<num_of_SIRO); S++){
-      for(int point = 0; point < num_of_stations; point++){
-	if(time_limit >= dp[point][S]){
-	  res = max(res,__builtin_popcount(S));
-	}
+      if(time_limit >= dp[starting_point][S]){
+	res = max(res,__builtin_popcount(S));
       }
     }
     
