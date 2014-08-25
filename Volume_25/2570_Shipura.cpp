@@ -37,21 +37,16 @@ P sp(int pos,const string& str);
 P number(int pos,const string& str);
 
 P expr(int pos,const string& str){
-  if(isdigit(str[pos]) || str[pos] == 'S'){
-    P p = term(pos,str);
-    return p;
-  }
   
-  while(pos < str.size()){
-    P p1 = expr(pos,str);
+  int prev = 1;
+  while(isdigit(str[pos]) || str[pos] == 'S'){
+    P p1 = term(pos,str);
     P p2 = sp(p1.first,str);
     while(str[p2.first] == '>') p2.first++; //for '>'
     P p3 = sp(p2.first,str);
     P p4 = term(p3.first,str);
 
-    cout << p1.second << endl;
     int val = p1.second / pow(2.0,(double)p4.second);
-    cout << val << endl;
     return P(p4.first,val);
   }
 }
