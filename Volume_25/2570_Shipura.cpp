@@ -23,10 +23,10 @@
 using namespace std;
   
 typedef long long ll;
-typedef pair <int,int> P;
+typedef pair <int,ll> P;
   
 static const double EPS = 1e-8;
-static const int MOD = 1000000007;
+static const ll MOD = 1000000007;
 
 int tx[] = {0,1,0,-1};
 int ty[] = {-1,0,1,0};
@@ -37,18 +37,18 @@ P sp(int pos,const string& str);
 P number(int pos,const string& str);
 
 P expr(int pos,const string& str){
-  
-  int prev = 1;
-  while(isdigit(str[pos]) || str[pos] == 'S'){
-    P p1 = term(pos,str);
-    P p2 = sp(p1.first,str);
-    while(str[p2.first] == '>') p2.first++; //for '>'
-    P p3 = sp(p2.first,str);
+  P p1 = term(pos,str);
+  P p2 = sp(p1.first,str);
+  pos = p2.first;
+  while(pos < str.size()){
+    while(str[pos] == '>') pos++; //for '>'
+    P p3 = sp(pos,str);
     P p4 = term(p3.first,str);
-
-    int val = p1.second / pow(2.0,(double)p4.second);
-    return P(p4.first,val);
+    cout << p1.second << " >> " << p4.second << endl;
+    p1.second >>= min(p4.second,32LL);
+    pos = p4.first;
   }
+  return P(pos,p1.second);
 }
 
 P term(int pos,const string& str){
@@ -76,12 +76,12 @@ P sp(int pos,const string& str){
 
 P number(int pos,const string& str){
   
-  string tmp = "";
+  string tmp = "0";
   while(pos < str.size() && isdigit(str[pos])){
     tmp.push_back(str[pos]);
     pos++;
   }
-  return P(pos,atoi(tmp.c_str()));
+  return P(pos,atol(tmp.c_str()));
 }
 
 int main(){
