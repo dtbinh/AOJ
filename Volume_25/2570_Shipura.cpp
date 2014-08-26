@@ -33,45 +33,36 @@ int ty[] = {-1,0,1,0};
 
 P expr(int pos,const string& str);
 P term(int pos,const string& str);
-P sp(int pos,const string& str);
 P number(int pos,const string& str);
 
 P expr(int pos,const string& str){
   P p1 = term(pos,str);
-  P p2 = sp(p1.first,str);
-  pos = p2.first;
-  while(pos < str.size()){
+  pos = p1.first;
+
+  while(pos + 2 < str.size() 
+	&& str[pos] == '>'
+	&& str[pos+1] == '>'
+	&& isdigit(str[pos+2])){
     while(str[pos] == '>') pos++; //for '>'
-    P p3 = sp(pos,str);
-    P p4 = term(p3.first,str);
-    cout << p1.second << " >> " << p4.second << endl;
-    p1.second >>= min(p4.second,32LL);
-    pos = p4.first;
+    P p2 = term(pos,str);
+    p1.second >>= min(p2.second,63LL);
+    pos = p2.first;
   }
   return P(pos,p1.second);
 }
 
 P term(int pos,const string& str){
   if(str[pos] == 'S'){
-    P p1 = sp(pos + 1,str);
-    p1.first++; // for "<"
-    P p2 = sp(p1.first,str);
-    P p3 = expr(p2.first,str);
-    P p4 = sp(p3.first,str);
-    p4.first++; // for ">"
-    return P(p4.first,((p3.second % MOD) * (p3.second % MOD)) % MOD);
+    pos+=2; // for "S<"
+    P p1 = expr(pos,str);
+    pos = p1.first;
+    pos++; // for ">"
+    return P(pos,((p1.second % MOD) * (p1.second % MOD)) % MOD);
   }
   
   else{
     return number(pos,str);
   }
-}
-
-P sp(int pos,const string& str){
-  while(pos < str.size() && str[pos] == ' '){
-    pos++;
-  }
-  return P(pos,0);
 }
 
 P number(int pos,const string& str){
@@ -89,7 +80,13 @@ int main(){
   while(getline(cin,str)){
     if(str == "#") continue;
 
-    cout << str << endl;
+    string tmp = "";
+    for(int i=0;i<str.size();i++){
+      if(str[i] != ' '){
+	tmp.push_back(str[i]);
+      }
+    }
+    str = tmp;
     P p = expr(0,str);
     cout << p.second << endl;
   }
