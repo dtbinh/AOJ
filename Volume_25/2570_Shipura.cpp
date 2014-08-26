@@ -42,7 +42,7 @@ P expr(int pos,const string& str){
   while(pos + 2 < str.size() 
 	&& str[pos] == '>'
 	&& str[pos+1] == '>'
-	&& isdigit(str[pos+2])){
+	&& (isdigit(str[pos+2]) || str[pos+2] == 'S')){
     while(str[pos] == '>') pos++; //for '>'
     P p2 = term(pos,str);
     p1.second >>= min(p2.second,63LL);
@@ -88,6 +88,6 @@ int main(){
     }
     str = tmp;
     P p = expr(0,str);
-    cout << p.second << endl;
+    cout << p.second % MOD << endl;
   }
 }
