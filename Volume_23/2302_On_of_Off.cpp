@@ -56,7 +56,7 @@ vector<P> dfs(int sx,int sy,int gx,int gy,
 
     vector<P> tmp = dfs(dx,dy,gx,gy,route);
     if(tmp.size() > 0){
-      res = tmp;
+	res = tmp;
     }
 
     visited[dy][dx] = false;
@@ -143,9 +143,11 @@ int main(){
     int res = 0;
     for(int y = 0; y < H; y++){
       for(int x = 0; x < W; x++){
+	if(move_log[y][x].size() == 0) continue;
+
 	res += turn_on_cost[y][x];
 	for(int i = 0; i + 1< move_log[y][x].size(); i++){
-	  int duration = move_log[y][x][i+1] - move_log[y][x][i] ;
+	  int duration = move_log[y][x][i+1] - move_log[y][x][i];
 	  res += min(turn_off_cost[y][x] + turn_on_cost[y][x],
 		     consumption_per_unit[y][x] * duration);
 	}
