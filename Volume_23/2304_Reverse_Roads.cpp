@@ -31,8 +31,6 @@ const static int ty[] = {-1,-1,0,1,1,1,0,-1};
  
 static const double EPS = 1e-8;
 
-int path[301][301];
-
 class Edge{
 public:
   int _to;
@@ -78,8 +76,6 @@ public:
       
       e._capacity -= d;
       _edges[to][e._reverse]._capacity += d;
-      path[current][to] -= d;
-      path[to][current] += d;
       return d;
     }
     
@@ -97,14 +93,15 @@ public:
     return res;
   }
 
-  set<int> compute_reverse(const vector<P>& roads,int path[301][301]){
+  set<int> compute_reverse(){
     set<int> res;
-    for(int road_i = 0; road_i < roads.size();road_i++){
-      int from = roads[road_i].first;
-      int to = roads[road_i].second;
-
-      if(path[to][from] == 0){
-	 res.insert(road_i + 1);
+    for(int from = 1; from <= _n; from++){
+      for(int i = 0; i < _edges[from].size();i++){
+	Edge& e = _edges[from][i];
+	if(_edges[e._to][e._reverse]._capacity > 1
+	   && e._id < 0){
+	  res.insert(-1 * e._id);
+	}
       }
     }
     return res;
@@ -120,13 +117,11 @@ int main(){
     
     FordFulkerson fordfulkerson(num_of_crossings);
 
-    memset(path,0,sizeof(path));
     vector<P> roads;
     for(int road_i = 1; road_i <= num_of_roads; road_i++){
       int from,to;
       scanf("%d %d",&from,&to);
       fordfulkerson.add_edge(from,to,1,road_i);
-      path[from][to] = path[to][from] = 1;
       roads.push_back(P(from,to));
     }
 
@@ -134,7 +129,7 @@ int main(){
     scanf("%d %d",&source,&sink);
     cout << fordfulkerson.compute_max_flow(source,sink) << endl;
     
-    set<int> res = fordfulkerson.compute_reverse(roads,path);
+    set<int> res = fordfulkerson.compute_reverse();
     cout << res.size() << endl;
     for(set<int>::iterator it = res.begin(); it != res.end(); it++){
       cout << *it << endl;
