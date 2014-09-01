@@ -58,7 +58,7 @@ public:
   
   void add_edge(int from,int to,int capacity = 1){
     _edges[from].push_back(Edge(to,capacity,_edges[to].size()));
-    _edges[to].push_back(Edge(from,0,_edges[from].size()-1));
+    _edges[to].push_back(Edge(from,capacity,_edges[from].size()-1));
   }
 
   int dfs(int current,int sink,int flow){
@@ -96,7 +96,7 @@ public:
       int to = it->first.second;
       for(int i = 0; i < _edges[from].size();i++){
       	if(to == _edges[from][i]._to){
-	  if(_edges[from][i]._capacity == 1){
+	  if(_edges[from][i]._capacity > 0){
 	    res.insert(it->second);
 	  }
       	}
@@ -119,7 +119,7 @@ int main(){
       int from,to;
       scanf("%d %d",&from,&to);
       fordfulkerson.add_edge(from,to);
-      fordfulkerson.add_edge(to,from);
+      // fordfulkerson.add_edge(to,from);
       id[P(from,to)] = id.size();
     }
     int source,sink;
