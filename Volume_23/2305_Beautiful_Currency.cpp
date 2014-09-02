@@ -31,6 +31,8 @@ const static int ty[] = {-1,-1,0,1,1,1,0,-1};
  
 static const double EPS = 1e-8;
 
+double dp[21][140001];
+
 int main(){
   int N;
   while(~scanf("%d",&N)){
@@ -38,36 +40,24 @@ int main(){
     for(int i=0;i<N;i++){
       scanf("%d",&currency[i]);
     }
+    
+    fill((double*)dp,(double*)dp + 21 * 140001,1e12);
 
-    double res = numeric_limits<double>::max();
-    for(int start=1;start<=100000;start++){
-      double tmp_ratio = 0.0;
-      int prev = start;
-
-      for(int i=0;i<N;i++){
-	int lhs = 0; int rhs = 1000000;
-	for(int round = 0; round < 30; round++){
-	  int mid = lhs + (rhs - lhs) / 2;
-	  if(prev * mid - currency[i] >= 0){
-	    rhs = mid;
-	  }
-	  else{
-	    lhs = mid;
-	  }
+    dp[0][1] = 0.0;
+    for(int i = 0; i < N; i++){
+      for(int start = 1; start <= 140000; start++){
+	if(dp[i][start] >= 1e12) continue;
+	for(int next = start; next <= 140000; next += start){
+	  dp[i+1][next] = min(dp[i+1][next],
+			      max(dp[i][start],
+				  (double)abs(next - currency[i])/(double)currency[i]));
 	}
-	  
-	int next1 = prev * rhs;
-	int next2 = prev * lhs;
-	  
-	double ratio1 = abs((double)(next1 - currency[i])) / (double)currency[i];
-	double ratio2 = abs((double)(next2 - currency[i])) / (double)currency[i];
-	
-	tmp_ratio
-	  = max(tmp_ratio,min(ratio1,ratio2));
-
-	prev = (ratio1 < ratio2 ? next1 : next2);
       }
-      res = min(res,tmp_ratio);
+    }
+
+    double res = 1e12;
+    for(int next = 1; next <= 140000; next++){
+      res = min(dp[N][next],res);
     }
     printf("%.12lf\n",res);
   }
