@@ -26,88 +26,52 @@ typedef long long ll;
 typedef pair <int,int> P;
 typedef pair <int,P > PP;
 
-class Node {
-public:
-  Node* next[256];
-  int freq;
-  Node() : freq(0) {
-    for(int i=0;i<256;i++){
-      next[i] = NULL;
-    }
-  }
-  ~Node(){
-    delete[] next;
-  }
-};
+vector<string> answers;
+vector<int> groups;
+map<vector<int>, int> dp;
+int total_questions;
+int total_ppl;
 
-class Trie {
-public:
-  Node* root;
-  Trie (){
-    root = new Node;
-  }
+int dfs(const vector<int>& current,int used){
+  if(current.size() <= 0) return -1;
+  if(current.size() == 1) return 0;
 
-  void insert(const string& str){
-    if(str.size() <= 0) return;
+  if(dp.count(current)) return dp[current];
 
-    Node* current = root;
-    for(int i=0;i<str.size();i++){
-      if(current->next[str[i]] == NULL) {
-	current->next[str[i]] = new Node;
-      }
-      current = current->next[str[i]];
+  int res = INF;
+  for(int question_i=0;question_i<total_questions;question_i++){
+    if(used & (1<<question_i)) continue;
+
+    vector<int> next[256];
+    for(int i = 0; i < current.size(); i++){
+      int ppl_i = current[i];
+      char ans = answers[ppl_i][question_i];
+      next[ans].push_back(ppl_i);
     }
 
-    current->freq++;
+    int cost = max(dfs(next['0'],
+		       used | (1<<question_i)) + 1,
+		   dfs(next['1'],
+		       used | (1<<question_i)) + 1);
+    res = min(res,cost);
   }
-
-  int get_freq(const string& str){
-    if(str.size() <= 0) return INF;
-
-    Node* current = root;
-    for(int i=0;i<str.size();i++){
-      current = current->next[str[i]];
-      assert(current != NULL);
-    }
-
-    return current->freq;
-  }
-};
+  return (dp[current] = res);
+}
 
 int main(){
-  int total_questions;
-  int total_ppl;
   while(~scanf("%d %d",&total_questions,&total_ppl)){
     if(total_questions == 0 && total_ppl == 0) break;
+    groups.clear();
+    answers.clear();
+    dp.clear();
 
-    vector<string> answers;
     for(int ppl_i = 0; ppl_i < total_ppl; ppl_i++){
       string ans;
       cin >> ans;
       answers.push_back(ans);
+      groups.push_back(ppl_i);
     }
-
-    int res = INF;
-    for(int S = 0; S <= (1<<total_questions) - 1; S++){
-      Trie trie;
-      bool isok = true;
-      for(int ppl_i = 0; ppl_i < total_ppl; ppl_i++){
-	string tmp = "0";
-	for(int question_i = 0; question_i < total_questions; question_i++){
-	  if(!(S & (1 << question_i))) continue;
-	  tmp.push_back(answers[ppl_i][question_i]);
-	}
-	trie.insert(tmp);
-	if(trie.get_freq(tmp) > 1){
-	  isok = false;
-	  break;
-	}
-      }
-      if(isok){
-	res = min(res,__builtin_popcount(S));
-      }
-    }
-
-    printf("%d\n",res);
+    
+    printf("%d\n",dfs(groups,0));
   }
 }
