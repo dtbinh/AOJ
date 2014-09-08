@@ -27,7 +27,7 @@ typedef pair <int,int> P;
 typedef pair <int,P > PP;
 
 vector<string> answers;
-vector<int> groups;
+vector<int> group;
 map<vector<int>, int> dp;
 int total_questions;
 int total_ppl;
@@ -61,7 +61,7 @@ int dfs(const vector<int>& current,int used){
 int main(){
   while(~scanf("%d %d",&total_questions,&total_ppl)){
     if(total_questions == 0 && total_ppl == 0) break;
-    groups.clear();
+    group.clear();
     answers.clear();
     dp.clear();
 
@@ -69,9 +69,9 @@ int main(){
       string ans;
       cin >> ans;
       answers.push_back(ans);
-      groups.push_back(ppl_i);
+      group.push_back(ppl_i);
     }
     
-    printf("%d\n",dfs(groups,0));
+    printf("%d\n",dfs(group,0));
   }
 }
