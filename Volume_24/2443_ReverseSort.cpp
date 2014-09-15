@@ -1,5 +1,5 @@
 #define _USE_MATH_DEFINES
-#define INF 100000000
+#define INF 0x3f3f3f3f
   
 #include <iostream>
 #include <cstdio>
@@ -56,6 +56,7 @@ int bfs(const vector<int>& init,
   while(!que.empty()){
     State s = que.top();
     que.pop();
+    if(s.cost >= 5) continue;
     for(int lhs = 0; lhs < s.nums.size(); lhs++){
       for(int rhs = lhs + 1; rhs <= s.nums.size(); rhs++){
 	reverse(s.nums.begin() + lhs,s.nums.begin() + rhs);
@@ -82,9 +83,21 @@ int main(){
       scanf("%d",&num);
       nums.push_back(num);
     }
-    map<vector<int>,int> dp;
-    bfs(nums,dp);
+    map<vector<int>,int> start;
+    bfs(nums,start);
+
+    map<vector<int>,int> goal;
     sort(nums.begin(),nums.end());
-    printf("%d\n",dp[nums]);
+    bfs(nums,goal);
+
+    int res = INF;
+    for(map<vector<int>,int>::iterator it = start.begin();
+	it != start.end();
+	it++){
+      if(goal.find(it->first) != goal.end()){
+	res = min(it->second + goal[it->first],res);
+      }
+    }
+    printf("%d\n",res);
   }
 }
