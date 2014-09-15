@@ -33,7 +33,7 @@ int ty[] = {-1,0,1,0};
 
 class State {
 public:
-  vector<int> nums;
+  vector<char> nums;
   int cost;
   bool operator <(const State& s) const {
     return cost < s.cost;
@@ -41,14 +41,14 @@ public:
   bool operator >(const State& s) const {
     return cost > s.cost;
   }
-  State(const vector<int>& n,int c) {
+  State(const vector<char>& n,int c) {
     nums = n;
     cost = c;
   }
 };
 
-int bfs(const vector<int>& init,
-	map<vector<int>,int>& dp){
+int bfs(const vector<char>& init,
+	map<vector<char>,int>& dp,int limit = 4){
   priority_queue<State,vector<State>,greater<State> > que;
   que.push(State(init,0));
   dp[init] = 0;
@@ -56,7 +56,7 @@ int bfs(const vector<int>& init,
   while(!que.empty()){
     State s = que.top();
     que.pop();
-    if(s.cost >= 5) continue;
+    if(s.cost >= limit) continue;
     for(int lhs = 0; lhs < s.nums.size(); lhs++){
       for(int rhs = lhs + 1; rhs <= s.nums.size(); rhs++){
 	reverse(s.nums.begin() + lhs,s.nums.begin() + rhs);
@@ -77,21 +77,21 @@ int bfs(const vector<int>& init,
 int main(){
   int N;
   while(~scanf("%d",&N)){
-    vector<int> nums;
+    vector<char> nums;
     for(int i=0; i < N; i++){
       int num;
       scanf("%d",&num);
       nums.push_back(num);
     }
-    map<vector<int>,int> start;
+    map<vector<char>,int> start;
     bfs(nums,start);
 
-    map<vector<int>,int> goal;
+    map<vector<char>,int> goal;
     sort(nums.begin(),nums.end());
-    bfs(nums,goal);
-
-    int res = INF;
-    for(map<vector<int>,int>::iterator it = start.begin();
+    bfs(nums,goal,4);
+    
+    int res = 9;
+    for(map<vector<char>,int>::iterator it = start.begin();
 	it != start.end();
 	it++){
       if(goal.find(it->first) != goal.end()){
