@@ -44,6 +44,24 @@ bool check_cross(int lpos,int rpos){
   return true;
 }
 
+int compute_pos(char dir){
+  int pos = 0;
+  if(dir == 'U'){
+    pos = 0;
+  }
+  else if(dir == 'R'){
+    pos= 1;
+  }
+  else if(dir == 'D'){
+    pos = 2;
+  }
+  else if(dir == 'L'){
+    pos = 3;
+  }
+
+  return pos;
+}
+
 int main(){
   int N;
   while(~scanf("%d",&N)){
@@ -52,50 +70,46 @@ int main(){
       string command;
       cin >> command;
 
-      int lpos = 3;
-      int rpos = 1;
+      int lpos = -1;
+      int rpos = -1;
+      int flag = 0;
+
       if(!check_sequence(command)){
 	isok = false;
 	goto gameover;
       }
+
       for(int command_i = 0; command_i < command.size(); command_i++){
 	if(command_i % 2 == 1) {
-	  if(command[command_i] == 'U'){
-	    lpos = 0;
-	  }
-	  else if(command[command_i] == 'R'){
-	    lpos = 1;
-	  }
-	  else if(command[command_i] == 'D'){
-	    lpos = 2;
-	  }
-	  else if(command[command_i] == 'L'){
-	    lpos = 3;
-	  }
+	  lpos = compute_pos(command[command_i]);
 	}
 	else {
-	  if(command[command_i] == 'U'){
-	    rpos = 0;
-	  }
-	  else if(command[command_i] == 'R'){
-	    rpos = 1;
-	  }
-	  else if(command[command_i] == 'D'){
-	    rpos = 2;
-	  }
-	  else if(command[command_i] == 'L'){
-	    rpos = 3;
-	  }
+	  rpos = compute_pos(command[command_i]);
 	}
 
 	if(!check_cross(lpos,rpos)){
-	  isok = false;
-	  goto gameover;
+	  flag |= (1<<0);
+	}
+      }
+
+      lpos = -1;
+      rpos = -1;
+
+      for(int command_i = 0; command_i < command.size(); command_i++){
+	if(command_i % 2 == 0) {
+	  lpos = compute_pos(command[command_i]);
+	}
+	else {
+	  rpos = compute_pos(command[command_i]);
+	}
+
+	if(!check_cross(lpos,rpos)){
+	  flag |= (1<<1);
 	}
       }
 
     gameover:;
-      printf("%s\n",isok ? "Yes" : "No");
+      printf("%s\n",(!isok || (flag == (1<<2) - 1)) ? "No" : "Yes");
     }
   }
 }
