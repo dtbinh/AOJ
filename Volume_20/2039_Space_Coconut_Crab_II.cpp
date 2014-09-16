@@ -55,7 +55,7 @@ int main(){
     for(int prime_i = 0; prime_i < prime.size(); prime_i++){
 
       int center_side = prime[prime_i];
-      if(center_side >= side_sum) break;
+      if(2 * center_side >= side_sum) break;
 
       int remainings = side_sum - center_side;
       if(remainings <= 0) break;
@@ -64,8 +64,10 @@ int main(){
 	int left_side = prime[prime_j];
 	int right_side = remainings - left_side;
 
-	if(right_side <= 0) continue;
+	if(right_side <= 0) break;
 	if(!is_prime[right_side]) continue;
+	if(left_side > right_side) break;
+
 	vector<int> used;
 	used.push_back(center_side);
 	used.push_back(left_side);
