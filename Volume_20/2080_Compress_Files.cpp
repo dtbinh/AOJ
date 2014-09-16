@@ -86,8 +86,9 @@ int main(){
     while(!que.empty()){
       State s = que.top();
       que.pop();
-      
-      for(int S = 0; S <= (1<<total_files) - 1; S++){
+
+      int rev = ((1<<total_files) - 1) & ~(s._used);
+      for(int S = 0; S <= rev; S++){
 	if(s._used & S) continue;
 	if(dp[s._used | S] <= s._archives + 1) continue;
 	if(required_space[S] > open_space[s._used] + init_disk_space) continue;
