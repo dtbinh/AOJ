@@ -28,14 +28,14 @@ typedef pair <int,P > PP;
 int tx[] = {0,1,0,-1};
 int ty[] = {-1,0,1,0};
  
-static const double EPS = 1e-8;
+static const double EPS = 1e-12;
 
 class Point {
 public:
-  int _x;
-  int _y;
-  int _z;
-  Point(int x,int y,int z) :
+  double _x;
+  double _y;
+  double _z;
+  Point (double x,double y,double z) :
     _x(x), _y(y), _z(z) {}
   Point operator-(const Point& p) const {
     return Point(_x - p._x,
@@ -103,24 +103,60 @@ double distanceLL(const Line& l,const Line& m){
   return intersectLL(l,m) ? 0 : distanceLP(l,m[0]);
 }
 
+double dp[105][105];
+
 int main(){
   int num_of_straight_paths;
   while(~scanf("%d",&num_of_straight_paths)){
-    int sx,sy,sz;
-    int gx,gy,gz;
-    scanf("%d %d %d",&sx,&sy,&sz);
-    scanf("%d %d %d",&gx,&gy,&gz);
+    if(num_of_straight_paths == 0) break;
+
+    double sx,sy,sz;
+    double gx,gy,gz;
+    scanf("%lf %lf %lf",&sx,&sy,&sz);
+    scanf("%lf %lf %lf",&gx,&gy,&gz);
     
     vector<Line> lines;
     for(int path_i = 0; path_i < num_of_straight_paths; path_i++){
-      int x[2],y[2],z[2];
+      double x[2],y[2],z[2];
       for(int i = 0; i < 2; i++){
-	scanf("%d %d %d",&x[i],&y[i],&z[i]);
+	scanf("%lf %lf %lf",&x[i],&y[i],&z[i]);
       }
       lines.push_back(Line(Point(x[0],y[0],z[0]),
 			   Point(x[1],y[1],z[1])));
     }
 
-    
+    fill((double*)dp,(double*)dp+105*105,1000000000.0);
+
+    dp[0][num_of_straight_paths+1] 
+      = dp[num_of_straight_paths+1][0]
+      = norm(Point(sx,sy,sz) - Point(gx,gy,gz));
+
+    for(int path_i = 0; path_i < num_of_straight_paths; path_i++){
+      dp[0][path_i + 1] = dp[path_i + 1][0]
+	= distanceLP(lines[path_i],Point(sx,sy,sz));
+    }
+    for(int path_i = 0; path_i < num_of_straight_paths; path_i++){
+      dp[num_of_straight_paths + 1][path_i + 1]
+	= dp[path_i + 1][num_of_straight_paths + 1]
+	= distanceLP(lines[path_i],Point(gx,gy,gz));
+    }
+
+    for(int path_i = 0; path_i < num_of_straight_paths; path_i++){
+      for(int path_j = path_i + 1; path_j < num_of_straight_paths; path_j++){
+	dp[path_i + 1][path_j + 1]
+	  = dp[path_j + 1][path_i + 1]
+	  = distanceLL(lines[path_i],lines[path_j]);
+      }
+    }
+
+    for(int k=0;k<=num_of_straight_paths+1;k++){
+      for(int i=0;i<=num_of_straight_paths+1;i++){
+	for(int j=0;j<=num_of_straight_paths+1;j++){
+	  dp[i][j] = min(dp[i][k] + dp[k][j],dp[i][j]);
+	}
+      }
+    }
+
+    printf("%lf\n",dp[0][num_of_straight_paths+1]);
   }
 }
