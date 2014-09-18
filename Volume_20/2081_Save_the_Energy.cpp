@@ -28,7 +28,7 @@ typedef pair <int,P > PP;
 int tx[] = {0,1,0,-1};
 int ty[] = {-1,0,1,0};
  
-static const double EPS = 1e-12;
+static const double EPS = 1e-8;
 
 class Point {
 public:
@@ -52,6 +52,19 @@ public:
 		 _y * t,
 		 _z * t);
   }
+  Point operator*(const Point&p) const {
+    return Point(_x * p._x,
+		 _y * p._y,
+		 _z * p._z);
+  }
+  Point operator/(const double t) const {
+    return Point(_x / t,
+		 _y / t,
+		 _z / t);
+  }
+  void print_vec() const{
+    printf("(%lf,%lf,%lf)\n",_x,_y,_z);
+  }
 };
 
 class Line : public vector<Point> {
@@ -62,17 +75,16 @@ public:
   }
 };
 
-
 double norm(const Point& p){
   return sqrt(p._x * p._x + p._y * p._y + p._z * p._z);
 }
 
-double dot(const Point& p1,const Point& p2){
-  return p1._x * p2._x + p1._y * p2._y + p1._z * p2._z;
+Point unit(const Point& p){
+  return p/norm(p);
 }
 
-double abs(const Point& p){
-  return sqrt(dot(p,p));
+double dot(const Point& p1,const Point& p2){
+  return p1._x * p2._x + p1._y * p2._y + p1._z * p2._z;
 }
 
 Point cross(const Point& p1,const Point& p2){
@@ -83,24 +95,24 @@ Point cross(const Point& p1,const Point& p2){
 
 Point projection(const Line& l,const Point& p){
   double t = dot(p - l[0],l[0]-l[1]) / norm(l[0] - l[1]);
-  return l[0] + (l[0] - l[1]) * t;
-}
-
-Point reflection(const Line& l,const Point& p){
-  return p + (projection(l,p) - p) * 2;
+  return l[0] + unit(l[0] - l[1]) * t;
 }
 
 double distanceLP(const Line& l,const Point& p){
-  return abs(p - projection(l,p));
+  return norm(p - projection(l,p));
 }
 
 bool intersectLL(const Line &l, const Line &m) {
-  return abs(cross(l[1]-l[0], m[1]-m[0])) > EPS || // non-parallel
-    abs(cross(l[1]-l[0], m[0]-l[0])) < EPS;   // same line
+  return (norm(cross(l[1]-l[0], m[1]-l[0]) * cross(l[1]-l[0],m[1]-l[0])) < EPS
+	  && norm(cross(m[1]-m[0], l[0]-m[0]) * cross(m[1]-m[0],l[1]-m[0])) < EPS);
 }
 
 double distanceLL(const Line& l,const Line& m){
-  return intersectLL(l,m) ? 0 : distanceLP(l,m[0]);
+  return (intersectLL(l,m) ? 0 : distanceLP(l,m[0]));
+}
+
+bool intersectLP(const Line &l, const Point &p) {
+  return (norm(cross(l[1]-p, l[0]-p)) < EPS);
 }
 
 double dp[105][105];
@@ -123,22 +135,27 @@ int main(){
       }
       lines.push_back(Line(Point(x[0],y[0],z[0]),
 			   Point(x[1],y[1],z[1])));
+
     }
 
-    fill((double*)dp,(double*)dp+105*105,1000000000.0);
+    memset(dp,0,sizeof(dp));
 
     dp[0][num_of_straight_paths+1] 
       = dp[num_of_straight_paths+1][0]
       = norm(Point(sx,sy,sz) - Point(gx,gy,gz));
 
     for(int path_i = 0; path_i < num_of_straight_paths; path_i++){
-      dp[0][path_i + 1] = dp[path_i + 1][0]
+      dp[0][path_i + 1]
+	= dp[path_i + 1][0]
 	= distanceLP(lines[path_i],Point(sx,sy,sz));
+      printf("s to... %d %lf\n",path_i + 1,dp[0][path_i+1]);
     }
+
     for(int path_i = 0; path_i < num_of_straight_paths; path_i++){
       dp[num_of_straight_paths + 1][path_i + 1]
 	= dp[path_i + 1][num_of_straight_paths + 1]
 	= distanceLP(lines[path_i],Point(gx,gy,gz));
+      printf("g to... %d %lf\n",path_i + 1,dp[path_i + 1][num_of_straight_paths + 1]);
     }
 
     for(int path_i = 0; path_i < num_of_straight_paths; path_i++){
@@ -146,6 +163,7 @@ int main(){
 	dp[path_i + 1][path_j + 1]
 	  = dp[path_j + 1][path_i + 1]
 	  = distanceLL(lines[path_i],lines[path_j]);
+	printf("LL %d %d %lf\n",path_i + 1,path_j + 1,distanceLL(lines[path_i],lines[path_j]));
       }
     }
 
@@ -154,6 +172,12 @@ int main(){
 	for(int j=0;j<=num_of_straight_paths+1;j++){
 	  dp[i][j] = min(dp[i][k] + dp[k][j],dp[i][j]);
 	}
+      }
+    }
+
+    for(int i=0;i<=num_of_straight_paths+1;i++){
+      for(int j=i+1;j<=num_of_straight_paths+1;j++){
+	printf("%d %d %lf\n",i,j,dp[i][j]);
       }
     }
 
