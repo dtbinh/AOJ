@@ -123,7 +123,7 @@ double distanceLL(const Line& l,const Line& m){
 
   Point V1 = l[1] - l[0];
   Point V2 = m[1] - m[0];
-  Point V3 = m[0]-l[0];
+  Point V3 = m[0] - l[0];
   double dist = abs(dot(cross(V1,V2),V3)/norm(cross(V1,V2)));
   return dist;
 }
@@ -161,14 +161,12 @@ int main(){
       dp[0][path_i + 1]
 	= dp[path_i + 1][0]
 	= distanceLP(lines[path_i],Point(sx,sy,sz));
-      // printf("s to... %d %lf\n",path_i + 1,dp[0][path_i+1]);
     }
 
     for(int path_i = 0; path_i < num_of_straight_paths; path_i++){
       dp[num_of_straight_paths + 1][path_i + 1]
 	= dp[path_i + 1][num_of_straight_paths + 1]
 	= distanceLP(lines[path_i],Point(gx,gy,gz));
-      // printf("g to... %d %lf\n",path_i + 1,dp[path_i + 1][num_of_straight_paths + 1]);
     }
 
     for(int path_i = 0; path_i < num_of_straight_paths; path_i++){
@@ -176,7 +174,6 @@ int main(){
 	dp[path_i + 1][path_j + 1]
 	  = dp[path_j + 1][path_i + 1]
 	  = distanceLL(lines[path_i],lines[path_j]);
-	// printf("LL %d %d %lf\n",path_i + 1,path_j + 1,distanceLL(lines[path_i],lines[path_j]));
       }
     }
 
@@ -187,12 +184,6 @@ int main(){
 	}
       }
     }
-
-    // for(int i=0;i<=num_of_straight_paths+1;i++){
-    //   for(int j=i+1;j<=num_of_straight_paths+1;j++){
-    // 	printf("%d %d %lf\n",i,j,dp[i][j]);
-    //   }
-    // }
 
     printf("%lf\n",dp[0][num_of_straight_paths+1]);
   }
