@@ -121,11 +121,10 @@ double distanceLP(const Line& l,const Point& p){
 double distanceLL(const Line& l,const Line& m){
   if(parallelLL(l,m)) return distanceLP(l,m[0]);
 
-  Point V1 = l[1] - l[0];
-  Point V2 = m[1] - m[0];
-  Point V3 = m[0] - l[0];
-  double dist = abs(dot(cross(V1,V2),V3)/norm(cross(V1,V2)));
-  return dist;
+  const Point V1 = l[1] - l[0];
+  const Point V2 = m[1] - m[0];
+  const Point V3 = m[0] - l[0];
+  return abs(dot(cross(V1,V2),V3)/norm(cross(V1,V2)));
 }
 
 double dp[105][105];
