@@ -263,6 +263,7 @@ int main(){
 
     reader.clip(14,7,stage);
     reader.flip_vertical();
+    reader.flip_horizontal();
     player_sum += reader.get_num();
 
     int enemy_sum = 0;
@@ -290,6 +291,7 @@ int main(){
 
     reader.clip(14,36,stage);
     reader.flip_vertical();
+    reader.flip_horizontal();
     enemy_sum += reader.get_num();
 
     printf("%s\n",player_sum >= enemy_sum ? "HIGH" : "LOW");
