@@ -238,62 +238,75 @@ int main(){
     }
 
     Reader reader;
-    int player_sum = 0;
+    vector<int> player;
     reader.clip(0,7,stage);
     reader.flip_horizontal();
-    player_sum += reader.get_num();
+    player.push_back(reader.get_num());
 
     reader.clip(7,0,stage);
     reader.flip_horizontal();
     reader.iter(3);
-    player_sum += reader.get_num();
+    player.push_back(reader.get_num());
 
     reader.clip(7,7,stage);
     reader.flip_horizontal();
-    player_sum += reader.get_num();
+    player.push_back(reader.get_num());
 
     reader.clip(7,14,stage);
     reader.flip_horizontal();
     reader.iter(1);
-    player_sum += reader.get_num();
+    player.push_back(reader.get_num());
 
     reader.clip(7,21,stage);
     reader.flip_horizontal();
-    player_sum += reader.get_num();
+    player.push_back(reader.get_num());
 
     reader.clip(14,7,stage);
     reader.flip_vertical();
     reader.flip_horizontal();
-    player_sum += reader.get_num();
+    player.push_back(reader.get_num());
 
-    int enemy_sum = 0;
+    vector<int> enemy;
     reader.clip(0,36,stage);
     reader.flip_horizontal();
-    enemy_sum += reader.get_num();
+    enemy.push_back(reader.get_num());
 
     reader.clip(7,29,stage);
     reader.flip_horizontal();
     reader.iter(3);
-    enemy_sum += reader.get_num();
+    enemy.push_back(reader.get_num());
 
     reader.clip(7,36,stage);
     reader.flip_horizontal();
-    enemy_sum += reader.get_num();
+    enemy.push_back(reader.get_num());
 
     reader.clip(7,43,stage);
     reader.flip_horizontal();
     reader.iter(1);
-    enemy_sum += reader.get_num();
+    enemy.push_back(reader.get_num());
 
     reader.clip(7,50,stage);
     reader.flip_horizontal();
-    enemy_sum += reader.get_num();
+    enemy.push_back(reader.get_num());
 
     reader.clip(14,36,stage);
     reader.flip_vertical();
     reader.flip_horizontal();
-    enemy_sum += reader.get_num();
+    enemy.push_back(reader.get_num());
 
-    printf("%s\n",player_sum >= enemy_sum ? "HIGH" : "LOW");
+
+    int win = 0;
+    int lose = 0;
+    for(int player_i=0;player_i<player.size();player_i++){
+      for(int enemy_i=0;enemy_i<player.size();enemy_i++){
+	if(player[player_i] > enemy[enemy_i]){
+	  win++;
+	}
+	if(player[player_i] < enemy[enemy_i]){
+	  lose++;
+	}
+      }
+    }
+    printf("%s\n",win >= lose ? "HIGH" : "LOW");
   }
 }
