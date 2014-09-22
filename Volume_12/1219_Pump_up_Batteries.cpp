@@ -29,6 +29,22 @@ typedef pair <int,P> PP;
   
 static const double EPS = 1e-8;
 
+class State {
+public:
+  int _id;
+  int _time;
+  int _occupy;
+  State(int id,int time,int occupy) : _id(id),_time(time), _occupy(occupy) {}
+  bool operator<(const State& s) const {
+    if(_time == s._time) return _id < s._id;
+    return _time < s._time;
+  }
+  bool operator>(const State& s) const {
+    if(_time == s._time) return _id > s._id;
+    return _time > s._time;
+  }
+};
+
 int main(){
   int num_of_guards;
   int simulation_duration;
@@ -47,6 +63,63 @@ int main(){
       }
     }
     
-    
+    int for_queue[101];
+    int next_process[101];
+    bool is_inque[101];
+    memset(next_process,0,sizeof(next_process));
+    memset(for_queue,0,sizeof(for_queue));
+    memset(is_inque,0,sizeof(is_inque));
+
+    priority_queue<State,vector<State>,greater<State> > que;
+    int res = 0;
+    for(int time = 0; time < simulation_duration;time++){
+      char action[101];
+
+      for(int guard_i = 0; guard_i < num_of_guards; guard_i++){
+	if(next_process[guard_i] % 2 == 0){ // to consume
+	  if(is_inque[guard_i]){
+	    continue;
+	  }
+	  for_queue[guard_i] = time_table[guard_i][next_process[guard_i] % time_table[guard_i].size()] - 1;
+	  next_process[guard_i]++;
+	  action[guard_i] = '*';
+	}
+	else{ //to charge
+	  if(for_queue[guard_i] > 0){
+	    for_queue[guard_i]--;
+	    continue;
+	  }
+
+	  else if(!que.empty() && que.top()._id != guard_i){
+	    res++;
+	    action[guard_i] = '-';
+	    continue;
+	  }
+	  que.push(State(guard_i,time,time_table[guard_i][next_process[guard_i] % time_table[guard_i].size()]));
+	  next_process[guard_i]++;
+	  is_inque[guard_i] = true;
+	  action[guard_i] = '.';
+	}
+      }
+      if(!que.empty()){
+	State s = que.top();
+	que.pop();
+	if(s._occupy - 1 > 0){
+	  que.push(State(s._id,s._time,s._occupy-1));
+	}
+	else{
+	  is_inque[s._id] = false;
+	}
+      }
+
+      // for debug
+      // printf("time:%d\n",time);
+      // for(int guard_i = 0; guard_i < num_of_guards; guard_i++){
+      // 	printf("%c\n",action[guard_i]);
+      // }
+      // printf("\n");
+    }
+
+    printf("%d\n",res);
   }
 }
