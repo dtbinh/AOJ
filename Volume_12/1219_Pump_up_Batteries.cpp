@@ -53,12 +53,12 @@ int main(){
 
     vector<int> time_table[101];
     for(int guard_i = 0; guard_i < num_of_guards; guard_i++){
-      int comsuming_duration;
+      int consuming_duration;
       int charging_duration;
-      while(~scanf("%d",&comsuming_duration)){
-	if(comsuming_duration == 0) break;
+      while(~scanf("%d",&consuming_duration)){
+	if(consuming_duration == 0) break;
 	scanf("%d",&charging_duration);
-	time_table[guard_i].push_back(comsuming_duration);
+	time_table[guard_i].push_back(consuming_duration);
 	time_table[guard_i].push_back(charging_duration);
       }
     }
