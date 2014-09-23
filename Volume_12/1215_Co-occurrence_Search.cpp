@@ -71,6 +71,7 @@ void bfs(){
   bool is_first = true;
   int ans_length = 0;
   map<int,string> ans;
+  map<PP,bool> visited;
   while(!que.empty()){
     State s = que.top();
     que.pop();
@@ -92,8 +93,13 @@ void bfs(){
     }
 
     for(int index_i = 0; index_i < gIndex[gQuery[s._query_i]].size(); index_i++){
-      que.push(State(min(s._min_pos,gIndex[gQuery[s._query_i]][index_i]),
-		     max(s._max_pos,gIndex[gQuery[s._query_i]][index_i]),
+      int next_min = min(s._min_pos,gIndex[gQuery[s._query_i]][index_i]);
+      int next_max = max(s._max_pos,gIndex[gQuery[s._query_i]][index_i]);
+      if(visited.find(PP(s._query_i,P(next_min,next_max))) != visited.end()) continue;
+      
+      visited[PP(s._query_i,P(next_min,next_max))] = true;
+      que.push(State(next_min,
+		     next_max,
 		     s._query_i + 1));
     }
   }
