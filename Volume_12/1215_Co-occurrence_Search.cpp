@@ -31,7 +31,7 @@ static const double EPS = 1e-8;
 
 string gText;
 string gQuery;
-vector<int> gIndex[256];
+vector<int> gIndex[1024];
 
 class State {
 public:
@@ -42,9 +42,15 @@ public:
   State(int min_pos,int max_pos,int query_i) :
     _min_pos(min_pos), _max_pos(max_pos), _query_i(query_i) {}
   bool operator<(const State& s) const{
+    if(_max_pos - _min_pos == s._max_pos - s._min_pos){
+      return _query_i > s._query_i;
+    }
     return _max_pos - _min_pos < s._max_pos - s._min_pos;
   }
   bool operator>(const State& s) const{
+    if(_max_pos - _min_pos == s._max_pos - s._min_pos){
+      return _query_i > s._query_i;
+    }
     return _max_pos - _min_pos > s._max_pos - s._min_pos;
   }
 };
@@ -70,8 +76,11 @@ void bfs(){
 
   bool is_first = true;
   int ans_length = 0;
-  map<int,string> ans;
-  map<PP,bool> visited;
+  int ans_min_pos = INF;
+  int ans_max_pos = -INF;
+  map<int,bool> freq;
+  map<P,bool> visited[64];
+
   while(!que.empty()){
     State s = que.top();
     que.pop();
@@ -87,32 +96,52 @@ void bfs(){
 	  break;
 	}
       }
-      string tmp = gText.substr(s._min_pos,s._max_pos - s._min_pos + 1);
-      if(ans.find(s._min_pos) != ans.end()) continue;
-      ans[s._min_pos] = tmp;
+      if(freq.find(s._min_pos) != freq.end()) continue;
+      freq[s._min_pos] = true;
+
+      if(ans_min_pos > s._min_pos){
+	ans_max_pos = s._max_pos;
+	ans_min_pos = s._min_pos;
+      }
     }
 
-    for(int index_i = 0; index_i < gIndex[gQuery[s._query_i]].size(); index_i++){
-      int next_min = min(s._min_pos,gIndex[gQuery[s._query_i]][index_i]);
-      int next_max = max(s._max_pos,gIndex[gQuery[s._query_i]][index_i]);
-      if(visited.find(PP(s._query_i,P(next_min,next_max))) != visited.end()) continue;
-      
-      visited[PP(s._query_i,P(next_min,next_max))] = true;
-      que.push(State(next_min,
-		     next_max,
+    int next_lower
+      = lower_bound(gIndex[gQuery[s._query_i]].begin(),gIndex[gQuery[s._query_i]].end(),s._min_pos)
+      - gIndex[gQuery[s._query_i]].begin();
+    
+    if(next_lower < gIndex[gQuery[s._query_i]].size()
+       && gIndex[gQuery[s._query_i]][next_lower] <= s._max_pos){
+      if(visited[s._query_i].find(P(s._min_pos,s._max_pos)) != visited[s._query_i].end()) continue;
+      que.push(State(s._min_pos,
+		     s._max_pos,
 		     s._query_i + 1));
+    }
+
+    else{
+      for(int index_i = 0; index_i < gIndex[gQuery[s._query_i]].size(); index_i++){
+	int next_min = min(s._min_pos,gIndex[gQuery[s._query_i]][index_i]);
+	int next_max = max(s._max_pos,gIndex[gQuery[s._query_i]][index_i]);
+	if(visited[s._query_i].find(P(next_min,next_max)) != visited[s._query_i].end()) continue;
+	
+	visited[s._query_i][P(next_min,next_max)] = true;
+	que.push(State(next_min,
+		       next_max,
+		       s._query_i + 1));
+      }
     }
   }
 
 
-  if(printed) printf("\n");
-  if(ans.size() > 0){
-    printf("%d\n",ans.size());
+  // if(printed) printf("\n");
+  if(freq.size() > 0){
+    printf("%d\n",freq.size());
     printf("\n");
-    print_text(ans.begin()->second.c_str());
+    print_text(gText.substr(ans_min_pos,ans_max_pos-ans_min_pos+1));
+    printf("\n");
   }
   else {
     printf("0\n");
+    printf("\n");
   }
   printed = true;
 }
