@@ -114,9 +114,11 @@ int main(){
 	  }
 	}
 	else if(deals[dealer_i]._type == "SELL"){
-	  if(current_buy_price >= deals[dealer_j]._price){
-	    current_buy_price = deals[dealer_j]._price;
-	    target_id = dealer_j;
+	  if(deals[dealer_j]._price >= deals[dealer_i]._price){
+	    if(current_buy_price < deals[dealer_j]._price){
+	      current_buy_price = deals[dealer_j]._price;
+	      target_id = dealer_j;
+	    }
 	  }
 	}
       }
@@ -130,10 +132,10 @@ int main(){
 	}
 
 	if(deals[dealer_i]._type == "SELL"){
-	  dealer_result[deals[dealer_i]._dealer_name]._received += (current_buy_price + deals[target_id]._price) / 2;
-	  dealer_result[deals[target_id]._dealer_name]._paid += (current_buy_price + deals[target_id]._price) / 2;
+	  dealer_result[deals[dealer_i]._dealer_name]._received += (current_buy_price + deals[dealer_i]._price) / 2;
+	  dealer_result[deals[target_id]._dealer_name]._paid += (current_buy_price + deals[dealer_i]._price) / 2;
 	  commodity_result[deals[dealer_i]._commodity_name]._purchase_history
-	    .push_back((current_buy_price + deals[target_id]._price) / 2);
+	    .push_back((current_buy_price + deals[dealer_i]._price) / 2);
 	}
 	
 	used[dealer_i] = true;
