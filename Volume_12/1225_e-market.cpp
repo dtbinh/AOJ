@@ -98,8 +98,7 @@ int main(){
       int current_buy_price = -INF; // highest
       int target_id = -1;
 
-      for(int dealer_j = 0; dealer_j < total_dealers; dealer_j++){
-	if(dealer_i == dealer_j) continue;
+      for(int dealer_j = 0; dealer_j < dealer_i; dealer_j++){
 	if(used[dealer_j]) continue;
 	if(deals[dealer_i]._type == deals[dealer_j]._type) continue;
 	if(deals[dealer_i]._dealer_name == deals[dealer_j]._dealer_name) continue;
