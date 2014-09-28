@@ -138,23 +138,22 @@ int main(){
     if(num_of_stars == 0) break;
 
     vector<Point> stars;
+    Point center(0,0,0);
     for(int star_i = 0; star_i < num_of_stars; star_i++){
       double x,y,z;
       scanf("%lf %lf %lf",&x,&y,&z);
       stars.push_back(Point(x,y,z));
+      center = center + Point(x,y,z);
     }
+
+    center = center / stars.size();
 
     double max_radius = 0;
     for(int star_i = 0; star_i < num_of_stars; star_i++){
-      for(int star_j = 0; star_j < num_of_stars; star_j++){
-	if(star_i == star_j) continue;
-
-	max_radius = max(max_radius,
-			 distancePP(stars[star_i],stars[star_j])/2.0);
-	
-      }
+      max_radius = max(max_radius,
+		       distancePP(stars[star_i],center));
     }
 
-    printf("%.7lf\n",max_radius);
+    printf("%.5lf\n",max_radius);
   }
 }
