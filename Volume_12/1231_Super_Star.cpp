@@ -25,8 +25,6 @@
 using namespace std;
   
 typedef long long ll;
-typedef pair <int,int> P;
-typedef pair <int,P> PP;
   
 static const double EPS = 1e-8;
 
@@ -47,6 +45,11 @@ public:
 		 _y + p._y,
 		 _z + p._z);
   }
+  void operator+=(const Point& p) const {
+    _x + p._x;
+    _y + p._y;
+    _z + p._z;
+  }
   Point operator*(const double t) const {
     return Point(_x * t,
 		 _y * t,
@@ -61,6 +64,11 @@ public:
     return Point(_x / t,
 		 _y / t,
 		 _z / t);
+  }
+  void operator/=(const double t) {
+    _x /= t;
+    _y /= t;
+    _z /= t;
   }
   void print_vec() const{
     printf("(%lf,%lf,%lf)\n",_x,_y,_z);
@@ -132,6 +140,30 @@ double distancePP(const Point& s,const Point& t) {
   return norm(Point(s._x - t._x,s._y - t._y,s._z - t._z));
 }
 
+const int sign[8][3] = {
+  {+1,+1,+1},
+  {+1,+1,-1},
+  {+1,-1,+1},
+  {+1,-1,-1},
+  {-1,+1,+1},
+  {-1,+1,-1},
+  {-1,-1,+1},
+  {-1,-1,-1}
+};
+
+class Cube {
+public:
+  Point _p;
+  double _r;
+  Cube(Point p,double r) : _p(p),_r(r) {}
+  bool operator<(const Cube& c) const {
+    return _r < c._r;
+  }
+  bool operator>(const Cube& c) const {
+    return _r > c._r;
+  }
+};
+
 int main(){
   int num_of_stars;
   while(~scanf("%d",&num_of_stars)){
@@ -143,17 +175,43 @@ int main(){
       double x,y,z;
       scanf("%lf %lf %lf",&x,&y,&z);
       stars.push_back(Point(x,y,z));
-      center = center + Point(x,y,z);
     }
 
-    center = center / stars.size();
+    priority_queue<Cube,vector<Cube>,greater<Cube> > candidates;
+    candidates.push(Cube(Point(50.0,50.0,50.0),1000.0));
+    double min_radius = 1e15;
 
-    double max_radius = 0;
-    for(int star_i = 0; star_i < num_of_stars; star_i++){
-      max_radius = max(max_radius,
-		       distancePP(stars[star_i],center));
+    double size = 100.0;
+
+    while(size > 0.000002){
+      size = size / 2.0;
+
+      priority_queue<Cube,vector<Cube>,greater<Cube> > next;
+      while(!candidates.empty()){
+	for(int sign_i = 0; sign_i < 8; sign_i++){
+	  Cube cube = candidates.top();
+	  cube._p._x += sign[sign_i][0] * size / 2.0;
+	  cube._p._y += sign[sign_i][1] * size / 2.0;
+	  cube._p._z += sign[sign_i][2] * size / 2.0;
+
+	  double r = 0.0;
+	  for(int star_i = 0; star_i < stars.size(); star_i++){
+	    r = max(r,distancePP(cube._p,stars[star_i]));
+	  }
+
+	  if(r < min_radius){
+	    min_radius = r;
+	  }
+	  if(min_radius <= r - sqrt(3.0) * size / 2.0){
+	    continue;
+	  }
+	  if(next.size() < 10000) next.push(Cube(cube._p,r));
+	}
+	candidates.pop();
+      }
+      candidates = next;
     }
 
-    printf("%.5lf\n",max_radius);
+    printf("%.5lf\n",min_radius);
   }
 }
