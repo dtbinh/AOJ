@@ -40,7 +40,6 @@ map<ll,int> dp;
 
 ll compute_hash(){
   ll res = 0;
-  ll base = 1;
   for(int y = 0; y < 4; y++){
     for(int x = 0; x < 4; x++){
       ll num = 0; //stage[y][x] eq '.'
@@ -48,25 +47,10 @@ ll compute_hash(){
       if(stage[y][x] == 'G') num = 2;
       if(stage[y][x] == 'B') num = 3;
       res += num;
-      res *= base;
-      base *= 5LL;
+      res <<= 2LL;
     }
   }
   return res;
-}
-
-ll generate_clear_hash(){
-  ll res = 0;
-  ll base = 1;
-  for(int y = 0; y < 4; y++){
-    for(int x = 0; x < 4; x++){
-      res += 0;
-      res *= base;
-      base *= 5LL;
-    }
-  }
-  return res;
-
 }
 
 bool is_clear(ll hash){
@@ -178,6 +162,11 @@ int main(){
       int H,W;
       scanf("%d %d",&H,&W);
       has_stamp[H][W] = true;
+      for(int h = H; h >= 1; h--){
+	for(int w = W; w >= 1; w--){
+	  corner_stamp[h][w] = true;
+	}
+      }
     }
 
     for(int h = 4; h >= 1; h--){
@@ -185,7 +174,6 @@ int main(){
       for(int w = 4; w >= 1; w--){
 	if(has_stamp[h][w]) flag = true;
 	if(flag) left_right_stamp[h][w] = true;
-	if(flag) corner_stamp[h][w] = true;
       }
     }
 
@@ -194,7 +182,6 @@ int main(){
       for(int h = 4; h >= 1; h--){
 	if(has_stamp[h][w]) flag = true;
 	if(flag) top_bottom_stamp[h][w] = true;
-	if(flag) corner_stamp[h][w] = true;
       }
     }
     
@@ -207,7 +194,6 @@ int main(){
     }
 
     dfs(0);
-    ll hash = generate_clear_hash();
-    printf("%d\n",dp[hash]);
+    printf("%d\n",dp[0]);
   }
 }
