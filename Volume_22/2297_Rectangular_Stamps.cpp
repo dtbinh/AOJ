@@ -77,9 +77,9 @@ bool can_erase(int ly,int lx,int ry,int rx){
   int freq[256] = {};
   int colors = 0;
   for(int y = ly; y <= ry; y++){
-    for(int x = ry; x <= rx; x++){
+    for(int x = lx; x <= rx; x++){
       if(stage[y][x] != '.' && 
-	 freq[stage[y][x]]++ > 0) colors++;
+	 freq[stage[y][x]]++ == 0) colors++;
       if(colors >= 2) return false;
     }
   }
@@ -88,7 +88,7 @@ bool can_erase(int ly,int lx,int ry,int rx){
 
 void erase(int ly,int lx,int ry,int rx){
   for(int y = ly; y <= ry; y++){
-    for(int x = ly; x <= rx; x++){
+    for(int x = lx; x <= rx; x++){
       stage[y][x] = '.';
     }
   }
@@ -125,11 +125,11 @@ void dfs(int count){
 	  else if(lx == 0 || rx == 3){
 	    if(left_right_stamp[ry - ly + 1][rx - lx + 1]){
 	      if(can_erase(ly,lx,ry,rx)){
-		char tmp[4][4];
-		memcpy(tmp,stage,sizeof(char)*4*4);
-		erase(ly,lx,ry,rx);
-		dfs(count+1);
-		memcpy(stage,tmp,sizeof(char)*4*4);
+	  	char tmp[4][4];
+	  	memcpy(tmp,stage,sizeof(char)*4*4);
+	  	erase(ly,lx,ry,rx);
+	  	dfs(count+1);
+	  	memcpy(stage,tmp,sizeof(char)*4*4);
 	      }
 	    }
 	  }
@@ -138,11 +138,11 @@ void dfs(int count){
 	  else if(ly == 0 || ry == 3){
 	    if(top_bottom_stamp[ry - ly + 1][rx - lx + 1]){
 	      if(can_erase(ly,lx,ry,rx)){
-		char tmp[4][4];
-		memcpy(tmp,stage,sizeof(char)*4*4);
-		erase(ly,lx,ry,rx);
-		dfs(count+1);
-		memcpy(stage,tmp,sizeof(char)*4*4);
+	  	char tmp[4][4];
+	  	memcpy(tmp,stage,sizeof(char)*4*4);
+	  	erase(ly,lx,ry,rx);
+	  	dfs(count+1);
+	  	memcpy(stage,tmp,sizeof(char)*4*4);
 	      }
 	    }
 	  }
@@ -151,11 +151,11 @@ void dfs(int count){
 	  else {
 	    if(has_stamp[ry - ly + 1][rx - lx + 1]){
 	      if(can_erase(ly,lx,ry,rx)){
-		char tmp[4][4];
-		memcpy(tmp,stage,sizeof(char)*4*4);
-		erase(ly,lx,ry,rx);
-		dfs(count+1);
-		memcpy(stage,tmp,sizeof(char)*4*4);
+	  	char tmp[4][4];
+	  	memcpy(tmp,stage,sizeof(char)*4*4);
+	  	erase(ly,lx,ry,rx);
+	  	dfs(count+1);
+	  	memcpy(stage,tmp,sizeof(char)*4*4);
 	      }
 	    }
 	  }
