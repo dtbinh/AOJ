@@ -32,11 +32,15 @@ static const double EPS = 1e-8;
 
 char stage[4][4];
 bool has_stamp[5][5];
+bool left_right_stamp[5][5];
+bool top_bottom_stamp[5][5];
+bool corner_stamp[5][5];
+
 map<ll,int> dp;
-map<ll,int>::iterator it;
 
 ll compute_hash(){
   ll res = 0;
+  ll base = 1;
   for(int y = 0; y < 4; y++){
     for(int x = 0; x < 4; x++){
       ll num = 0; //stage[y][x] eq '.'
@@ -44,12 +48,27 @@ ll compute_hash(){
       if(stage[y][x] == 'G') num = 2;
       if(stage[y][x] == 'B') num = 3;
       res += num;
-      res <<= 2;
+      res *= base;
+      base *= 5LL;
     }
   }
-
   return res;
 }
+
+ll generate_clear_hash(){
+  ll res = 0;
+  ll base = 1;
+  for(int y = 0; y < 4; y++){
+    for(int x = 0; x < 4; x++){
+      res += 0;
+      res *= base;
+      base *= 5LL;
+    }
+  }
+  return res;
+
+}
+
 bool is_clear(ll hash){
   return (hash == 0);
 }
@@ -86,13 +105,58 @@ void dfs(int count){
     for(int lx=0;lx<4;lx++){
       for(int ry=ly;ry<4;ry++){
 	for(int rx=lx;rx<4;rx++){
-	  if(has_stamp[ry - ly + 1][rx - lx + 1]){
-	    if(can_erase(ly,lx,ry,rx)){
-	      char tmp[4][4];
-	      memcpy(tmp,stage,sizeof(char)*4*4);
-	      erase(ly,lx,ry,rx);
-	      dfs(count+1);
-	      memcpy(stage,tmp,sizeof(char)*4*4);
+	  //corner
+	  if((lx == 0 && ly == 0)
+	     || (lx == 0 && ly == 3)
+	     || (rx == 3 && ry == 3)
+	     || (rx == 3 && ry == 0)){
+	    if(corner_stamp[ry - ly + 1][rx - lx + 1]){
+	      if(can_erase(ly,lx,ry,rx)){
+		char tmp[4][4];
+		memcpy(tmp,stage,sizeof(char)*4*4);
+		erase(ly,lx,ry,rx);
+		dfs(count+1);
+		memcpy(stage,tmp,sizeof(char)*4*4);
+	      }
+	    }
+	  }
+
+	  //left or right
+	  else if(lx == 0 || rx == 3){
+	    if(left_right_stamp[ry - ly + 1][rx - lx + 1]){
+	      if(can_erase(ly,lx,ry,rx)){
+		char tmp[4][4];
+		memcpy(tmp,stage,sizeof(char)*4*4);
+		erase(ly,lx,ry,rx);
+		dfs(count+1);
+		memcpy(stage,tmp,sizeof(char)*4*4);
+	      }
+	    }
+	  }
+
+	  //top or bottom
+	  else if(ly == 0 || ry == 3){
+	    if(top_bottom_stamp[ry - ly + 1][rx - lx + 1]){
+	      if(can_erase(ly,lx,ry,rx)){
+		char tmp[4][4];
+		memcpy(tmp,stage,sizeof(char)*4*4);
+		erase(ly,lx,ry,rx);
+		dfs(count+1);
+		memcpy(stage,tmp,sizeof(char)*4*4);
+	      }
+	    }
+	  }
+
+	  //center
+	  else {
+	    if(has_stamp[ry - ly + 1][rx - lx + 1]){
+	      if(can_erase(ly,lx,ry,rx)){
+		char tmp[4][4];
+		memcpy(tmp,stage,sizeof(char)*4*4);
+		erase(ly,lx,ry,rx);
+		dfs(count+1);
+		memcpy(stage,tmp,sizeof(char)*4*4);
+	      }
 	    }
 	  }
 	}
@@ -105,12 +169,33 @@ int main(){
   int num_of_stamps;
   while(~scanf("%d",&num_of_stamps)){
     memset(has_stamp,false,sizeof(has_stamp));
+    memset(top_bottom_stamp,false,sizeof(top_bottom_stamp));
+    memset(left_right_stamp,false,sizeof(left_right_stamp));
+    memset(corner_stamp,false,sizeof(corner_stamp));
     dp.clear();
 
     for(int stamp_i = 0; stamp_i < num_of_stamps; stamp_i++){
       int H,W;
       scanf("%d %d",&H,&W);
       has_stamp[H][W] = true;
+    }
+
+    for(int h = 4; h >= 1; h--){
+      bool flag = false;
+      for(int w = 4; w >= 1; w--){
+	if(has_stamp[h][w]) flag = true;
+	if(flag) left_right_stamp[h][w] = true;
+	if(flag) corner_stamp[h][w] = true;
+      }
+    }
+
+    for(int w = 4; w >= 1; w--){
+      bool flag = false;
+      for(int h = 4; h >= 1; h--){
+	if(has_stamp[h][w]) flag = true;
+	if(flag) top_bottom_stamp[h][w] = true;
+	if(flag) corner_stamp[h][w] = true;
+      }
     }
     
     for(int y = 0; y < 4; y++){
@@ -122,7 +207,7 @@ int main(){
     }
 
     dfs(0);
-    printf("%d\n",dp[0]);
+    ll hash = generate_clear_hash();
+    printf("%d\n",dp[hash]);
   }
-
 }
