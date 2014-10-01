@@ -138,6 +138,7 @@ int bfs(){
   ll init = compute_hash();
   ll goal = compute_clear_hash();
   que.push(State(init,0));
+  dp[init] = 0;
 
   while(!que.empty()){
     State s = que.top();
@@ -152,6 +153,10 @@ int bfs(){
 	    //corner
 	    if((lx == 0 && ly == 0)
 	       || (lx == 0 && ly == 3)
+	       || (lx == 3 && ly == 0)
+	       || (lx == 3 && ly == 3)
+	       || (rx == 0 && ry == 0)
+	       || (rx == 0 && ry == 3)
 	       || (rx == 3 && ry == 3)
 	       || (rx == 3 && ry == 0)){
 	      if(corner_stamp[ry - ly + 1][rx - lx + 1]){
@@ -173,7 +178,7 @@ int bfs(){
 	    }
 	    
 	    //left or right
-	    else if(lx == 0 || rx == 3){
+	    if(lx == 0 || rx == 3){
 	      if(left_right_stamp[ry - ly + 1][rx - lx + 1]){
 		if(can_erase(ly,lx,ry,rx)){
 		  char tmp[4][4];
@@ -194,7 +199,7 @@ int bfs(){
 	    }
 	    
 	    //top or bottom
-	    else if(ly == 0 || ry == 3){
+	    if(ly == 0 || ry == 3){
 	      if(top_bottom_stamp[ry - ly + 1][rx - lx + 1]){
 		if(can_erase(ly,lx,ry,rx)){
 		  char tmp[4][4];
@@ -213,22 +218,20 @@ int bfs(){
 	    }
 	    
 	    //center
-	    else {
-	      if(has_stamp[ry - ly + 1][rx - lx + 1]){
-		if(can_erase(ly,lx,ry,rx)){
-		  char tmp[4][4];
-		  memcpy(tmp,stage,sizeof(char)*4*4);
-		  erase(ly,lx,ry,rx);
-		  ll next = compute_hash();
-		  if(dp.find(next) != dp.end() && dp[next] <= s._cost + 1){
-		    memcpy(stage,tmp,sizeof(char)*4*4);
-		    continue;
-		  }
-		  dp[next] = s._cost + 1;
-
-		  que.push(State(next,s._cost + 1));
+	    if(has_stamp[ry - ly + 1][rx - lx + 1]){
+	      if(can_erase(ly,lx,ry,rx)){
+		char tmp[4][4];
+		memcpy(tmp,stage,sizeof(char)*4*4);
+		erase(ly,lx,ry,rx);
+		ll next = compute_hash();
+		if(dp.find(next) != dp.end() && dp[next] <= s._cost + 1){
 		  memcpy(stage,tmp,sizeof(char)*4*4);
+		  continue;
 		}
+		dp[next] = s._cost + 1;
+		
+		que.push(State(next,s._cost + 1));
+		memcpy(stage,tmp,sizeof(char)*4*4);
 	      }
 	    }
 	  }
