@@ -37,21 +37,60 @@ bool top_bottom_stamp[5][5];
 bool corner_stamp[5][5];
 
 map<ll,int> dp;
-
 ll compute_hash(){
   ll res = 0;
+  ll base = 1;
   for(int y = 0; y < 4; y++){
     for(int x = 0; x < 4; x++){
-      ll num = 0; //stage[y][x] eq '.'
-      if(stage[y][x] == 'R') num = 1;
-      if(stage[y][x] == 'G') num = 2;
-      if(stage[y][x] == 'B') num = 3;
-      res += num;
-      res <<= 2LL;
+      ll type = 0; //stage[y][x] eq '.'
+      if(stage[y][x] == 'R') type = 1;
+      if(stage[y][x] == 'G') type = 2;
+      if(stage[y][x] == 'B') type = 3;
+      res += type * base;
+      base *= 4LL;
     }
   }
   return res;
 }
+
+void hash2stage(ll hash){
+  ll base = 1;
+  for(int y = 0; y < 4; y++){
+    for(int x = 0; x < 4; x++){
+      ll type = hash % 4LL;
+      if(type == 0) stage[y][x] = '.';
+      if(type == 1) stage[y][x] = 'R';
+      if(type == 2) stage[y][x] = 'G';
+      if(type == 3) stage[y][x] = 'B';
+      hash /= 4LL;
+    }
+  }
+}
+
+ll compute_clear_hash(){
+  ll res = 0;
+  ll base = 1;
+  for(int y = 0; y < 4; y++){
+    for(int x = 0; x < 4; x++){
+      ll type = 0;
+      res += type * base;
+      base *= 4LL;
+    }
+  }
+
+  return res;
+}
+
+void print_stage(){
+  for(int y = 0; y < 4; y++){
+    for(int x = 0; x < 4; x++){
+      printf("%c",stage[y][x]);
+    }
+    printf("\n");
+  }
+  printf("\n");
+}
+
 
 bool is_clear(ll hash){
   return (hash == 0);
@@ -78,68 +117,118 @@ void erase(int ly,int lx,int ry,int rx){
   }
 }
 
-void dfs(int count){
-  ll hash = compute_hash();
 
-  if(dp.find(hash) != dp.end() 
-     && dp[hash] <= count) return;
-  dp[hash] = count;
+class State {
+public:
+  ll _hash;
+  int _cost;
+  
+  State(ll hash,int cost) : _hash(hash), _cost(cost) {}
+  bool operator<(const State& s) const {
+    return _cost < s._cost;
+  }
+  bool operator>(const State& s) const {
+    return _cost > s._cost;
+  }
+};
 
-  for(int ly=0;ly<4;ly++){
-    for(int lx=0;lx<4;lx++){
-      for(int ry=ly;ry<4;ry++){
-	for(int rx=lx;rx<4;rx++){
-	  //corner
-	  if((lx == 0 && ly == 0)
-	     || (lx == 0 && ly == 3)
-	     || (rx == 3 && ry == 3)
-	     || (rx == 3 && ry == 0)){
-	    if(corner_stamp[ry - ly + 1][rx - lx + 1]){
-	      if(can_erase(ly,lx,ry,rx)){
-		char tmp[4][4];
-		memcpy(tmp,stage,sizeof(char)*4*4);
-		erase(ly,lx,ry,rx);
-		dfs(count+1);
-		memcpy(stage,tmp,sizeof(char)*4*4);
+int bfs(){
+
+  priority_queue<State,vector<State>, greater<State> > que;
+  ll init = compute_hash();
+  ll goal = compute_clear_hash();
+  que.push(State(init,0));
+
+  while(!que.empty()){
+    State s = que.top();
+    que.pop();
+    if(s._hash == goal) return s._cost;
+    hash2stage(s._hash);
+
+    for(int ly=0;ly<4;ly++){
+      for(int lx=0;lx<4;lx++){
+	for(int ry=ly;ry<4;ry++){
+	  for(int rx=lx;rx<4;rx++){
+	    //corner
+	    if((lx == 0 && ly == 0)
+	       || (lx == 0 && ly == 3)
+	       || (rx == 3 && ry == 3)
+	       || (rx == 3 && ry == 0)){
+	      if(corner_stamp[ry - ly + 1][rx - lx + 1]){
+		if(can_erase(ly,lx,ry,rx)){
+		  char tmp[4][4];
+		  memcpy(tmp,stage,sizeof(char)*4*4);
+		  erase(ly,lx,ry,rx);
+		  ll next = compute_hash();
+		  if(dp.find(next) != dp.end() && dp[next] <= s._cost + 1){
+		    memcpy(stage,tmp,sizeof(char)*4*4);
+		    continue;
+		  }
+		  dp[next] = s._cost + 1;
+
+		  que.push(State(next,s._cost + 1));
+		  memcpy(stage,tmp,sizeof(char)*4*4);
+		}
 	      }
 	    }
-	  }
+	    
+	    //left or right
+	    else if(lx == 0 || rx == 3){
+	      if(left_right_stamp[ry - ly + 1][rx - lx + 1]){
+		if(can_erase(ly,lx,ry,rx)){
+		  char tmp[4][4];
+		  memcpy(tmp,stage,sizeof(char)*4*4);
+		  erase(ly,lx,ry,rx);
+		  ll next = compute_hash();
+		  if(dp.find(next) != dp.end() && dp[next] <= s._cost + 1){
+		    memcpy(stage,tmp,sizeof(char)*4*4);
+		    continue;
+		  }
 
-	  //left or right
-	  else if(lx == 0 || rx == 3){
-	    if(left_right_stamp[ry - ly + 1][rx - lx + 1]){
-	      if(can_erase(ly,lx,ry,rx)){
-	  	char tmp[4][4];
-	  	memcpy(tmp,stage,sizeof(char)*4*4);
-	  	erase(ly,lx,ry,rx);
-	  	dfs(count+1);
-	  	memcpy(stage,tmp,sizeof(char)*4*4);
+		  dp[next] = s._cost + 1;
+
+		  que.push(State(next,s._cost + 1));
+		  memcpy(stage,tmp,sizeof(char)*4*4);
+		}
 	      }
 	    }
-	  }
-
-	  //top or bottom
-	  else if(ly == 0 || ry == 3){
-	    if(top_bottom_stamp[ry - ly + 1][rx - lx + 1]){
-	      if(can_erase(ly,lx,ry,rx)){
-	  	char tmp[4][4];
-	  	memcpy(tmp,stage,sizeof(char)*4*4);
-	  	erase(ly,lx,ry,rx);
-	  	dfs(count+1);
-	  	memcpy(stage,tmp,sizeof(char)*4*4);
+	    
+	    //top or bottom
+	    else if(ly == 0 || ry == 3){
+	      if(top_bottom_stamp[ry - ly + 1][rx - lx + 1]){
+		if(can_erase(ly,lx,ry,rx)){
+		  char tmp[4][4];
+		  memcpy(tmp,stage,sizeof(char)*4*4);
+		  erase(ly,lx,ry,rx);
+		  ll next = compute_hash();
+		  if(dp.find(next) != dp.end() && dp[next] <= s._cost + 1){
+		    memcpy(stage,tmp,sizeof(char)*4*4);
+		    continue;
+		  }
+		  dp[next] = s._cost + 1;
+		  que.push(State(next,s._cost + 1));
+		  memcpy(stage,tmp,sizeof(char)*4*4);
+		}
 	      }
 	    }
-	  }
+	    
+	    //center
+	    else {
+	      if(has_stamp[ry - ly + 1][rx - lx + 1]){
+		if(can_erase(ly,lx,ry,rx)){
+		  char tmp[4][4];
+		  memcpy(tmp,stage,sizeof(char)*4*4);
+		  erase(ly,lx,ry,rx);
+		  ll next = compute_hash();
+		  if(dp.find(next) != dp.end() && dp[next] <= s._cost + 1){
+		    memcpy(stage,tmp,sizeof(char)*4*4);
+		    continue;
+		  }
+		  dp[next] = s._cost + 1;
 
-	  //center
-	  else {
-	    if(has_stamp[ry - ly + 1][rx - lx + 1]){
-	      if(can_erase(ly,lx,ry,rx)){
-	  	char tmp[4][4];
-	  	memcpy(tmp,stage,sizeof(char)*4*4);
-	  	erase(ly,lx,ry,rx);
-	  	dfs(count+1);
-	  	memcpy(stage,tmp,sizeof(char)*4*4);
+		  que.push(State(next,s._cost + 1));
+		  memcpy(stage,tmp,sizeof(char)*4*4);
+		}
 	      }
 	    }
 	  }
@@ -147,6 +236,8 @@ void dfs(int count){
       }
     }
   }
+
+  return INF;
 }
 
 int main(){
@@ -193,7 +284,6 @@ int main(){
       }
     }
 
-    dfs(0);
-    printf("%d\n",dp[0]);
+    printf("%d\n",bfs());
   }
 }
