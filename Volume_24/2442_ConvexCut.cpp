@@ -130,6 +130,27 @@ Point crosspoint(const Line &l, const Line &m) {
   return m[0] + B / A * (m[1] - m[0]);
 }
 
+bool cmp_x(const Point& p, const Point& q){
+  if(p.real() != q.real()) return p.real() < q.real();
+  return p.imag() < q.imag();
+}
+
+vector<Point> compute_convex_hull(vector<Point> ps){
+  sort(ps.begin(), ps.end(), cmp_x);
+  int k = 0;
+  vector<Point> qs(ps.size() * 2);
+  for(int i=0; i < ps.size(); i++){
+    while(k > 1 && cross(qs[k - 1] - qs[k - 2],ps[i] - qs[k - 1]) <= 0) k--;
+    qs[k++] = ps[i];
+  }
+  for(int i = ps.size() - 2,t = k; i >= 0; i--){
+    while(k > t && cross(qs[k - 1] - qs[k - 2],ps[i] - qs[k - 1]) <= 0) k--;
+    qs[k++] = ps[i];
+  }
+  qs.resize(k-1);
+  return qs;
+}
+
 int main(){
   int N;
   while(~scanf("%d",&N)){
@@ -166,12 +187,12 @@ int main(){
 	  div.push_back(p);
 	}
       }
-
       vector<Point> top,bottom;
       top.push_back(div[0]);
       top.push_back(div[1]);
-
       bottom.push_back(div[0]);
+      bottom.push_back(div[1]);
+
       for(int pos_i = 0; pos_i < N; pos_i++){
 	if(mid - EPS <= points[pos_i].imag()){
 	  top.push_back(points[pos_i]);
@@ -180,8 +201,8 @@ int main(){
 	  bottom.push_back(points[pos_i]);
 	}
       }
-      bottom.push_back(div[1]);
-
+      top = compute_convex_hull(top);      
+      bottom = compute_convex_hull(bottom);      
       double area_top = compute_area(top);
       double area_bottom = compute_area(bottom);
       double whole = area_top + area_bottom;
@@ -211,6 +232,9 @@ int main(){
       vector<Point> left,right;
       left.push_back(div[0]);
       right.push_back(div[0]);
+      left.push_back(div[1]);
+      right.push_back(div[1]);
+
       for(int pos_i = 0; pos_i < N; pos_i++){
 	if(mid - EPS >= points[pos_i].real()){
 	  left.push_back(points[pos_i]);
@@ -219,9 +243,9 @@ int main(){
 	  right.push_back(points[pos_i]);
 	}
       }
-      left.push_back(div[1]);
-      right.push_back(div[1]);
 
+      left = compute_convex_hull(left);
+      right = compute_convex_hull(right);
       double area_left = compute_area(left);
       double area_right = compute_area(right);
       double whole = area_left + area_right;
@@ -250,15 +274,15 @@ int main(){
     
     vector<Point> half;
     half.push_back(div[0]);
+
     for(int pos_i = 0; pos_i < N; pos_i++){
       if(first <= pos_i && pos_i <= last){
 	half.push_back(points[pos_i]);
       }
     }
     half.push_back(div[1]);
-    
     double area_half = compute_area(half);
-    if(abs(area_half - area_target) > EPS){
+    if(abs(area_half - area_target) > 0.01){
       cout << "NA" << endl;
     }
     else{
