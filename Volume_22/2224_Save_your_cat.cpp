@@ -42,7 +42,7 @@ public:
     _rank = new int[_size]();
     for(int i = 0; i < _size; i++){
       _parent[i] = i;
-      _rank[i] = 0;
+      _rank[i] = 1;
     }
   }
 
