@@ -93,9 +93,7 @@ string maya2christ(ll passed_day){
 }
 
 string christ2maya(ll passed_day){
-  while(passed_day > 13*20*20*18*20){
-    passed_day -= 13*20*20*18*20;
-  }
+  passed_day %= 13*20*20*18*20;
   ll b = passed_day / (20*20*18*20);
   passed_day %= (20*20*18*20);
 
