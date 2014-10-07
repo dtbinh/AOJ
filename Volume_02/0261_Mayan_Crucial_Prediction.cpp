@@ -46,7 +46,7 @@ vector<string> split(string delim,string str){
   return res;
 }
 
-static const int days_per_month[] = {0,31,28,31,30,31,30,31,31,30,31,30,31};
+static const ll days_per_month[] = {0,31,28,31,30,31,30,31,31,30,31,30,31};
 
 bool is_leap_year(int year){
   if(year % 4 == 0){
@@ -57,13 +57,13 @@ bool is_leap_year(int year){
 }
 
 string maya2christ(ll passed_day){
-  passed_day += 355;
+  passed_day += 355LL;
   int year = 2012;
-  for(int prev = 2012; prev <= 10000000; prev++){
-    if(is_leap_year(prev) && passed_day - 366 > 0){
+  for(int prev = 2012; prev < 10000000; prev++){
+    if(is_leap_year(prev) && passed_day - 366LL >= 0){
       passed_day -= 366LL;
     }
-    else if(!is_leap_year(prev) && passed_day - 365 > 0){
+    else if(!is_leap_year(prev) && passed_day - 365LL >= 0){
       passed_day -= 365LL;
     }
     else{
@@ -74,19 +74,26 @@ string maya2christ(ll passed_day){
 
   int month = 1;
   for(int prev = 1; prev < 12; prev++){
-    if(is_leap_year(year) && prev == 2
-       && passed_day - (days_per_month[prev] + 1) > 0){
-      passed_day -= (days_per_month[prev] + 1);
-    }
-    else if(passed_day - days_per_month[prev] > 0){
-      passed_day -= days_per_month[prev];
+    if(is_leap_year(year) && prev == 2){
+      if(passed_day - (days_per_month[prev] + 1LL) >= 0){
+	passed_day -= (days_per_month[prev] + 1LL);
+      }
+      else{
+	break;
+      }
     }
     else{
-      break;
+      if(passed_day - days_per_month[prev] >= 0){
+	passed_day -= days_per_month[prev];
+      }
+      else{
+	break;
+      }
     }
     month = prev + 1;
-  }
-  int day = passed_day + 1;
+  }  
+  int day = 1;
+  day += passed_day;
   stringstream ss;
   ss << year << "." << month << "." << day;
   return ss.str();
@@ -112,6 +119,43 @@ string christ2maya(ll passed_day){
   return ss.str();
 }
 
+ll compute_christ_passed_day(const string& str){
+  vector<string> elements = split(".",str);
+  ll year = atol(elements[0].c_str());
+  ll month = atol(elements[1].c_str());
+  ll day = atol(elements[2].c_str());
+  
+  ll passed_day = 0;
+  for(ll prev = 2012; prev < year; prev++){
+    passed_day += (is_leap_year(prev) ? 366LL : 365LL);
+  }
+  
+  for(ll prev = 1; prev < month; prev++){
+    if(is_leap_year(year) && prev == 2){
+      passed_day++;
+    }
+    passed_day += days_per_month[prev];
+  }
+  for(ll prev = 1; prev < day; prev++){
+    passed_day++;
+  }
+  passed_day -= 355LL; //2012.01.01 - 2012.12.20
+  
+  return passed_day;
+}
+
+ll compute_maya_passed_day(const string& str){
+  vector<string> elements = split(".",str);
+  ll b = atol(elements[0].c_str());
+  ll ka = atol(elements[1].c_str());
+  ll t = atol(elements[2].c_str());
+  ll w = atol(elements[3].c_str());
+  ll ki = atol(elements[4].c_str());
+  
+  ll passed_day = b * (20*20*18*20) + ka * (20*18*20) + t * (18*20) + w * 20 + ki;
+  return passed_day;
+}
+
 int main(){
   string str;
   while(cin >> str){
@@ -119,39 +163,11 @@ int main(){
     int total_dots = count(str.begin(),str.end(),'.');
     if(total_dots == 2){
       //after christ
-      vector<string> elements = split(".",str);
-      ll year = atol(elements[0].c_str());
-      ll month = atol(elements[1].c_str());
-      ll day = atol(elements[2].c_str());
-
-      ll passed_day = 0;
-      for(ll prev = 2012; prev < year; prev++){
-	passed_day += (is_leap_year(prev) ? 366LL : 365LL);
-      }
-
-      for(ll prev = 1; prev < month; prev++){
-	if(is_leap_year(year) && prev == 2){
-	  passed_day++;
-	}
-	passed_day += days_per_month[prev];
-      }
-      for(ll prev = 1; prev < day; prev++){
-	passed_day++;
-      }
-      passed_day -= 355LL; //2012.01.01 - 2012.12.20
-      cout << christ2maya(passed_day) << endl;
+      cout << christ2maya(compute_christ_passed_day(str)) << endl;
     }
     else{
       //maya
-      vector<string> elements = split(".",str);
-      ll b = atol(elements[0].c_str());
-      ll ka = atol(elements[1].c_str());
-      ll t = atol(elements[2].c_str());
-      ll w = atol(elements[3].c_str());
-      ll ki = atol(elements[4].c_str());
-
-      ll passed_day = b * (20*20*18*20) + ka * (20*18*20) + t * (18*20) + w * 20 + ki;
-      cout << maya2christ(passed_day) << endl;
+      cout << maya2christ(compute_maya_passed_day(str)) << endl;
     }
   }
 }
