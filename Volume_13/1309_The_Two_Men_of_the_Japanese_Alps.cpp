@@ -27,7 +27,7 @@ typedef pair <int,int> P;
 typedef pair <int,P > PP;
 
 typedef complex<double> Point;
-const static double EPS = 1e-8;
+const static double EPS = 1e-12;
 
 double dot(const Point& p,const Point& q){
   return real(conj(p)*q);
@@ -110,22 +110,27 @@ void disp(double next_cost,int lhs_i,int rhs_i){
   printf("lhs:%d rhs:%d cost: %lf\n",lhs_i,rhs_i,next_cost);
 }
 
+map<int,bool> dp[1000001];
+
 int main(){
   int total_points;
   while(~scanf("%d",&total_points)){
     if(total_points == 0) break;
-    map<int,bool> dp[100001];
-    set<int> height;
+
+    for(int i=0;i<=1000000;i++){
+      dp[i].clear();
+    }
+    set<double> height;
     vector<Node> routes;
     for(int point_i = 0; point_i < total_points; point_i++){
       double x,y;
       scanf("%lf %lf",&x,&y);
-      height.insert((int)(y+EPS));
+      height.insert(y);
       routes.push_back(Node(Point(x,y),true));
     }
     
     vector<Node> external;
-    for(set<int>::iterator it = height.begin();
+    for(set<double>::iterator it = height.begin();
 	it != height.end();
 	it++){
       for(int route_i = 0; route_i+1 < routes.size(); route_i++){
@@ -172,7 +177,14 @@ int main(){
     while(!que.empty()){
       State s = que.top();
       que.pop();
+      if(dp[s.lhs][s.rhs]) continue;
+      dp[s.lhs][s.rhs] = true;
+      if(s.lhs == s.rhs && routes[s.lhs].is_origin){
+	res = s.cost;
+	break;
+      }
 
+      //target
       for(int lhs_i = s.lhs - 1; lhs_i <= s.lhs + 1; lhs_i++){
     	if(lhs_i < 0 || lhs_i >= routes.size()) continue;
     	for(int rhs_i = s.rhs - 1; rhs_i <= s.rhs + 1; rhs_i++){
@@ -182,19 +194,13 @@ int main(){
     	  double next_cost = s.cost 
     	    + compute_distance(routes[s.lhs].point,routes[lhs_i].point)
     	    + compute_distance(routes[s.rhs].point,routes[rhs_i].point);
-    	  if(dp[lhs_i].find(rhs_i) == dp[lhs_i].end()){
-    	    dp[lhs_i][rhs_i] = true;
-	    if(lhs_i == rhs_i && routes[lhs_i].is_origin){
-	      res = next_cost;
-	      goto found;
-	    }
+    	  if(!dp[lhs_i][rhs_i]){
     	    que.push(State(lhs_i,rhs_i,next_cost));
     	  }
     	}
       }
     }
     
-  found:;
-    printf("%.8lf\n",res);
+    printf("%.3lf\n",res);
   }
 }
