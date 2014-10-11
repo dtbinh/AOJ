@@ -68,11 +68,24 @@ double compute_distance(const Point& p,const Point &q){
   return abs(q-p);
 }
 
+bool is_parallel(const Point& p1, const Point& p2,
+		 const Point& q1, const Point& q2){
+  double m = compute_distance(p1,p2) * compute_distance(q1,q2);
+  if(abs(dot(p1-p2,q1-q2)) - EPS <=  m && m <= abs(dot(p1-p2,q1-q2)) + EPS){
+    return true;
+  }
+  if(abs(dot(p1-p2,q1-q2)) - EPS <=  -m && -m <= abs(dot(p1-p2,q1-q2)) + EPS){
+    return true;
+  }
+  return false;
+}
+
+
 struct State {
   int lhs;
   int rhs;
   double cost;
-  State(int l,int r,int c) : lhs(l),rhs(r),cost(c) {}
+  State(int l,int r,double c) : lhs(l),rhs(r),cost(c) {}
   bool operator<(const State& s) const {
     return cost < s.cost;
   }
@@ -93,22 +106,20 @@ struct Node {
   }
 };
 
-double dp[1001][1001];
+double dp[501][501];
 
-void disp(int next_cost,int lhs_i,int rhs_i){
-  cout << next_cost << endl;
-  cout << dp[lhs_i][rhs_i] << endl;
-  cout << lhs_i << " " << rhs_i << endl;
-
+void disp(double next_cost,int lhs_i,int rhs_i){
+  printf("lhs:%d rhs:%d cost: %lf\n",lhs_i,rhs_i,next_cost);
 }
 int main(){
   int total_points;
   while(~scanf("%d",&total_points)){
+    if(total_points == 0) break;
     set<int> height;
     vector<Node> routes;
     for(int point_i = 0; point_i < total_points; point_i++){
-      int x,y;
-      scanf("%d %d",&x,&y);
+      double x,y;
+      scanf("%lf %lf",&x,&y);
       height.insert(y);
       routes.push_back(Node(Point(x,y),true));
     }
@@ -122,6 +133,12 @@ int main(){
 			routes[route_i+1].point,
 			Point(routes[route_i].point.real(),(double)*it),
 			Point(routes[route_i+1].point.real(),(double)*it))){
+	  continue;
+	}
+	if(is_parallel(routes[route_i].point,
+		       routes[route_i+1].point,
+		       Point(routes[route_i].point.real(),(double)*it),
+		       Point(routes[route_i+1].point.real(),(double)*it))){
 	  continue;
 	}
 
@@ -147,7 +164,7 @@ int main(){
     }
 
     sort(routes.begin(),routes.end());
-    fill((double*)dp,(double*)dp+1001*1001,10000000000000.0);
+    fill((double*)dp,(double*)dp+501*501,10000000000000.0);
 
     priority_queue<State,vector<State>,greater<State> > que;
     que.push(State(0,routes.size() - 1,0.0));
@@ -157,85 +174,26 @@ int main(){
       State s = que.top();
       que.pop();
 
-      for(int lhs_i = s.lhs + 1; lhs_i < routes.size(); lhs_i++){
-	if(routes[lhs_i].is_origin){
-	  // to right
+      for(int lhs_i = s.lhs - 1; lhs_i <= s.lhs + 1; lhs_i++){
+	if(lhs_i < 0 || lhs_i >= routes.size()) continue;
+	for(int rhs_i = s.rhs - 1; rhs_i <= s.rhs + 1; rhs_i++){
+	  if(rhs_i < 0 || rhs_i >= routes.size()) continue;
+	  if(abs(routes[rhs_i].point.imag() - routes[lhs_i].point.imag()) > EPS) continue;
 
-	  for(int rhs_i = s.rhs + 1; rhs_i < routes.size(); rhs_i++){
-	    if(abs(routes[rhs_i].point.imag() - routes[lhs_i].point.imag()) < EPS){
-	      double next_cost = s.cost 
-		+ compute_distance(routes[s.lhs].point,routes[lhs_i].point)
-		+ compute_distance(routes[s.rhs].point,routes[rhs_i].point);
-	      if(next_cost < dp[lhs_i][rhs_i]){
-		disp(next_cost,lhs_i,rhs_i);
-		dp[lhs_i][rhs_i] = next_cost;
-		que.push(State(lhs_i,rhs_i,next_cost));
-	      }
-	      break;
-	    }
-	    if(routes[rhs_i].is_origin) break;
+	  double next_cost = s.cost 
+	    + compute_distance(routes[s.lhs].point,routes[lhs_i].point)
+	    + compute_distance(routes[s.rhs].point,routes[rhs_i].point);
+	  if(next_cost < dp[lhs_i][rhs_i]){
+	    dp[lhs_i][rhs_i] = next_cost;
+	    que.push(State(lhs_i,rhs_i,next_cost));
 	  }
-	  
-	  // to left
-	  for(int rhs_i = s.rhs - 1; rhs_i >= 0; rhs_i--){
-	    if(abs(routes[rhs_i].point.imag() - routes[lhs_i].point.imag()) < EPS){
-	      double next_cost = s.cost 
-		+ compute_distance(routes[s.lhs].point,routes[lhs_i].point)
-		+ compute_distance(routes[s.rhs].point,routes[rhs_i].point);
-	      if(next_cost < dp[lhs_i][rhs_i]){
-		disp(next_cost,lhs_i,rhs_i);
-		dp[lhs_i][rhs_i] = next_cost;
-		que.push(State(lhs_i,rhs_i,next_cost));
-	      }
-	      break;
-	    }
-	    if(routes[rhs_i].is_origin) break;
-	  }
-	  break;
 	}
       }
-
-      for(int lhs_i = s.lhs - 1; lhs_i >= 0; lhs_i--){
-	if(routes[lhs_i].is_origin){
-	  // to right
-	  for(int rhs_i = s.rhs + 1; rhs_i < routes.size(); rhs_i++){
-	    if(abs(routes[rhs_i].point.imag() - routes[lhs_i].point.imag()) < EPS){
-	      double next_cost = s.cost 
-		+ compute_distance(routes[s.lhs].point,routes[lhs_i].point)
-		+ compute_distance(routes[s.rhs].point,routes[rhs_i].point);
-	      if(next_cost < dp[lhs_i][rhs_i]){
-		disp(next_cost,lhs_i,rhs_i);
-		dp[lhs_i][rhs_i] = next_cost;
-		que.push(State(lhs_i,rhs_i,next_cost));
-	      }
-	      break;
-	    }
-	    if(routes[rhs_i].is_origin) break;
-	  }
-	  
-	  // to left
-	  for(int rhs_i = s.rhs - 1; rhs_i >= 0; rhs_i--){
-	    if(abs(routes[rhs_i].point.imag() - routes[lhs_i].point.imag()) < EPS){
-	      double next_cost = s.cost 
-		+ compute_distance(routes[s.lhs].point,routes[lhs_i].point)
-		+ compute_distance(routes[s.rhs].point,routes[rhs_i].point);
-	      if(next_cost < dp[lhs_i][rhs_i]){
-		disp(next_cost,lhs_i,rhs_i);
-		dp[lhs_i][rhs_i] = next_cost;
-		que.push(State(lhs_i,rhs_i,next_cost));
-	      }
-	      break;
-	    }
-	    if(routes[rhs_i].is_origin) break;
-	  }
-	  break;
-	}
-      }
-      
     }
-
+    
     double res = 10000000000000.0;
     for(int pos = 0; pos < routes.size(); pos++){
+      if(!routes[pos].is_origin) continue;
       res = min(dp[pos][pos],res);
     }
     printf("%.8lf\n",res);
