@@ -106,21 +106,21 @@ struct Node {
   }
 };
 
-double dp[501][501];
-
 void disp(double next_cost,int lhs_i,int rhs_i){
   printf("lhs:%d rhs:%d cost: %lf\n",lhs_i,rhs_i,next_cost);
 }
+
 int main(){
   int total_points;
   while(~scanf("%d",&total_points)){
     if(total_points == 0) break;
+    map<int,bool> dp[100001];
     set<int> height;
     vector<Node> routes;
     for(int point_i = 0; point_i < total_points; point_i++){
       double x,y;
       scanf("%lf %lf",&x,&y);
-      height.insert(y);
+      height.insert((int)(y+EPS));
       routes.push_back(Node(Point(x,y),true));
     }
     
@@ -164,38 +164,37 @@ int main(){
     }
 
     sort(routes.begin(),routes.end());
-    fill((double*)dp,(double*)dp+501*501,10000000000000.0);
-
     priority_queue<State,vector<State>,greater<State> > que;
     que.push(State(0,routes.size() - 1,0.0));
     dp[0][routes.size()-1] = 0.0;
 
+    double res = 0.0;
     while(!que.empty()){
       State s = que.top();
       que.pop();
 
       for(int lhs_i = s.lhs - 1; lhs_i <= s.lhs + 1; lhs_i++){
-	if(lhs_i < 0 || lhs_i >= routes.size()) continue;
-	for(int rhs_i = s.rhs - 1; rhs_i <= s.rhs + 1; rhs_i++){
-	  if(rhs_i < 0 || rhs_i >= routes.size()) continue;
-	  if(abs(routes[rhs_i].point.imag() - routes[lhs_i].point.imag()) > EPS) continue;
+    	if(lhs_i < 0 || lhs_i >= routes.size()) continue;
+    	for(int rhs_i = s.rhs - 1; rhs_i <= s.rhs + 1; rhs_i++){
+    	  if(rhs_i < 0 || rhs_i >= routes.size()) continue;
+    	  if(abs(routes[rhs_i].point.imag() - routes[lhs_i].point.imag()) > EPS) continue;
 
-	  double next_cost = s.cost 
-	    + compute_distance(routes[s.lhs].point,routes[lhs_i].point)
-	    + compute_distance(routes[s.rhs].point,routes[rhs_i].point);
-	  if(next_cost < dp[lhs_i][rhs_i]){
-	    dp[lhs_i][rhs_i] = next_cost;
-	    que.push(State(lhs_i,rhs_i,next_cost));
-	  }
-	}
+    	  double next_cost = s.cost 
+    	    + compute_distance(routes[s.lhs].point,routes[lhs_i].point)
+    	    + compute_distance(routes[s.rhs].point,routes[rhs_i].point);
+    	  if(dp[lhs_i].find(rhs_i) == dp[lhs_i].end()){
+    	    dp[lhs_i][rhs_i] = true;
+	    if(lhs_i == rhs_i && routes[lhs_i].is_origin){
+	      res = next_cost;
+	      goto found;
+	    }
+    	    que.push(State(lhs_i,rhs_i,next_cost));
+    	  }
+    	}
       }
     }
     
-    double res = 10000000000000.0;
-    for(int pos = 0; pos < routes.size(); pos++){
-      if(!routes[pos].is_origin) continue;
-      res = min(dp[pos][pos],res);
-    }
+  found:;
     printf("%.8lf\n",res);
   }
 }
