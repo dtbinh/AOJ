@@ -1,5 +1,6 @@
 #define _USE_MATH_DEFINES
 #define INF 0x3f3f3f3f
+#define MINF 0xc0c0c0c0
 
 #include <iostream>
 #include <cstdio>
@@ -76,7 +77,7 @@ int main(){
 	       &total_queries)){
     
     UnionFindTree uft(total_players+1);
-    memset(power,0,sizeof(power));
+    memset(power,0xc0,sizeof(power));
 
     for(int query_i = 0; query_i <total_queries; query_i++){
       string command;
@@ -86,9 +87,26 @@ int main(){
 	int up;
 	cin >> players[0] >> players[1] >> up;
 
-	power[players[1]] = power[players[0]] + up;
-	power[players[1]] += up;
-	power[players[0]] += up;
+	if(power[players[0]] == MINF && power[players[1]] == MINF){
+	  power[players[0]] = power[players[1]] = 0;
+	  power[players[1]] = power[players[0]] + up;
+	  power[players[1]] += up;
+	  power[players[0]] += up;
+	}
+	else if(power[players[0]] == MINF && power[players[1]] != MINF){
+	  power[players[0]] = power[players[1]] - up;
+	  power[players[1]] += up;
+	  power[players[0]] += up;
+	}
+	else if(power[players[0]] != MINF && power[players[1]] == MINF){
+	  power[players[1]] = power[players[0]] + up;
+	  power[players[1]] += up;
+	  power[players[0]] += up;
+	}
+	else if(power[players[0]] != MINF && power[players[1]] != MINF){
+	  power[players[1]] += up;
+	  power[players[0]] += up;
+	}
 	
 	uft.unite(players[0],players[1]);
       }
