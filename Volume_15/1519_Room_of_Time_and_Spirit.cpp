@@ -1,6 +1,5 @@
 #define _USE_MATH_DEFINES
 #define INF 0x3f3f3f3f
-#define MINF 0xc0c0c0c0
 
 #include <iostream>
 #include <cstdio>
@@ -32,42 +31,63 @@ static const double EPS = 1e-8;
 static const int tx[] = {0,1,0,-1};
 static const int ty[] = {-1,0,1,0};
 
+int power[100001];
+
+struct Node{
+  int par;
+  int diff;
+  Node() : par(0),diff(0) {}
+  Node(int p,int d) : par(p),diff(d) {}
+};
+
 class UnionFindTree {
 private:
-  int* par;
+  Node* nodes;
 public:
   UnionFindTree(int n){
-    par = new int[n]();
+    nodes = new Node[n]();
     for(int i=0;i<n;i++){
-      par[i] = i;
+      nodes[i].par = i;
     }
   }
 
   ~UnionFindTree(){
-    delete[] par;
+    delete[] nodes;
   }
 
-  int find(int x){
-    if(par[x] == x){
-      return x;
+  Node find(int x){
+    if(nodes[x].par == x){
+      return nodes[x];
     } else {
-      return par[x] = find(par[x]);
+      Node ret = find(nodes[x].par);
+      return nodes[x] = Node(ret.par,ret.diff + nodes[x].diff);
     }
   }
 
-  void unite(int x,int y){
-    x = find(x);
-    y = find(y);
-    if (x == y) return;
-    par[x] = y;
+  void unite(int x,int y,int up){
+    Node rx = find(x);
+    Node ry = find(y);
+    if (rx.par == ry.par){
+      return;
+    }
+
+    //rx.par == rx
+    //ry.par == ry
+    nodes[rx.par].par = ry.par;
+    nodes[rx.par].diff = (power[y] - power[x] - up) + (ry.diff - rx.diff);
+  }
+
+  int dist(int x,int y){
+    Node rx = find(x);
+    Node ry = find(y);
+    if(rx.par != ry.par) return INF;
+    return (ry.diff - rx.diff) + (power[y] - power[x]);
   }
 
   bool same(int x,int y){
-    return find(x) == find(y);
+    return find(x).par == find(y).par;
   }
 };
-
-int power[100001];
 
 int main(){
   int total_players;
@@ -77,8 +97,7 @@ int main(){
 	       &total_queries)){
     
     UnionFindTree uft(total_players+1);
-    memset(power,0xc0,sizeof(power));
-
+    memset(power,0,sizeof(power));
     for(int query_i = 0; query_i <total_queries; query_i++){
       string command;
       cin >> command;
@@ -86,29 +105,9 @@ int main(){
 	int players[2];
 	int up;
 	cin >> players[0] >> players[1] >> up;
-
-	if(power[players[0]] == MINF && power[players[1]] == MINF){
-	  power[players[0]] = power[players[1]] = 0;
-	  power[players[1]] = power[players[0]] + up;
-	  power[players[1]] += up;
-	  power[players[0]] += up;
-	}
-	else if(power[players[0]] == MINF && power[players[1]] != MINF){
-	  power[players[0]] = power[players[1]] - up;
-	  power[players[1]] += up;
-	  power[players[0]] += up;
-	}
-	else if(power[players[0]] != MINF && power[players[1]] == MINF){
-	  power[players[1]] = power[players[0]] + up;
-	  power[players[1]] += up;
-	  power[players[0]] += up;
-	}
-	else if(power[players[0]] != MINF && power[players[1]] != MINF){
-	  power[players[1]] += up;
-	  power[players[0]] += up;
-	}
-	
-	uft.unite(players[0],players[1]);
+	power[players[0]] += up;
+	power[players[1]] += up;
+	uft.unite(players[0],players[1],up);
       }
       else if(command == "COMPARE"){
 	int players[2];
@@ -117,7 +116,7 @@ int main(){
 	  printf("WARNING\n");
 	}
 	else{
-	  printf("%d\n",power[players[1]] - power[players[0]]);
+	  printf("%d\n",uft.dist(players[0],players[1]));
 	}
       }
     }
