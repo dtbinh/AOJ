@@ -34,49 +34,72 @@ bool visited[20][20][20][20][10];
 int gTime = 0;
 int rx,ry;
 
-void dfs(int sx,int sy,int gx,int gy,int time){
-  int pattern_i = time % ghost.size();
-  if(ghost[pattern_i] == '5'){
-    //nothing to do
+class State {
+public:
+  int _sx,_sy,_gx,_gy,_time;
+  State(int sx,int sy,int gx,int gy,int time) : 
+    _sx(sx),_sy(sy),_gx(gx),_gy(gy),_time(time) {}
+  bool operator<(const State &s) const {
+    return _time < s._time;
   }
-  else if(ghost[pattern_i] == '8' && gy - 1 >= 0){
-    gy--;
+  bool operator>(const State &s) const {
+    return _time > s._time;
   }
-  else if(ghost[pattern_i] == '6' && gx + 1 < W){
-    gx++;
-  }
-  else if(ghost[pattern_i] == '4' && gx - 1 >= 0){
-    gx--;
-  }
-  else if(ghost[pattern_i] == '2' && gy + 1 < H){
-    gy++;
-  }
+};
 
-  if(!visited[sx][sy][gx][gy][pattern_i]){
-    visited[sx][sy][gx][gy][pattern_i] = true;
-    if(sx == gx && sy == gy && gTime > time){
-      gTime = time;
-      rx = gx;
-      ry = gy;
-      return;
-    }
-    dfs(sx,sy,gx,gy,time+1);
-  }
-  for(int i = 0; i < 4; i++){
-    int dx = tx[i] + sx;
-    int dy = ty[i] + sy;
-    if(dx < 0 || dx >= W || dy < 0 || dy >= H) continue;
-    if(stage[dy][dx] == '#') continue;
-    if(visited[dx][dy][gx][gy][pattern_i]) continue;
+void bfs(int sx,int sy,int gx,int gy){
+  State init(sx,sy,gx,gy,0);
+  
+  priority_queue<State,vector<State>,greater<State> > que;
+  que.push(init);
 
-    visited[dx][dy][gx][gy][pattern_i] = true;
-    if(dx == gx && dy == gy && gTime > time){
-      gTime = time;
-      rx = gx;
-      ry = gy;
-      return;
+  while(!que.empty()){
+    State s = que.top();
+    que.pop();
+
+    int pattern_i = s._time % ghost.size();
+    if(ghost[pattern_i] == '5'){
+      //nothing to do
     }
-    dfs(dx,dy,gx,gy,time+1);
+    else if(ghost[pattern_i] == '8' && s._gy - 1 >= 0){
+      s._gy--;
+    }
+    else if(ghost[pattern_i] == '6' && s._gx + 1 < W){
+      s._gx++;
+    }
+    else if(ghost[pattern_i] == '4' && s._gx - 1 >= 0){
+      s._gx--;
+    }
+    else if(ghost[pattern_i] == '2' && s._gy + 1 < H){
+      s._gy++;
+    }
+
+    if(!visited[s._sx][s._sy][s._gx][s._gy][pattern_i]){
+      visited[s._sx][s._sy][s._gx][s._gy][pattern_i] = true;
+      if(s._sx == s._gx && s._sy == s._gy && gTime > s._time){
+	gTime = s._time;
+	rx = s._gx;
+	ry = s._gy;
+	return;
+      }
+      que.push(State(sx,sy,s._gx,s._gy,s._time+1));
+    }
+    for(int i = 0; i < 4; i++){
+      int dx = tx[i] + s._sx;
+      int dy = ty[i] + s._sy;
+      if(dx < 0 || dx >= W || dy < 0 || dy >= H) continue;
+	 if(stage[dy][dx] == '#') continue;
+	 if(visited[dx][dy][s._gx][s._gy][pattern_i]) continue;
+	 
+	 visited[dx][dy][s._gx][s._gy][pattern_i] = true;
+	 if(dx == s._gx && dy == s._gy && gTime > s._time){
+	   gTime = s._time;
+	   rx = s._gx;
+	   ry = s._gy;
+	   return;
+	 }
+	 que.push(State(dx,dy,s._gx,s._gy,s._time+1));
+    }
   }
 }
 
@@ -106,10 +129,10 @@ int main(){
     cin >> ghost;
     rx = -1;
     ry = -1;
-    dfs(sx,sy,gx,gy,0);
+    bfs(sx,sy,gx,gy);
     
     if(gTime == INF){
-      printf("Impossible\n");
+      printf("impossible\n");
     }
     else{
       printf("%d %d %d\n",gTime + 1,ry,rx);
