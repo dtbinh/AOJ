@@ -27,39 +27,69 @@ static const double EPS = 1e-8;
  
 const int tx[] = {0,1,0,-1};
 const int ty[] = {-1,0,1,0};
- 
+
+ll GCD(ll a ,ll b){
+  return b > 0 ? GCD(b,a%b) : a;
+}
+
+ll LCM(ll a ,ll b){
+  return a / GCD(a,b) * b;
+}
+
 int main(){
-  int limit;
+  ll limit;
   int total_requirements;
-  while(~scanf("%d %d",&limit,&total_requirements)){
+  while(~scanf("%lld %d",&limit,&total_requirements)){
     if(limit == 0 && total_requirements == 0) break;
-    vector<int> requirements;
+    vector<ll> requirements;
     for(int require_i = 0; require_i < total_requirements; require_i++){
-      int num;
-      scanf("%d",&num);
+      ll num;
+      scanf("%lld",&num);
       requirements.push_back(num);
     }
-
     sort(requirements.begin(),requirements.end());
 
-    double exp = 0.0;
-    double sum = EPS;
-    map<int,int> can_make;
-    for(int round = 0; round < 100000000; round++){
-      int year = rand() % limit + 1;
-      bool can_make = true;
-      for(int require_i = 0; require_i < requirements.size(); require_i++){
-	if(requirements[require_i] > year) break;
-	if(year % requirements[require_i] == 0){
-	  can_make = false;
-	  break;
-	}
+    ll gain = limit * (1LL + limit) / 2;
+    ll lost = 0;
+    ll remaining_items = limit;
+    for(int i=0;i<requirements.size();i++){
+      bool is_already_computed = false;
+      for(int j=0;j<i;j++){
+      	if(requirements[i] % requirements[j] == 0){
+      	  is_already_computed = true;
+      	  break;
+      	}
       }
-      if(!can_make) continue;
-      sum += 1.0;
-      exp += (double)year;
+      
+      if(!is_already_computed){
+	ll first_item = requirements[i];
+	ll num_of_item = limit / requirements[i];
+	ll last_item= num_of_item * requirements[i];
+	remaining_items -= num_of_item;
+	lost += num_of_item * (first_item + last_item) / 2;
+      }
     }
 
-    printf("%lf\n",exp / sum);
+    for(int i=0;i<requirements.size();i++){
+      if(i == 0 && requirements[i] == 1) break;
+
+      for(int j=i+1;j<requirements.size();j++){
+	ll lcm = LCM(requirements[i],requirements[j]);
+	if(lcm == requirements[j]) continue;
+
+	ll first_item = lcm;
+	ll num_of_item = limit / lcm;
+	ll last_item= num_of_item * lcm;
+	remaining_items += num_of_item;
+	lost -= num_of_item * (first_item + last_item) / 2;
+      }
+    }
+
+    if(remaining_items == 0){
+      printf("%.5lf\n",0);
+    }
+    else{
+      printf("%.5lf\n",(double)(gain - lost)/(double)remaining_items);
+    }
   }
 }
