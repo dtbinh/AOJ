@@ -70,11 +70,12 @@ int main(){
       }
     }
 
+    map<ll,bool> visited;
     for(int i=0;i<requirements.size();i++){
-      if(i == 0 && requirements[i] == 1) break;
-
+      if(visited[requirements[i]]) continue;
       for(int j=i+1;j<requirements.size();j++){
 	ll lcm = LCM(requirements[i],requirements[j]);
+	visited[lcm] = true;
 	if(lcm == requirements[j]) continue;
 
 	ll first_item = lcm;
@@ -86,10 +87,10 @@ int main(){
     }
 
     if(remaining_items == 0){
-      printf("%.5lf\n",0);
+      printf("%.8lf\n",0);
     }
     else{
-      printf("%.5lf\n",(double)(gain - lost)/(double)remaining_items);
+      printf("%.8lf\n",(double)(gain - lost)/(double)remaining_items);
     }
   }
 }
