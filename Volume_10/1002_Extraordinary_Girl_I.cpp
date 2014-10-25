@@ -29,13 +29,13 @@ const int tx[] = {+0,+0,+1};
 const int ty[] = {-1,+1,+0};
 
 int nodes[5][20001];
-int dp[1<<2][20001][5]; //dp[book_state][x][y];
+int dp[1<<5][20001][5]; //dp[book_state][x][y];
 
 int compute_book_state(int x){
   int res = 0;
   for(int y = 1,i=0; y < 5; y+=2,i++){
     if(nodes[y][x] == 1){
-      res |= (1<<i);
+      res |= (1<<y);
     }
   }
   return res;
@@ -43,11 +43,72 @@ int compute_book_state(int x){
 
 int shelves_per_line;
 
+struct State{
+  int x;
+  int y;
+  int cost;
+  int book_state;
+  State(int x,int y,int cost,int book_state) :
+    x(x),y(y),cost(cost),book_state(book_state) {}
+  bool operator<(const State& s) const {
+    return cost < s.cost;
+  }
+  bool operator>(const State& s) const {
+    return cost > s.cost;
+  }
+};
+
+int bfs(){
+  
+  priority_queue<State,vector<State>,greater<State> > que;
+  que.push(State(0,0,0,compute_book_state(0)));
+	   
+  while(!que.empty()){
+    State s = que.top();
+    que.pop();
+    int sx = s.x;
+    int sy = s.y;
+    int cost = s.cost;
+    for(int i=0;i<3;i++){
+      int dx = sx + tx[i];
+      int dy = sy + ty[i];
+      if(dy < 0 || dy >= 5 || dx > shelves_per_line) continue;
+      
+      if(i < 2){
+	if(s.book_state & (1<<dy)){
+	  int next_book_state = (s.book_state & ~(1<<dy));
+	  if(dp[next_book_state][dx][dy] > cost + abs(sy - dy)){
+	    dp[next_book_state][dx][dy] = cost + abs(sy - dy);
+	    que.push(State(dx,dy,cost + abs(sy - dy),next_book_state));
+	  }
+	}
+	else{
+	  if(dp[s.book_state][dx][dy] > cost + abs(sy - dy)){
+	    dp[s.book_state][dx][dy] = cost + abs(sy - dy);
+	    que.push(State(dx,dy,cost + abs(sy - dy),s.book_state));
+	  }
+	}
+      }
+      
+      else{
+	if(sy % 2 == 1) continue;
+	if(s.book_state != 0) continue;
+	
+	int next_book_state = compute_book_state(dx);
+	if(dp[next_book_state][dx][dy] > cost + 2){
+	  dp[next_book_state][dx][dy] = cost + 2;
+	  que.push(State(dx,dy,cost + 2,next_book_state));
+	}
+      }
+    }
+  }
+}
+
 int dfs(int sx,int sy,int cost){
   for(int i=0;i<3;i++){
     int dx = sx + tx[i];
     int dy = sy + ty[i];
-    if(dy < 0 || dy >= 5 || dx > shelves_per_line * 2) continue;
+    if(dy < 0 || dy >= 5 || dx > shelves_per_line) continue;
 
     if(i < 2){
       if(nodes[dy][dx] == 1){
@@ -118,9 +179,9 @@ int main(){
       memset(dp,0x3f,sizeof(dp));
       int book_state = compute_book_state(0);
       dp[book_state][0][0] = 0;
-      dfs(0,0,0);
+      bfs();
 
-      cout << dp[0][shelves_per_line][0] / 2<< endl;
+      printf("%d\n",dp[0][shelves_per_line][0] / 2);
     }
   }
 }
