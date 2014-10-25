@@ -28,8 +28,8 @@ static const double EPS = 1e-8;
 const int tx[] = {+0,+0,+1};
 const int ty[] = {-1,+1,+0};
 
-int nodes[1001][1001];
-int dp[1<<2][100001][5]; //dp[book_state][x][y];
+int nodes[5][20001];
+int dp[1<<2][20001][5]; //dp[book_state][x][y];
 
 int compute_book_state(int x){
   int res = 0;
