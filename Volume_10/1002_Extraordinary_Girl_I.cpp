@@ -25,11 +25,11 @@ typedef pair <int,P> PP;
  
 static const double EPS = 1e-8;
  
-const int tx[] = {+0,+0};
-const int ty[] = {-1,+1};
+const int tx[] = {+0,+0,+1};
+const int ty[] = {-1,+1,+0};
 
 int nodes[1001][1001];
-int dp[1<<2][100001][3]; //dp[book_state][x][y];
+int dp[1<<2][100001][5]; //dp[book_state][x][y];
 
 int compute_book_state(int x){
   int res = 0;
@@ -41,51 +41,45 @@ int compute_book_state(int x){
   return res;
 }
 
+int shelves_per_line;
+
 int dfs(int sx,int sy,int cost){
-  if(sx > 100000) return 0;
-  bool has_book = false;
-  for(int y = 0; y < 5; y++){
-    if(nodes[y][sx] == 1){
-      has_book = true;
-    }
-  }
-  
-  if(!has_book){
-    for(int y = 0; y < 5; y++){
-      if(y % 2 != 0) continue;
-      int book_state = compute_book_state(sx+1);
-      if(dp[book_state][sx+1][y] > cost + abs(y - sy) + 2){
-	dp[book_state][sx+1][y] = cost + abs(y - sy) + 2;
-	dfs(sx+1,y,cost + abs(y - sy) + 2);
-      }
-    }
-  }
+  for(int i=0;i<3;i++){
+    int dx = sx + tx[i];
+    int dy = sy + ty[i];
+    if(dy < 0 || dy >= 5 || dx > shelves_per_line * 2) continue;
 
-  else{
-    
-    for(int i=0;i<2;i++){
-      int dy = sy + ty[i];
-      if(dy < 0 || dy >= 5) continue;
-
-      if(nodes[dy][sx] == 1){
-	nodes[dy][sx] = 0;
-	int book_state = compute_book_state(sx);
-	if(dp[book_state][sx][dy] <= cost + abs(sy - dy)){
-	  nodes[dy][sx] = 1;
+    if(i < 2){
+      if(nodes[dy][dx] == 1){
+	nodes[dy][dx] = 0;
+	int book_state = compute_book_state(dx);
+	if(dp[book_state][dx][dy] <= cost + abs(sy - dy)){
+	  nodes[dy][dx] = 1;
 	  continue;
 	}
 	
-	dp[book_state][sx][dy] = cost + abs(sy - dy);
-	dfs(sx,dy,cost + abs(sy - dy));
-	nodes[dy][sx] = 1;
+	dp[book_state][dx][dy] = cost + abs(sy - dy);
+	dfs(dx,dy,cost + abs(sy - dy));
+	nodes[dy][dx] = 1;
       }
-
       else{
-	int book_state = compute_book_state(sx);
-	if(dp[book_state][sx][dy] > cost + abs(sy - dy)){
-	  dp[book_state][sx][dy] = cost + abs(sy - dy);
-	  dfs(sx,dy,cost + abs(sy - dy));
+	int book_state = compute_book_state(dx);
+	if(dp[book_state][dx][dy] > cost + abs(sy - dy)){
+	  dp[book_state][dx][dy] = cost + abs(sy - dy);
+	  dfs(dx,dy,cost + abs(sy - dy));
 	}
+      }
+    }
+
+    else{
+      int current_book_state = compute_book_state(sx);
+      if(sy % 2 == 1) continue;
+      if(current_book_state != 0) continue;
+
+      int next_book_state = compute_book_state(dx);
+      if(dp[next_book_state][dx][dy] > cost + 2){
+	dp[next_book_state][dx][dy] = cost + 2;
+	dfs(dx,dy,cost + 2);
       }
     }
   }
@@ -95,7 +89,6 @@ int main(){
   int num_of_test_cases;
   while(~scanf("%d",&num_of_test_cases)){
     for(int case_i = 0; case_i < num_of_test_cases; case_i++){
-      int shelves_per_line;
       scanf("%d",&shelves_per_line);
       string shelves;
       cin >> shelves;
@@ -123,18 +116,11 @@ int main(){
       }
 
       memset(dp,0x3f,sizeof(dp));
-      for(int y = 0; y < 5; y++){
-	for(int x = 0; x < 10; x++){
-	  printf("%d ",nodes[y][x]);
-	}
-	printf("\n");
-      }
-      printf("\n");
       int book_state = compute_book_state(0);
       dp[book_state][0][0] = 0;
       dfs(0,0,0);
 
-      cout << dp[0][shelves_per_line][0] << endl;
+      cout << dp[0][shelves_per_line][0] / 2<< endl;
     }
   }
 }
