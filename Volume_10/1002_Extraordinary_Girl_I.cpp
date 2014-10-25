@@ -58,7 +58,7 @@ struct State{
   }
 };
 
-int bfs(){
+void bfs(){
   
   priority_queue<State,vector<State>,greater<State> > que;
   que.push(State(0,0,0,compute_book_state(0)));
@@ -104,48 +104,6 @@ int bfs(){
   }
 }
 
-int dfs(int sx,int sy,int cost){
-  for(int i=0;i<3;i++){
-    int dx = sx + tx[i];
-    int dy = sy + ty[i];
-    if(dy < 0 || dy >= 5 || dx > shelves_per_line) continue;
-
-    if(i < 2){
-      if(nodes[dy][dx] == 1){
-	nodes[dy][dx] = 0;
-	int book_state = compute_book_state(dx);
-	if(dp[book_state][dx][dy] <= cost + abs(sy - dy)){
-	  nodes[dy][dx] = 1;
-	  continue;
-	}
-	
-	dp[book_state][dx][dy] = cost + abs(sy - dy);
-	dfs(dx,dy,cost + abs(sy - dy));
-	nodes[dy][dx] = 1;
-      }
-      else{
-	int book_state = compute_book_state(dx);
-	if(dp[book_state][dx][dy] > cost + abs(sy - dy)){
-	  dp[book_state][dx][dy] = cost + abs(sy - dy);
-	  dfs(dx,dy,cost + abs(sy - dy));
-	}
-      }
-    }
-
-    else{
-      int current_book_state = compute_book_state(sx);
-      if(sy % 2 == 1) continue;
-      if(current_book_state != 0) continue;
-
-      int next_book_state = compute_book_state(dx);
-      if(dp[next_book_state][dx][dy] > cost + 2){
-	dp[next_book_state][dx][dy] = cost + 2;
-	dfs(dx,dy,cost + 2);
-      }
-    }
-  }
-}
-
 int main(){
   int num_of_test_cases;
   while(~scanf("%d",&num_of_test_cases)){
@@ -162,7 +120,7 @@ int main(){
 	      nodes[y][x] = 1;
 	    }
 	  }
-	  if(x == shelves_per_line){
+	  else if(x == shelves_per_line){
 	    if(shelves[(i * shelves_per_line * 2) + (shelves_per_line * 2 - 1)] == 'Y'){
 	      nodes[y][x] = 1;
 	    }
@@ -181,7 +139,7 @@ int main(){
       dp[book_state][0][0] = 0;
       bfs();
 
-      printf("%d\n",dp[0][shelves_per_line][0] / 2);
+      printf("%d\n",dp[0][shelves_per_line][0]/2);
     }
   }
 }
