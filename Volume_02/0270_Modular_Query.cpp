@@ -36,27 +36,28 @@ int main(){
 	       &total_questions)){
 
     memset(cards,false,sizeof(cards));
+    
+    int tmp_max = 0;
     for(int card_i = 0; card_i < total_cards; card_i++){
       int card;
       scanf("%d",&card);
       cards[card] = true;
     }
-    sort(cards,cards + total_cards);
 
     for(int question_i = 0; question_i < total_questions; question_i++){
-      int question;
-      scanf("%d",&question);
-      int max_card = 0;
-      for(int target = question - 1; target >= 1; target--){
-	for(int i = target; i <= 300000; i+= question){
+      int divisor;
+      scanf("%d",&divisor);
+      int res = 0;
+      for(int target = divisor - 1; target >= 0; target--){
+	for(int i = target; i <= 300000; i+= divisor){
 	  if(cards[i]){
-	    max_card = i;
+	    res = target;
 	    goto found;
 	  }
 	}
       }
     found:;
-      printf("%d\n",max_card % question);
+      printf("%d\n",res);
     }
   }
 }
