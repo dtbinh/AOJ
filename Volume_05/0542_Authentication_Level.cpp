@@ -53,6 +53,7 @@ int main(){
     int elevator_y[2];
     int W[2];
     int H[2];
+    vector<int> auth_candidates;
     for(int office_i = 0; office_i < 2; office_i++){
       scanf("%d %d %d %d",&W[office_i],&H[office_i],
 	    &elevator_x[office_i],&elevator_y[office_i]);
@@ -62,31 +63,45 @@ int main(){
       for(int y = 0; y < H[office_i]; y++){
 	for(int x = 0; x < W[office_i]; x++){
 	  scanf("%d",&rooms[office_i][y][x]);
+	  if(office_i == 1){
+	    auth_candidates.push_back(rooms[office_i][y][x]);
+	  }
 	}
       }
     }
 
+    int res = 1000000000;
     int lhs = 0; 
     int rhs = 1000000000;
-    for(int round = 0; round < 50; round++){
-      int mid = lhs + (rhs - lhs) / 2;
-
-      int sum = 0;
-      for(int office_i = 0; office_i < 2; office_i++){
-	memset(visited,false,sizeof(visited));
-	sum += dfs(elevator_x[office_i],
-		   elevator_y[office_i],
-		   W[office_i],H[office_i],mid,office_i);
-      }
-
-      if(sum < have_to_visit_rooms){
-	lhs = mid;
-      }
-      else{
-	rhs = mid;
+    for(int auth_i = 0; auth_i < auth_candidates.size(); auth_i++){
+      int first_auth = auth_candidates[auth_i];
+      for(int round = 0; round < 50; round++){
+	int mid = lhs + (rhs - lhs) / 2;
+	int sum = 0;
+	for(int office_i = 0; office_i < 2; office_i++){
+	  memset(visited,false,sizeof(visited));
+	  if(office_i == 0){
+	    sum += dfs(elevator_x[office_i],
+		       elevator_y[office_i],
+		       W[office_i],H[office_i],mid,office_i);
+	  }
+	  else{
+	    sum += dfs(elevator_x[office_i],
+		       elevator_y[office_i],
+		       W[office_i],H[office_i],first_auth,office_i);
+	  }
+	}
+	
+	if(sum < have_to_visit_rooms){
+	  lhs = mid;
+	}
+	else{
+	  rhs = mid;
+	  res = min(rhs + first_auth,res);	  
+	}
       }
     }
 
-    printf("%d\n",rhs);
+    printf("%d\n",res);
   }
 }
