@@ -70,12 +70,17 @@ int main(){
       }
     }
 
+    sort(auth_candidates.begin(),auth_candidates.end());
+    auth_candidates.erase(unique(auth_candidates.begin(),auth_candidates.end()),
+			  auth_candidates.end());
     int res = 1000000000;
-    int lhs = 0; 
-    int rhs = 1000000000;
     for(int auth_i = 0; auth_i < auth_candidates.size(); auth_i++){
       int first_auth = auth_candidates[auth_i];
-      for(int round = 0; round < 50; round++){
+
+      int lhs = 0; 
+      int rhs = 1000000000;
+
+      for(int round = 0; round < 30; round++){
 	int mid = lhs + (rhs - lhs) / 2;
 	int sum = 0;
 	for(int office_i = 0; office_i < 2; office_i++){
