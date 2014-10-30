@@ -51,6 +51,21 @@ int main(){
   string fact;
   while(cin >> base >> fact){
     if(base == 0 && fact == "0") break;
-    cout << conv(base,fact) << endl;
+    unsigned long long num = conv(base,fact);
+    int count[6] = {};
+    while(num > 0){
+      unsigned long long tmp = num;
+      while(tmp % 2 == 0){
+	tmp /= 2;
+	count[2]++;
+      }
+      while(tmp % 5 == 0){
+	tmp /= 5;
+	count[5]++;
+      }
+      num--;
+    }
+
+    printf("%d\n",min(count[2],count[5]));
   }
 }
