@@ -32,9 +32,9 @@ static const double EPS = 1e-8;
 
 unsigned long long conv(int base,const string& fact){
   unsigned long long res = 0;
-  unsigned long long digit = 1;
+  unsigned long long digit = 1ULL;
   for(int i = fact.size() - 1; i >= 0; i--){
-    if('A' <= fact[i] &&  fact[i] <= 'Z'){
+    if('A' <= fact[i] && fact[i] <= 'Z'){
       res += (fact[i] - 'A' + 10) * digit;
       digit *= base;
     }
@@ -51,21 +51,29 @@ int main(){
   string fact;
   while(cin >> base >> fact){
     if(base == 0 && fact == "0") break;
-    unsigned long long num = conv(base,fact);
-    int count[6] = {};
-    while(num > 0){
-      unsigned long long tmp = num;
-      while(tmp % 2 == 0){
-	tmp /= 2;
-	count[2]++;
+    unsigned long long init = conv(base,fact);
+    unsigned long long prime_factor[37] = {};
+    for(int i = 2; i <= base; i++){
+      while(base % i == 0){
+	prime_factor[i]++;
+	base /= i;
       }
-      while(tmp % 5 == 0){
-	tmp /= 5;
-	count[5]++;
-      }
-      num--;
     }
 
-    printf("%d\n",min(count[2],count[5]));
+    unsigned long long res = numeric_limits<unsigned long long>::max();
+    for(unsigned long long i = 2; i <= 36; i++){
+      if(prime_factor[i] == 0) continue;
+      unsigned long long count = 0;
+      unsigned long long tmp = init;
+
+      while(tmp > 0){
+	count += tmp / i;
+	tmp /= i;
+      }
+      res = min(res,count / prime_factor[i]);
+    }
+
+    if(res == numeric_limits<unsigned long long>::max()) res = 0;    
+    cout << res << endl;
   }
 }
