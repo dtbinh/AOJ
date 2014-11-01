@@ -30,7 +30,54 @@ int ty[] = {-1,0,1,0};
  
 static const double EPS = 1e-12;
 
-double dp[1<<21][21];
+class Compare {
+  int monster_x;
+  int monster_y;
+public:
+  Compare(int monster_x,int monster_y)
+    : monster_x(monster_x), monster_y(monster_y) {}
+  bool operator()(const P& ci,const P& cj) const{
+    int dist_i = (ci.first - monster_x) * (ci.first - monster_x)
+      + (ci.second - monster_y) * (ci.second - monster_y);
+    int dist_j = (cj.first - monster_x) * (cj.first - monster_x)
+      + (cj.second - monster_y) * (cj.second - monster_y);
+    return dist_i < dist_j;
+  }
+};
+
+class State{
+  int x;
+  int y;
+  double dist;
+};
+
+bool dfs(int hero_x,
+	 int hero_y,
+	 double current_time,
+	 int S,
+	 int monster_x,
+	 int monster_y,
+	 const vector<P>& cristals){
+  bool res = false;
+
+  if(S == (1<<cristals.size()) - 1) return true;
+  for(int i=0;i<cristals.size();i++){
+    if(S & (1<<i)) continue;
+    double add_time = sqrt((hero_x - cristals[i].first) * (hero_x - cristals[i].first)
+			   + (hero_y - cristals[i].second) * (hero_y - cristals[i].second));
+    
+    double impurity_arrive_time = sqrt((monster_x - cristals[i].first) * (monster_x - cristals[i].first)
+				       + (monster_y - cristals[i].second) * (monster_y - cristals[i].second));
+    if(current_time + add_time >= impurity_arrive_time){
+      return false;
+    }
+    
+    res |= dfs(cristals[i].first,cristals[i].second,current_time + add_time,
+	       S | (1<<i),monster_x,monster_y,cristals);
+    if(res) return res;
+  }
+  return res;
+}
 
 int main(){
   int total_cristals;
@@ -47,42 +94,14 @@ int main(){
     if(total_cristals == 0 && hero_x == 0 && hero_y == 0
        && monster_x == 0 && monster_y == 0) break;
     vector<P> cristals;
-    cristals.push_back(P(hero_x,hero_y));
     for(int cristal_i = 0; cristal_i < total_cristals; cristal_i++){
       int x,y;
       scanf("%d %d",&x,&y);
       cristals.push_back(P(x,y));
     }
-    fill((double*)dp,(double*)dp + (1<<21) * 21,1000000000000);
-    dp[(1<<0)][0] = 0;
-    for(int S = 0; S < (1<<cristals.size()); S++){
-      for(int from = 0; from < cristals.size(); from++){
-	if(!(S & (1<<from))) continue;
-	for(int to = 0; to < cristals.size(); to++){
-	  if(S & (1<<to)) continue;
-	  double diff_x = cristals[from].first - cristals[to].first;
-	  double diff_y = cristals[from].second - cristals[to].second;
-	  double dist = sqrt(diff_x * diff_x + diff_y * diff_y); 
-
-	  double impurity = 
-	    sqrt((monster_x - cristals[to].first) * (monster_x - cristals[to].first)
-		 + (monster_y - cristals[to].second) * (monster_y - cristals[to].second));
-	  if(impurity > dp[S][from] + dist){
-	    dp[S | (1<<to)][to] = min(dp[S][from] + dist,
-				      dp[S | (1<<to)][to]);
-	  }
-	}
-      }
-    }
-    
-    bool res = false;
-    for(int to = 0; to < cristals.size(); to++){
-      if(dp[(1<<cristals.size()) - 1][to] < 1000000000000){
-	res = true;
-	break;
-      }
-    }
-
-    printf("%s\n",res ? "YES" : "NO");
+    Compare comp(monster_x,monster_y);
+    sort(cristals.begin(),cristals.end(),comp);
+    printf("%s\n", dfs(hero_x,hero_y,0,0,monster_x,monster_y,cristals)
+	   ? "YES" : "NO");
   }
 }
