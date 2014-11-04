@@ -34,10 +34,10 @@ int total_subjects;
 int credit_requirement;
 
 void dfs(int S,int sum){
-  if(dp[S] != -1) return;
-  dp[S] = sum;
   for(int i = 0; i < total_subjects; i++){
     if((prior[i] | S) == S){
+      if(dp[S | (1<<i)] != -1) continue;
+      dp[S | (1<<i)] = sum + credit[i];
       dfs(S | (1<<i),sum + credit[i]);
     }
   }
@@ -61,10 +61,8 @@ int main(){
     dfs(0,0);
     int res = INF;
     for(int S = 0; S < (1<<total_subjects); S++){
-      if(dp[S] == -1) continue;
-      if(dp[S] >= credit_requirement){
-	res = min(res,__builtin_popcount(S));
-      }
+      if(dp[S] < credit_requirement) continue;
+      res = min(res,__builtin_popcount(S));
     }
     printf("%d\n",res);
   }
