@@ -33,14 +33,39 @@ int dp[1<<20];
 int total_subjects;
 int credit_requirement;
 
-void dfs(int S,int sum){
-  for(int i = 0; i < total_subjects; i++){
-    if((prior[i] | S) == S){
-      if(dp[S | (1<<i)] != -1) continue;
-      dp[S | (1<<i)] = sum + credit[i];
-      dfs(S | (1<<i),sum + credit[i]);
+class State {
+public:
+  int S;
+  int sum;
+  bool operator<(const State& s) const {
+    return __builtin_popcount(S) < __builtin_popcount(s.S);
+  }
+  bool operator>(const State& s) const {
+    return __builtin_popcount(S) > __builtin_popcount(s.S);
+  }
+  State(int S,int sum) : S(S),sum(sum) {}
+};
+
+int bfs(){
+  priority_queue<State,vector<State>,greater<State> > que;
+  que.push(State(0,0));
+  while(!que.empty()){
+    State s = que.top();
+    que.pop();
+    for(int i = 0; i < total_subjects; i++){
+      if(s.S & (1<<i)) continue;
+      if((prior[i] | s.S) == s.S){
+	if(dp[s.S | (1<<i)] != -1) continue;
+	dp[s.S | (1<<i)] = s.sum + credit[i];
+
+	if(s.sum + credit[i] >= credit_requirement) {
+	  return __builtin_popcount(s.S) + 1;
+	}
+	que.push(State(s.S | (1<<i),s.sum + credit[i]));
+      }
     }
   }
+  return 0;
 }
 
 int main(){
@@ -58,12 +83,7 @@ int main(){
 	prior[subject_i] |= (1<<subject_code);
       }
     }
-    dfs(0,0);
-    int res = INF;
-    for(int S = 0; S < (1<<total_subjects); S++){
-      if(dp[S] < credit_requirement) continue;
-      res = min(res,__builtin_popcount(S));
-    }
-    printf("%d\n",res);
+    
+    printf("%d\n",bfs());
   }
 }
