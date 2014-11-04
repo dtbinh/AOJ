@@ -34,41 +34,61 @@ int bitcount[1<<20];
 int total_subjects;
 int credit_requirement;
 
-void dfs(int S,int sum){
-  for(int i = 0; i < total_subjects; ++i){
-    if((prior[i] | S) == S){
-      if(dp[S | (1<<i)] != -1) continue;
-      dp[S | (1<<i)] = sum + credit[i];
-      dfs(S | (1<<i),sum + credit[i]);
+class State {
+public:
+  int S;
+  int sum;
+  bool operator<(const State& s) const {
+    return bitcount[S] < bitcount[s.S];
+  }
+  bool operator>(const State& s) const {
+    return bitcount[S] > bitcount[s.S];
+  }
+  State(int S,int sum) : S(S),sum(sum) {}
+};
+
+int bfs(){
+  priority_queue<State,vector<State>,greater<State> > que;
+  que.push(State(0,0));
+  while(!que.empty()){
+    State s = que.top();
+    que.pop();
+    for(int i = 0; i < total_subjects; i++){
+      if(s.S & (1<<i)) continue;
+      if((prior[i] | s.S) == s.S){
+	if(dp[s.S | (1<<i)] != -1) continue;
+	dp[s.S | (1<<i)] = s.sum + credit[i];
+
+	if(s.sum + credit[i] >= credit_requirement) {
+	  return bitcount[s.S] + 1;
+	}
+	que.push(State(s.S | (1<<i),s.sum + credit[i]));
+      }
     }
   }
+  return 0;
 }
 
 int main(){
-  for(int S = 0; S < (1<<20); ++S){
+  for(int S = 0; S < (1<<20); S++){
     bitcount[S] = __builtin_popcount(S);
   }
-
+  
   while(~scanf("%d %d",&total_subjects,&credit_requirement)){
     if(total_subjects == 0 && credit_requirement == 0) break;
     memset(dp,-1,sizeof(dp));
     memset(prior,0,sizeof(prior));
 
-    for(int subject_i = 0; subject_i < total_subjects; ++subject_i){
+    for(int subject_i = 0; subject_i < total_subjects; subject_i++){
       int prior_subject_num;
       scanf("%d %d",&credit[subject_i],&prior_subject_num);
-      for(int subject_j = 0; subject_j < prior_subject_num; ++subject_j){
+      for(int subject_j = 0; subject_j < prior_subject_num; subject_j++){
 	int subject_code;
 	scanf("%d",&subject_code);
 	prior[subject_i] |= (1<<subject_code);
       }
     }
-    dfs(0,0);
-    int res = INF;
-    for(int S = 0; S < (1<<total_subjects); ++S){
-      if(dp[S] < credit_requirement) continue;
-      res = min(bitcount[S],res);
-    }
-    printf("%d\n",res);
+    
+    printf("%d\n",bfs());
   }
 }
