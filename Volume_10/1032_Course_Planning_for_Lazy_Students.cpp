@@ -38,6 +38,7 @@ class State {
 public:
   int S;
   int sum;
+  State(){}
   bool operator<(const State& s) const {
     return bitcount[S] < bitcount[s.S];
   }
@@ -52,13 +53,13 @@ int bfs(){
   que.push(State(0,0));
   int next_sum;
   int next_S;
+  State s;
+  int rest;
   while(!que.empty()){
-    State s = que.top();
+    s = que.top();
     que.pop();
     for(int i = 0; i < total_subjects; i++){
-      if(s.S & (1<<i)) continue;
       if(dp[next_S = (s.S | (1<<i))] != -1) continue;
-
       if((prior[i] | s.S) == s.S){
 	next_sum = s.sum + credit[i];
 	dp[next_S] = next_sum;
