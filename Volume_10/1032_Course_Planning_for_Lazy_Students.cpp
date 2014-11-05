@@ -50,19 +50,23 @@ public:
 int bfs(){
   priority_queue<State,vector<State>,greater<State> > que;
   que.push(State(0,0));
+  int next_sum;
+  int next_S;
   while(!que.empty()){
     State s = que.top();
     que.pop();
     for(int i = 0; i < total_subjects; i++){
       if(s.S & (1<<i)) continue;
-      if((prior[i] | s.S) == s.S){
-	if(dp[s.S | (1<<i)] != -1) continue;
-	dp[s.S | (1<<i)] = s.sum + credit[i];
+      if(dp[next_S = (s.S | (1<<i))] != -1) continue;
 
-	if(s.sum + credit[i] >= credit_requirement) {
+      if((prior[i] | s.S) == s.S){
+	next_sum = s.sum + credit[i];
+	dp[next_S] = next_sum;
+
+	if(next_sum >= credit_requirement) {
 	  return bitcount[s.S] + 1;
 	}
-	que.push(State(s.S | (1<<i),s.sum + credit[i]));
+	que.push(State(next_S,next_sum));
       }
     }
   }
