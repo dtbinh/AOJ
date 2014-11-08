@@ -28,28 +28,103 @@ static const double EPS = 1e-8;
 const int tx[] = {0,1,0,-1};
 const int ty[] = {-1,0,1,0};
 
+struct Node {
+  int to;
+  int idx;
+  int flow;
+  Node(int to,int idx,int flow) :
+    to(to),idx(idx),flow(flow) {}
+};
+
+class FordFulkerson {
+private:
+  vector<Node>* _graph;
+  bool* _used;
+  int _size;
+
+  int dfs(int src,int flow,int sink){
+    if(src == sink) return flow;
+
+    int res = 0;
+    _used[src] = true;
+    for(int i= 0;i < _graph[src].size();i++){
+      Node& e = _graph[src][i];
+      if(_used[e.to]) continue;
+      int next_flow = min(flow,e.flow);
+      if(next_flow <= 0) continue;
+      Node& rev_e = _graph[e.to][e.idx];
+      e.flow -= next_flow;
+      rev_e.flow += next_flow;
+      res = max(res,dfs(e.to,next_flow,sink));
+    }
+    return res;
+  }
+
+public:  
+  FordFulkerson(int n) {
+    _size = n;
+    _graph = new vector<Node>[_size];
+    _used = new bool[_size];
+  }
+  FordFulkerson(const FordFulkerson& f){
+    _size = f.size();
+    _graph = new vector<Node>[_size];
+    _used = new bool[_size];
+    fill((bool*)_used,(bool*)_used + _size,false);
+
+    for(int i = 0; i < f.size(); i++){
+      for(int j = 0; j < f.graph()[i].size(); j++){
+	_graph[i].push_back(f.graph()[i][j]);
+      }
+    }
+  }
+
+  void add_edge(int from,int to,int flow) {
+    _graph[from].push_back(Node(to,_graph[to].size(),flow));
+    _graph[to].push_back(Node(from,_graph[from].size()-1,0));
+  }
+
+  int compute_maxflow(int src,int sink){
+    int res = 0;
+
+    while(true){
+      fill((bool*)_used,(bool*)_used + _size,false);
+      int tmp = dfs(src,numeric_limits<int>::max(),sink);
+      if(tmp == 0) break;
+      res += tmp;
+    }
+    return res;
+  }
+
+  int size() const{
+    return _size;
+  }
+  vector<Node>* graph() const{
+    return _graph;
+  }
+};
+
 int main(){
   int num_of_houses;
   int num_of_paths;
   while(~scanf("%d %d",&num_of_houses,&num_of_paths)){
     if(num_of_houses == 0 && num_of_paths == 0) break;
 
-    int block_cost[101] = {};
-    bool used[101];
-    memset(used,false,sizeof(used));
+    FordFulkerson ff(num_of_houses);
+    int bonus = 0;
     for(int path_i = 0; path_i < num_of_paths; path_i++){
       int from,to,cost;
       scanf("%d %d %d",&from,&to,&cost);
-      block_cost[to] += cost;
-      used[to] = true;
+      if(cost < 0) bonus += cost; 
+      ff.add_edge(from,to,max(0,cost));
     }
 
     int res = numeric_limits<int>::max();
-    for(int house_i = 0; house_i < num_of_houses; house_i++){
-      if(!used[house_i]) continue;
-      res = min(block_cost[house_i],res);
+    for(int house_i = 1; house_i < num_of_houses; house_i++){
+      FordFulkerson tmp(ff);
+      res = min(res,tmp.compute_maxflow(0,house_i));
     }
 
-    printf("%d\n",res);
+    printf("%d\n",bonus + res);
   }
 }
