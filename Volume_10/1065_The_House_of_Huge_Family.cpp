@@ -31,8 +31,8 @@ const int ty[] = {-1,0,1,0};
 struct Node {
   int to;
   int idx;
-  int flow;
-  Node(int to,int idx,int flow) :
+  ll flow;
+  Node(int to,int idx,ll flow) :
     to(to),idx(idx),flow(flow) {}
 };
 
@@ -42,22 +42,24 @@ private:
   bool* _used;
   int _size;
 
-  int dfs(int src,int flow,int sink){
+  ll dfs(int src,ll flow,int sink){
     if(src == sink) return flow;
 
-    int res = 0;
+    ll res = 0;
     _used[src] = true;
     for(int i= 0;i < _graph[src].size();i++){
       Node& e = _graph[src][i];
       if(_used[e.to]) continue;
-      int next_flow = min(flow,e.flow);
-      if(next_flow <= 0) continue;
-      Node& rev_e = _graph[e.to][e.idx];
-      e.flow -= next_flow;
-      rev_e.flow += next_flow;
-      res = max(res,dfs(e.to,next_flow,sink));
+      if(e.flow <= 0) continue;
+      ll d = dfs(e.to,min(flow,e.flow),sink);
+      if(d > 0){
+	Node& rev_e = _graph[e.to][e.idx];
+	e.flow -= d;
+	rev_e.flow += d;
+	return d;
+      }
     }
-    return res;
+    return 0;
   }
 
 public:  
@@ -79,17 +81,17 @@ public:
     }
   }
 
-  void add_edge(int from,int to,int flow) {
+  void add_edge(int from,int to,ll flow) {
     _graph[from].push_back(Node(to,_graph[to].size(),flow));
     _graph[to].push_back(Node(from,_graph[from].size()-1,0));
   }
 
-  int compute_maxflow(int src,int sink){
-    int res = 0;
+  ll compute_maxflow(int src,int sink){
+    ll res = 0;
 
     while(true){
       fill((bool*)_used,(bool*)_used + _size,false);
-      int tmp = dfs(src,numeric_limits<int>::max(),sink);
+      ll tmp = dfs(src,numeric_limits<ll>::max(),sink);
       if(tmp == 0) break;
       res += tmp;
     }
@@ -104,6 +106,45 @@ public:
   }
 };
 
+class UnionFindTree {
+private:
+  int* par;
+  int* rank;
+public:
+  UnionFindTree(int n){
+    par = new int[n]();
+    rank = new int[n]();
+    for(int i=0;i<n;i++){
+      par[i] = i;
+      rank[i] = 0;
+    }
+  }
+
+  ~UnionFindTree(){
+    delete[] rank;
+    delete[] par;
+  }
+
+  int find(int x){
+    if(par[x] == x){
+      return x;
+    } else {
+      return par[x] = find(par[x]);
+    }
+  }
+
+  void unite(int x,int y){
+    x = find(x);
+    y = find(y);
+    if (x == y) return;
+    par[x] = y;
+  }
+
+  bool same(int x,int y){
+    return find(x) == find(y);
+  }
+};
+
 int main(){
   int num_of_houses;
   int num_of_paths;
@@ -111,20 +152,40 @@ int main(){
     if(num_of_houses == 0 && num_of_paths == 0) break;
 
     FordFulkerson ff(num_of_houses);
-    int bonus = 0;
+    UnionFindTree uft(num_of_houses);
+
+    ll bonus = 0;
+
     for(int path_i = 0; path_i < num_of_paths; path_i++){
-      int from,to,cost;
-      scanf("%d %d %d",&from,&to,&cost);
+      int from,to;
+      ll cost;
+      scanf("%d %d %lld",&from,&to,&cost);
       if(cost < 0) bonus += cost; 
-      ff.add_edge(from,to,max(0,cost));
+      ff.add_edge(from,to,max(0LL,cost));
+      uft.unite(from,to);
     }
 
-    int res = numeric_limits<int>::max();
-    for(int house_i = 1; house_i < num_of_houses; house_i++){
-      FordFulkerson tmp(ff);
-      res = min(res,tmp.compute_maxflow(0,house_i));
+    int tree_count = 0;
+    bool visited[101];
+    memset(visited,false,sizeof(visited));
+    for(int house_i = 0; house_i< num_of_houses; house_i++){
+      if(!visited[uft.find(house_i)]) tree_count++;
+      visited[uft.find(house_i)] = true;
     }
 
-    printf("%d\n",bonus + res);
+    ll res = numeric_limits<ll>::max();
+
+    if(tree_count >= 2){
+      res = 0;
+    }
+    else{
+      for(int house_i = 0; house_i< num_of_houses; house_i++){
+	int house_j = uft.find(house_i);
+	if(house_i == house_j) continue;
+	FordFulkerson tmp(ff);
+	res = min(res,tmp.compute_maxflow(house_i,house_j));
+      }
+    }
+    printf("%lld\n",bonus + res);
   }
 }
