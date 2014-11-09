@@ -31,8 +31,8 @@ const int ty[] = {-1,0,1,0};
 struct Node {
   int to;
   int idx;
-  ll flow;
-  Node(int to,int idx,ll flow) :
+  int flow;
+  Node(int to,int idx,int flow) :
     to(to),idx(idx),flow(flow) {}
 };
 
@@ -42,16 +42,16 @@ private:
   bool* _used;
   int _size;
 
-  ll dfs(int src,ll flow,int sink){
+  int dfs(int src,int flow,int sink){
     if(src == sink) return flow;
 
-    ll res = 0;
+    int res = 0;
     _used[src] = true;
     for(int i= 0;i < _graph[src].size();i++){
       Node& e = _graph[src][i];
       if(_used[e.to]) continue;
       if(e.flow <= 0) continue;
-      ll d = dfs(e.to,min(flow,e.flow),sink);
+      int d = dfs(e.to,min(flow,e.flow),sink);
       if(d > 0){
 	Node& rev_e = _graph[e.to][e.idx];
 	e.flow -= d;
@@ -81,17 +81,17 @@ public:
     }
   }
 
-  void add_edge(int from,int to,ll flow) {
+  void add_edge(int from,int to,int flow) {
     _graph[from].push_back(Node(to,_graph[to].size(),flow));
-    _graph[to].push_back(Node(from,_graph[from].size()-1,0));
+    _graph[to].push_back(Node(from,_graph[from].size()-1,flow));
   }
 
-  ll compute_maxflow(int src,int sink){
-    ll res = 0;
+  int compute_maxflow(int src,int sink){
+    int res = 0;
 
     while(true){
       fill((bool*)_used,(bool*)_used + _size,false);
-      ll tmp = dfs(src,numeric_limits<ll>::max(),sink);
+      int tmp = dfs(src,numeric_limits<int>::max(),sink);
       if(tmp == 0) break;
       res += tmp;
     }
@@ -154,14 +154,14 @@ int main(){
     FordFulkerson ff(num_of_houses);
     UnionFindTree uft(num_of_houses);
 
-    ll bonus = 0;
+    int bonus = 0;
 
     for(int path_i = 0; path_i < num_of_paths; path_i++){
       int from,to;
-      ll cost;
-      scanf("%d %d %lld",&from,&to,&cost);
+      int cost;
+      scanf("%d %d %d",&from,&to,&cost);
       if(cost < 0) bonus += cost; 
-      ff.add_edge(from,to,max(0LL,cost));
+      ff.add_edge(from,to,max(0,cost));
       uft.unite(from,to);
     }
 
@@ -173,7 +173,7 @@ int main(){
       visited[uft.find(house_i)] = true;
     }
 
-    ll res = numeric_limits<ll>::max();
+    int res = numeric_limits<int>::max();
 
     if(tree_count >= 2){
       res = 0;
@@ -186,6 +186,6 @@ int main(){
 	res = min(res,tmp.compute_maxflow(house_i,house_j));
       }
     }
-    printf("%lld\n",bonus + res);
+    printf("%d\n",bonus + res);
   }
 }
