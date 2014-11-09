@@ -67,6 +67,12 @@ public:
     _graph = new vector<Node>[_size];
     _used = new bool[_size];
   }
+
+  ~FordFulkerson(){
+    delete[] _graph;
+    delete[] _used;
+  }
+
   FordFulkerson(const FordFulkerson& f){
     _size = f.size();
     _graph = new vector<Node>[_size];
