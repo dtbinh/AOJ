@@ -67,6 +67,12 @@ public:
     _graph = new vector<Node>[_size];
     _used = new bool[_size];
   }
+
+  ~FordFulkerson(){
+    delete[] _graph;
+    delete[] _used;
+  }
+
   FordFulkerson(const FordFulkerson& f){
     _size = f.size();
     _graph = new vector<Node>[_size];
@@ -105,45 +111,6 @@ public:
   }
 };
 
-class UnionFindTree {
-private:
-  int* par;
-  int* rank;
-public:
-  UnionFindTree(int n){
-    par = new int[n]();
-    rank = new int[n]();
-    for(int i=0;i<n;i++){
-      par[i] = i;
-      rank[i] = 0;
-    }
-  }
-
-  ~UnionFindTree(){
-    delete[] rank;
-    delete[] par;
-  }
-
-  int find(int x){
-    if(par[x] == x){
-      return x;
-    } else {
-      return par[x] = find(par[x]);
-    }
-  }
-
-  void unite(int x,int y){
-    x = find(x);
-    y = find(y);
-    if (x == y) return;
-    par[x] = y;
-  }
-
-  bool same(int x,int y){
-    return find(x) == find(y);
-  }
-};
-
 int main(){
   int num_of_houses;
   int num_of_paths;
@@ -151,8 +118,6 @@ int main(){
     if(num_of_houses == 0 && num_of_paths == 0) break;
 
     FordFulkerson ff(num_of_houses);
-    UnionFindTree uft(num_of_houses);
-
     int bonus = 0;
 
     for(int path_i = 0; path_i < num_of_paths; path_i++){
@@ -161,29 +126,13 @@ int main(){
       scanf("%d %d %d",&from,&to,&cost);
       if(cost < 0) bonus += cost; 
       ff.add_edge(from,to,max(0,cost));
-      uft.unite(from,to);
-    }
-
-    int tree_count = 0;
-    bool visited[101];
-    memset(visited,false,sizeof(visited));
-    for(int house_i = 0; house_i< num_of_houses; house_i++){
-      if(!visited[uft.find(house_i)]) tree_count++;
-      visited[uft.find(house_i)] = true;
     }
 
     int res = numeric_limits<int>::max();
 
-    if(tree_count >= 2){
-      res = 0;
-    }
-    else{
-      for(int house_i = 0; house_i< num_of_houses; house_i++){
-	int house_j = uft.find(house_i);
-	if(house_i == house_j) continue;
-	FordFulkerson tmp(ff);
-	res = min(res,tmp.compute_maxflow(house_i,house_j));
-      }
+    for(int house_i = 1; house_i< num_of_houses; house_i++){
+      FordFulkerson tmp(ff);
+      res = min(res,tmp.compute_maxflow(0,house_i));
     }
     printf("%d\n",bonus + res);
   }
