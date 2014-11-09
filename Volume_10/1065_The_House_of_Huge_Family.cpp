@@ -45,19 +45,18 @@ private:
   int dfs(int src,int flow,int sink){
     if(src == sink) return flow;
 
-    int res = 0;
     _used[src] = true;
     for(int i= 0;i < _graph[src].size();i++){
       Node& e = _graph[src][i];
       if(_used[e.to]) continue;
       if(e.flow <= 0) continue;
       int d = dfs(e.to,min(flow,e.flow),sink);
-      if(d > 0){
-	Node& rev_e = _graph[e.to][e.idx];
-	e.flow -= d;
-	rev_e.flow += d;
-	return d;
-      }
+      if(d <= 0) continue;
+
+      Node& rev_e = _graph[e.to][e.idx];
+      e.flow -= d;
+      rev_e.flow += d;
+      return d;
     }
     return 0;
   }
