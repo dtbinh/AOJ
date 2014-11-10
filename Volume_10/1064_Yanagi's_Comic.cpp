@@ -52,73 +52,63 @@ struct Rect {
   }
 };
 
+bool used[10];
+int order[10];
+int idx;
+int total_pages;
+void dfs(int border_x,int lower_bound,const vector<Rect>& pages){
+  for(int round = 0; round < total_pages; round++){
+    priority_queue<Rect,vector<Rect>,greater<Rect> > candidates;
+    
+    for(int i = 0; i < total_pages; i++){
+      if(used[i]) continue;
+      if(lower_bound < pages[i].ly) continue;
+      if(pages[i].lx > border_x) continue;
+      candidates.push(pages[i]);
+    }
+    
+    if(candidates.empty()) return;
+    
+    Rect last = candidates.top();
+    candidates.pop();
+    
+    order[last.id] = idx++;
+    used[last.id] = true;
+    
+    int next_lower_bound = last.ly;
+    int next_border_x = 1000;
+    for(int i = 0; i < total_pages; i++){
+      if(pages[i].ly > last.ly && pages[i].ry < last.ly
+	 && pages[i].rx >= last.lx){
+	next_border_x = min(pages[i].rx,next_border_x);
+      }
+    }
+    dfs(next_border_x,next_lower_bound,pages);
+  }
+}
+
 int main(){
-  int n;
   bool is_first = true;
-  while(~scanf("%d",&n)){
-    if(n == 0) break;
+  while(~scanf("%d",&total_pages)){
+    if(total_pages == 0) break;
     vector<Rect> pages;
-    for(int i = 0; i < n; i++){
+    for(int i = 0; i < total_pages; i++){
       int lx,ly;
       int rx,ry;
       scanf("%d %d %d %d",&rx,&ry,&lx,&ly);
       pages.push_back(Rect(rx,ry,lx,ly,i));
     }
 
-    bool used[10];
+
     memset(used,false,sizeof(used));
-
-    int order[10] = {};
-    int idx = 1;
-    priority_queue<Rect,vector<Rect>,greater<Rect> > candidates;
-
-    int lower_bound = 1000;
-    int border_x = 1000;
-    // int last_rx = -1;
-    for(int round = 0; round < 2*n; round++){
-      for(int i = 0; i < n; i++){
-	if(used[i]) continue;
-	if(lower_bound < pages[i].ly) continue;
-	if(pages[i].lx > border_x) continue;
-	// if(pages[i].rx < last_rx) continue;
-	candidates.push(pages[i]);
-      }
-      if(candidates.empty()){
-	lower_bound = 1000;
-	for(int i = 0; i < n; i++){
-	  if(used[i]) continue;
-	  if(pages[i].lx > border_x) continue;
-	  // if(pages[i].rx < last_rx) continue;
-	  candidates.push(pages[i]);
-	}
-      }
-
-      if(candidates.empty()) break;
-
-      Rect last = candidates.top();
-      candidates.pop();
-
-      while(!candidates.empty()) candidates.pop();
-      // printf("border:%d id:%d lower:%d\n",border_x,last.id,lower_bound);
-      order[last.id] = idx++;
-      used[last.id] = true;
-
-      // last_rx = last.rx;
-      border_x = 1000;
-      lower_bound = last.ly;
-      // cout << "last:" << last.id<< endl;
-      for(int i = 0; i < n; i++){
-	if(pages[i].ly > last.ly && pages[i].ry < last.ly
-	   && pages[i].rx >= last.lx){
-	  border_x = min(pages[i].rx,border_x);
-	}
-      }
-    }
+    memset(order,0,sizeof(order));
+    idx = 1;
+    dfs(1000,1000,pages);
 
     if(!is_first) {
       printf("\n");
     }
-    for(int i = 0;i<n;i++){
+    for(int i = 0;i<total_pages;i++){
       printf("%d\n",order[i]);
     }
     is_first = false;
