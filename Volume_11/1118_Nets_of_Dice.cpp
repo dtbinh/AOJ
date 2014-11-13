@@ -137,7 +137,7 @@ public:
 
 int stage[5][5];
 bool visited[5][5];
-const string dir[] = {"south","west","north","east"};
+const string dir[] = {"north","west","south","east"};
 void dfs(int sx,int sy,Dice& d){
   d.writeTop(stage[sy][sx]);
   visited[sy][sx] = true;
@@ -175,7 +175,22 @@ int main(){
       memset(visited,false,sizeof(visited));
       Dice dice;
       dfs(start_x,start_y,dice);
-      printf("%s\n",dice.check() ? "true" : "false");
+
+      bool over = false;
+      bool same = false;
+      int freq[256] = {};
+      for(int y = 0; y < 5; y++){
+	for(int x = 0; x < 5; x++){
+	  freq[stage[y][x]]++;
+	  if(stage[y][x] != 0 && freq[stage[y][x]] > 1) same = true;
+	  if(stage[y][x] != 0
+	     && !visited[y][x]){
+	    over = true;
+	  }
+	}
+      }
+      printf("%s\n",(dice.check() && !over && !same) ? "true" : "false");
+      // dice.print();
     }
   }
 }
