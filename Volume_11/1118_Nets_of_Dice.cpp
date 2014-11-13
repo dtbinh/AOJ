@@ -136,64 +136,23 @@ public:
 };
 
 int stage[5][5];
-
-void bfs(int start_x,int start_y,vector<Face>& face){
-  queue<P> que;
-  bool visited[5][5];
-  memset(visited,false,sizeof(visited));
-  que.push(P(start_x,start_y));
-  while(!que.empty()){
-    P p = que.front();
-    que.pop();
-    visited[p.first][p.second] = true;
-    for(int i = 0; i < 4; i++){
-      int dx = p.first + tx[i];
-      int dy = p.second + ty[i];
-      if(dx >= 5 || dx < 0 || dy >= 5 || dy < 0) continue;
-      if(visited[dx][dy]) continue;
-      if(stage[dy][dx] != 0){
-	face.push_back(Face(dx - start_x,dy - start_y,stage[dy][dx]));
-	que.push(P(dx,dy));
-      }
+bool visited[5][5];
+const string dir[] = {"south","west","north","east"};
+void dfs(int sx,int sy,Dice& d){
+  d.writeTop(stage[sy][sx]);
+  visited[sy][sx] = true;
+  for(int i = 0; i < 4; i++){
+    int dx = sx + tx[i];
+    int dy = sy + ty[i];
+    
+    if(dx >= 5 || dx < 0 || dy >= 5 || dy < 0) continue;
+    if(!visited[dy][dx] && stage[dy][dx] != 0){
+      d.rotateDice(dir[i]);
+      dfs(dx,dy,d);
+      d.rotateDice(dir[(i + 2) % 4]);
     }
   }
 }
-
-void face2dice(const vector<Face>& face,Dice& d){
-  for(int i = 0; i < face.size(); i++){
-    int diff_x = face[i].diff_x;
-    int diff_y = face[i].diff_y;
-    int num = face[i].num;
-    printf("%d %d %d\n",diff_x,diff_y,num);
-    string dir_x = "west";
-    if(diff_x < 0) dir_x = "east";
-    string dir_y = "north";
-    if(diff_y < 0) dir_y = "south";
-
-    for(int j = 0; j < abs(diff_x); j++){
-      d.rotateDice(dir_x);
-    }
-    for(int j = 0; j < abs(diff_y); j++){
-      d.rotateDice(dir_y);
-    }
-    d.writeTop(num);
-    
-    string back_x = "west";
-    if(dir_x == "west") back_x = "east";
-    string back_y = "south";
-    if(dir_y == "south") back_y = "north";
-    for(int j = 0; j < abs(diff_x); j++){
-      d.rotateDice(back_x);
-    }
-    for(int j = 0; j < abs(diff_y); j++){
-      d.rotateDice(back_y);
-    }
-    cout << "---------------------" << endl;
-    d.print();
-    cout << "---------------------" << endl;
-
-  }
-};
 
 int main(){
   int N;
@@ -213,18 +172,10 @@ int main(){
 	  }
 	}
       }
-      vector<Face> face;
-      face.push_back(Face(0,0,start_num));
-      bfs(start_x,start_y,face);
+      memset(visited,false,sizeof(visited));
       Dice dice;
-      face2dice(face,dice);
-      
-      if(face.size() != 6 || !dice.check()){
-	printf("false\n");
-      }
-      else{
-	printf("true\n");
-      }
+      dfs(start_x,start_y,dice);
+      printf("%s\n",dice.check() ? "true" : "false");
     }
   }
 }
