@@ -62,10 +62,12 @@ int dfs(int current,int sum){
       visited[next] = true;
       res = max(res,dfs(next,sum + power[next]));
       used[next] = false;
+      visited[next] = false;
     }
     else{
       visited[next] = true;
       res = max(res,dfs(next,sum));
+      visited[next] = false;
     }
   }
   return res;
