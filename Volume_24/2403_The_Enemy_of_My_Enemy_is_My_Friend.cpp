@@ -43,6 +43,7 @@ int country2idx(map<string,int>& dict,string country){
 vector<int> edges[41];
 bool used[41];
 int power[41];
+int limit_gain[101];
 
 bool can_unite(int node){
   if(used[node]) return false;
@@ -52,18 +53,22 @@ bool can_unite(int node){
   return true;
 }
 
-int dfs(int current,int sum,const vector<int>& subset){
-  if(current == subset.size()) return sum;
+int gRes;
+void dfs(int current,int sum,const vector<int>& subset){
+  if(sum + limit_gain[current] <= gRes) return;
 
-  int res = sum;
+  if(current == subset.size()){
+    gRes = max(gRes,sum);
+    return;
+  }
+
   int next = subset[current];
   if(can_unite(next)){
     used[next] = true;
-    res = max(res,dfs(current+1,sum + power[next],subset));
+    dfs(current+1,sum + power[next],subset);
     used[next] = false;
   }
-  res = max(res,dfs(current+1,sum,subset));
-  return res;
+  dfs(current+1,sum,subset);
 }
 
 class UnionFindTree {
@@ -141,16 +146,29 @@ int main(){
     for(int i = 0; i < N; i++){
       if(tree[uft.find(i)]) continue;
       tree[uft.find(i)] = true;
-      int tmp = 0;
       vector<int> subset;
       make_subset(&uft,uft.find(i),subset);
+
+      gRes = 0;
+      int sum = 0;
+      memset(limit_gain,0,sizeof(limit_gain));
+      for(int j = 0; j < subset.size(); j++){
+	sum += power[subset[j]];
+      }
+      for(int j = 0; j < subset.size(); j++){
+	limit_gain[j] = sum;
+	sum -= power[subset[j]];
+      }
       memset(used,false,sizeof(used));
+      int tmp = 0;
       if(i == 0){
 	used[0] = true;
-	tmp = max(tmp,dfs(0,power[0],subset));
+	dfs(0,power[0],subset);
+	tmp = gRes;
       }
       else{
-	tmp = max(tmp,dfs(0,0,subset));
+	dfs(0,0,subset);
+	tmp = gRes;
       }
       res += tmp;
     }
