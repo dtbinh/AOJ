@@ -42,34 +42,27 @@ int country2idx(map<string,int>& dict,string country){
 
 vector<int> edges[41];
 bool used[41];
-bool visited[41];
 int power[41];
 
 bool can_unite(int node){
+  if(used[node]) return false;
   for(int i=0;i<edges[node].size();i++){
     if(used[edges[node][i]]) return false;
   }
   return true;
 }
 
-int dfs(int current,int sum){
+int dfs(int current,int sum,const vector<int>& subset){
+  if(current == subset.size()) return sum;
+
   int res = sum;
-  for(int i = 0; i < edges[current].size();i++){
-    int next = edges[current][i];
-    if(visited[next]) continue;
-    if(can_unite(next)){
-      used[next] = true;
-      visited[next] = true;
-      res = max(res,dfs(next,sum + power[next]));
-      used[next] = false;
-      visited[next] = false;
-    }
-    else{
-      visited[next] = true;
-      res = max(res,dfs(next,sum));
-      visited[next] = false;
-    }
+  int next = subset[current];
+  if(can_unite(next)){
+    used[next] = true;
+    res = max(res,dfs(current+1,sum + power[next],subset));
+    used[next] = false;
   }
+  res = max(res,dfs(current+1,sum,subset));
   return res;
 }
 
@@ -106,8 +99,16 @@ public:
   }
 };
 
+int N;
+void make_subset(UnionFindTree* uft,int root,vector<int>& subset){
+  for(int i = 0; i < N; i++){
+    if(uft->find(i) == root){
+      subset.push_back(i);
+    }
+  }
+}
+
 int main(){
-  int N;
   while(~scanf("%d",&N)){
     if(N == 0) break;
     for(int i = 0; i <= 40; i++){
@@ -141,21 +142,15 @@ int main(){
       if(tree[uft.find(i)]) continue;
       tree[uft.find(i)] = true;
       int tmp = 0;
-      for(int j = 0; j < N; j++){
-	if(uft.find(j) != uft.find(i)) continue;
-	memset(used,false,sizeof(used));
-	memset(visited,false,sizeof(visited));
-	if(i == 0){
-	  used[0] = true;
-	  visited[0] = true;
-	  tmp = max(tmp,dfs(0,power[0]));
-	  break;
-	}
-	else{
-	  used[j] = true;
-	  visited[j] = true;
-	  tmp = max(tmp,dfs(j,power[j]));
-	}
+      vector<int> subset;
+      make_subset(&uft,uft.find(i),subset);
+      memset(used,false,sizeof(used));
+      if(i == 0){
+	used[0] = true;
+	tmp = max(tmp,dfs(0,power[0],subset));
+      }
+      else{
+	tmp = max(tmp,dfs(0,0,subset));
       }
       res += tmp;
     }
