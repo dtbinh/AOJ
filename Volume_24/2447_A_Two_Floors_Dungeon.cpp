@@ -1,0 +1,59 @@
+#define _USE_MATH_DEFINES
+#define INF 0x3f3f3f3f
+#include <cstdio>
+#include <iostream>
+#include <sstream>
+#include <cmath>
+#include <cstdlib>
+#include <algorithm>
+#include <queue>
+#include <stack>
+#include <limits>
+#include <map>
+#include <string>
+#include <cstring>
+#include <set>
+#include <deque>
+#include <bitset>
+#include <list>
+#include <cctype>
+#include <utility>
+ 
+using namespace std;
+ 
+typedef long long ll;
+typedef pair <int,int> P;
+typedef pair <int,P > PP;
+ 
+int tx[] = {0,1,0,-1};
+int ty[] = {-1,0,1,0};
+ 
+static const double EPS = 1e-8;
+
+int W,H;
+char stage[51][51];
+char switches[11][51][51];
+
+int main(){
+  while(~scanf("%d %d",&W,&H)){
+    for(int y = 0; y < H; y++){
+      char line[64];
+      scanf("%s",line);
+      for(int x = 0; x < W; x++){
+	stage[y][x] = line[x];
+      }
+    }
+    int total_switches;
+    scanf("%d",&total_switches);
+    for(int switch_i = 0; switch_i < total_switches; switch_i++){
+      for(int y = 0; y < H; y++){
+	char line[64];
+	scanf("%s",line);
+	for(int x = 0; x < W; x++){
+	  switches[switch_i][y][x] = line[x];
+	}
+      }
+    }
+    
+  }
+}
