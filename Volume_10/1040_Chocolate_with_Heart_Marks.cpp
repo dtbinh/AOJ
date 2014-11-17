@@ -1,5 +1,5 @@
 #define _USE_MATH_DEFINES
-#define INF 0x3f3f3f3f
+#define INF 0x1f1f1f1f
 #include <cstdio>
 #include <iostream>
 #include <sstream>
@@ -31,90 +31,90 @@ int ty[] = {-1,0,1,0};
 static const double EPS = 1e-8;
 
 int block[12][12];
-bool dp[1<<6][12][12][12*12 + 1];
-int heart2idx[12][12];
-bool used[12][12];
-int H,W;
-int idx;
+int idx2heart[12];
+int dp[145][145];
 
-void dfs(int hearts,int sx,int sy,int count){
-  for(int i = 0; i < 4; i++){
-    int dx = sx + tx[i];
-    int dy = sy + ty[i];
-    if(dx < 0 || dy < 0 || dx >= W || dy >= H) continue;
+class MinimumSteinerTree {
+public:
+  int solver(int total_chocolates,int H,int W){
+    if(total_chocolates <= 1) return 0;
 
-    int next_hearts = hearts;
-    if(block[dy][dx] == 1){
-      next_hearts |= (1<<heart2idx[dy][dx]);
-    }
-    int next_count = count;
-    if(!used[dy][dx]) next_count++;
-    if(dp[next_hearts][dy][dx][next_count]) continue;
-    cout << next_count << endl;
-    used[dy][dx] = true;
-    dp[next_hearts][dy][dx][next_count] = true;
-    if(next_count == 0){
-      cout << "ha" << endl;
-    }
-    dfs(next_hearts,dx,dy,next_count);
-    used[dy][dx] = false;
-  }
-}
-
-void fill_dp(){
-  for(int S = 0; S < (1<<6); S++){
-    for(int y = 0; y < H; y++){
-      for(int x = 0; x < W; x++){
-	for(int count = 0; count <= W * H; count++){
-	  dp[S][y][x][count] = false;
+    for(int k = 0; k < H * W; k++){
+      for(int i = 0; i < H * W; i++){
+	for(int j = 0; j < H * W; j++){
+	  dp[i][j] = min(dp[i][j],dp[i][k] + dp[k][j]);
 	}
       }
     }
+
+    int steiner_tree[1<<total_chocolates][H * W];
+    memset(steiner_tree,0x1f,sizeof(steiner_tree));
+    for(int i = 0; i < total_chocolates; i++){
+      for(int to = 0; to < H * W; to++){
+	steiner_tree[(1 << i)][to] = dp[idx2heart[i]][to];
+      }
+    }
+
+    for(int S = 1; S < (1<<total_chocolates); S++){
+      for(int from = 0; from < H * W; from++){
+	
+	int tmp = INF;
+	for(int E = 0; E < S; E++){
+	  for(int to = 0; to < H * W; to++){
+	    if((E | S) != S) continue;
+	    tmp 
+	      = min(tmp,
+		    dp[from][to]
+		    + steiner_tree[E][to]
+		    + steiner_tree[S - E][to]);
+	  }
+	}
+	steiner_tree[S][from] = min(steiner_tree[S][from],tmp);
+      }
+    }
+
+    int res = INF;
+    for(int S = 0; S < (1 << total_chocolates); S++){
+      for(int to = 0; to < H * W; to++){
+	res = min(res,
+		  steiner_tree[S][to]
+		  + steiner_tree[((1<<total_chocolates) - 1) - S][to]);
+      }
+    }
+    return res;
   }
-}
+};
 
 int main(){
+  int H,W;
   while(~scanf("%d %d",&H,&W)){
     if(H == 0 && W == 0) break;
-    vector<P> start;
 
-    idx = 0;
-    memset(heart2idx,0,sizeof(heart2idx));
+    int idx = 0;
     for(int y = 0; y < H; y++){
       for(int x = 0; x < W; x++){
 	scanf("%d",&block[y][x]);
 	if(block[y][x] == 1){
-	  start.push_back(P(x,y));
-	  heart2idx[y][x] = idx++;
+	  idx2heart[idx] = y * W + x;
+	  idx++;
 	}
       }
     }
+    int total_chocolates = idx;
 
-    int res = 0;
-    for(int i = 0; i < start.size(); i++){
-      
-      fill_dp();
-      memset(used,false,sizeof(used));
-      used[start[i].second][start[i].first] = true;
-      dp[1<<i][start[i].second][start[i].first][1] = true;
-
-      dfs(0,start[i].first,start[i].second,1);
-
-      int S = ((1<<idx) - 1);
-      for(int y = 0; y < H; y++){
-	for(int x = 0; x < W; x++){
-	  for(int count = 0; count <= H*W; count++){
-	    if(dp[S][y][x][count]){
-	      if(count == 0){
-		cout << count << endl;
-	      }
-	      res = max(res,H * W - count);
-	    }
-	  }
-	}
+    memset(dp,0x1f,sizeof(dp));
+    for(int from = 0; from < H * W; from++){
+      dp[from][from] = 0;
+      for(int i = 0; i < 4; i++){
+	int dx = from % W + tx[i];
+	int dy = from / W + ty[i];
+	if(dx < 0 || dx >= W || dy < 0 || dy >= H) continue;
+	int to = dy * W + dx;
+	dp[from][to] = dp[to][from] = 1;
       }
     }
 
-    printf("%d\n",res);
+    MinimumSteinerTree mst;
+    printf("%d\n",H * W - (mst.solver(total_chocolates,H,W) + 1));
   }
 }
