@@ -67,50 +67,78 @@ int alpha2idx(char alpha){
   return alpha - 'a';
 }
 
-int dfs(int S,int sx,int sy,int floor,int cost){
-  for(int i = 0; i < 4; i++){
-    int dx = sx + tx[i];
-    int dy = sy + ty[i];
-    if(dx < 0 || dx >= W || dy < 0 || dy >= H) continue;
-    if(stage[dy][dx] == '#') continue;
-    if(!check_floor(S,dx,dy,floor)) continue;
+class State{
+public:
+  int S;
+  int x;
+  int y;
+  int floor;
+  int cost;
+  State(int S,int x,int y,int floor,int cost) :
+    S(S),x(x),y(y),floor(floor),cost(cost) {}
+  bool operator<(const State& s) const {
+    return cost < s.cost;
+  }
+  bool operator>(const State& s) const {
+    return cost > s.cost;
+  }
+};
 
-    if(dp[S][dx][dy][floor] > cost + 1){
-      dp[S][dx][dy][floor] = cost + 1;
-      dfs(S,dx,dy,floor,cost + 1);
-    }
+int bfs(int sx,int sy){
+  priority_queue<State,vector<State>,greater<State> > que;
+  que.push(State(0,sx,sy,0,0));
 
-    if(isalpha(stage[dy][dx])){
-      //use switch
-      int switch_i = alpha2idx(stage[dy][dx]);
-      int next_S = S ^ (1<<switch_i);
-      int next_floor = floor;
+  while(!que.empty()){
+    State s = que.top();
+    que.pop();
+    int S = s.S;
+    int floor = s.floor;
+    int cost = s.cost;
 
-      if(switches[switch_i][dy][dx] == '*'){
-	next_floor++;
-	next_floor %= 2;
-      }
+    for(int i = 0; i < 4; i++){
+      int dx = s.x + tx[i];
+      int dy = s.y + ty[i];
+      if(dx < 0 || dx >= W || dy < 0 || dy >= H) continue;
+      if(stage[dy][dx] == '#') continue;
+      if(!check_floor(S,dx,dy,floor)) continue;
 
-      if(dp[next_S][dx][dy][next_floor] > cost + 2){
-	dp[next_S][dx][dy][next_floor] = cost + 2;
-	dfs(next_S,dx,dy,next_floor,cost + 2);
-      }
-
-      //don't use switch
       if(dp[S][dx][dy][floor] > cost + 1){
-      	dp[S][dx][dy][floor] = cost + 1;
-      	dfs(S,dx,dy,floor,cost + 1);
+	dp[S][dx][dy][floor] = cost + 1;
+	que.push(State(S,dx,dy,floor,cost + 1));
       }
-    }
-    else{
-      int next_floor = floor;
 
-      if(stage[dy][dx] == '|'){
-	next_floor++;
-	next_floor %= 2;
-	if(dp[S][dx][dy][next_floor] > cost + 2){
-	  dp[S][dx][dy][next_floor] = cost + 2;
-	  dfs(S,dx,dy,next_floor,cost + 2);
+      if(isalpha(stage[dy][dx])){
+	//use switch
+	int switch_i = alpha2idx(stage[dy][dx]);
+	int next_S = S ^ (1<<switch_i);
+	int next_floor = floor;
+	
+	if(switches[switch_i][dy][dx] == '*'){
+	  next_floor++;
+	  next_floor %= 2;
+	}
+	
+	if(dp[next_S][dx][dy][next_floor] > cost + 2){
+	  dp[next_S][dx][dy][next_floor] = cost + 2;
+	  que.push(State(next_S,dx,dy,next_floor,cost + 2));
+	}
+	
+	//don't use switch
+	if(dp[S][dx][dy][floor] > cost + 1){
+	  dp[S][dx][dy][floor] = cost + 1;
+	  que.push(State(S,dx,dy,floor,cost + 1));
+	}
+      }
+      else{
+	int next_floor = floor;
+	
+	if(stage[dy][dx] == '|'){
+	  next_floor++;
+	  next_floor %= 2;
+	  if(dp[S][dx][dy][next_floor] > cost + 2){
+	    dp[S][dx][dy][next_floor] = cost + 2;
+	    que.push(State(S,dx,dy,next_floor,cost + 2));
+	  }
 	}
       }
     }
@@ -147,7 +175,7 @@ int main(){
 	}
       }
     }
-    dfs(0,sx,sy,0,0);
+    bfs(sx,sy);
     int res = INF;
     for(int S = 0; S < (1<<total_switches); S++){
       for(int floor = 0; floor < 2; floor++){
