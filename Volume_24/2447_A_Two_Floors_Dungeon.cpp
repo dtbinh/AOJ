@@ -34,9 +34,12 @@ int W,H;
 char stage[51][51];
 char switches[11][51][51];
 int dp[1<<10][51][51][2];
+int total_switches;
 
-int detect_floor(int S,int dx,int dy){
-  int floor;
+bool check_floor(int S,int dx,int dy,int current){
+  if(stage[dy][dx] == '|') return true;
+
+  int floor = 0;
   if('a' <= stage[dy][dx] && stage[dy][dx] <= 'z'
      || stage[dy][dx] == '_'
      || stage[dy][dx] == '&'
@@ -48,13 +51,13 @@ int detect_floor(int S,int dx,int dy){
     floor = 1;
   }
 
-  for(int switch_i = 0; switch_i < 10; switch_i++){
+  for(int switch_i = 0; switch_i < total_switches; switch_i++){
     if((S & (1<<switch_i)) && switches[switch_i][dy][dx] == '*'){
       floor++;
       floor %= 2;
     }
   }
-  return floor;
+  return (current == floor);
 }
 
 int alpha2idx(char alpha){
@@ -69,25 +72,28 @@ int dfs(int S,int sx,int sy,int floor,int cost){
     int dx = sx + tx[i];
     int dy = sy + ty[i];
     if(dx < 0 || dx >= W || dy < 0 || dy >= H) continue;
-    if(stage[dy][dx] != '|' && detect_floor(S,dx,dy) != floor) continue;
     if(stage[dy][dx] == '#') continue;
-    int next_floor = floor;
-    int next_S = S;
+    if(!check_floor(S,dx,dy,floor)) continue;
+
+    if(dp[S][dx][dy][floor] > cost + 1){
+      dp[S][dx][dy][floor] = cost + 1;
+      dfs(S,dx,dy,floor,cost + 1);
+    }
+
     if(isalpha(stage[dy][dx])){
       //use switch
-      next_floor++;
-      next_floor %= 2;
-
       int switch_i = alpha2idx(stage[dy][dx]);
-      if(S & (1<<switch_i)){
-	next_S &= ~(1<<switch_i);
+      int next_S = S ^ (1<<switch_i);
+      int next_floor = floor;
+
+      if(switches[switch_i][dy][dx] == '*'){
+	next_floor++;
+	next_floor %= 2;
       }
-      else{
-	next_S |= (1<<switch_i);
-      }
-      if(dp[next_S][dx][dy][next_floor] > cost + 1){
-	dp[next_S][dx][dy][next_floor] = cost + 1;
-	dfs(next_S,dx,dy,next_floor,cost + 1);
+
+      if(dp[next_S][dx][dy][next_floor] > cost + 2){
+	dp[next_S][dx][dy][next_floor] = cost + 2;
+	dfs(next_S,dx,dy,next_floor,cost + 2);
       }
 
       //don't use switch
@@ -97,17 +103,15 @@ int dfs(int S,int sx,int sy,int floor,int cost){
       }
     }
     else{
+      int next_floor = floor;
+
       if(stage[dy][dx] == '|'){
 	next_floor++;
 	next_floor %= 2;
-	if(dp[S][dx][dy][next_floor] > cost + 1){
-	  dp[S][dx][dy][next_floor] = cost + 1;
-	  dfs(S,dx,dy,next_floor,cost + 1);
+	if(dp[S][dx][dy][next_floor] > cost + 2){
+	  dp[S][dx][dy][next_floor] = cost + 2;
+	  dfs(S,dx,dy,next_floor,cost + 2);
 	}
-      }
-      if(dp[S][dx][dy][floor] > cost + 1){
-	dp[S][dx][dy][floor] = cost + 1;
-	dfs(S,dx,dy,floor,cost + 1);
       }
     }
   }
@@ -133,7 +137,6 @@ int main(){
 	}
       }
     }
-    int total_switches;
     scanf("%d",&total_switches);
     for(int switch_i = 0; switch_i < total_switches; switch_i++){
       for(int y = 0; y < H; y++){
@@ -151,6 +154,6 @@ int main(){
 	res = min(dp[S][gx][gy][floor],res);
       }
     }
-    printf("%d\n",res);
+    printf("%d\n",res >= INF ? -1 : res);
   }
 }
