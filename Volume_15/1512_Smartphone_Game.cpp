@@ -50,6 +50,7 @@ public:
   Field(int stage[5][5],int score[6]){
     memcpy(_stage,stage,sizeof(int)*5*5);
     memcpy(_score,score,sizeof(int)*6);
+    memset(_marked,false,sizeof(_marked));
   }
   bool mark(){
     bool has_mark = false;
@@ -66,10 +67,10 @@ public:
 	  }
 	}
 	if(h_count >= 3){
-	  for(int dx = x; dx + 1 < 5; dx++){
+	  has_mark = true;
+	  for(int dx = x; dx < 5; dx++){
 	    if(h_count-- <= 0) break;
 	    _marked[y][dx] = true;
-	    has_mark = true;
 	  }
 	}
 
@@ -83,10 +84,10 @@ public:
 	  }
 	}
 	if(v_count >= 3){
-	  for(int dy = y; dy + 1 < 5; dy++){
+	  has_mark = true;
+	  for(int dy = y; dy < 5; dy++){
 	    if(v_count-- <= 0) break;
 	    _marked[dy][x] = true;
-	    has_mark = true;
 	  }
 	}
       }
@@ -117,13 +118,31 @@ public:
     }
     return sum;
   }
+
+  void disp(){
+    for(int y = 0; y < 5; y++){
+      for(int x = 0; x < 5; x++){
+	printf("%d ",_stage[y][x]);
+      }
+      printf("\n");
+    }
+    printf("\n");
+
+    for(int y = 0; y < 5; y++){
+      for(int x = 0; x < 5; x++){
+	printf("%s",_marked[y][x] ? "o" : "x");
+      }
+      printf("\n");
+    }
+    printf("\n");
+  }
 };
 
 int stage[5][5];
 int score[6];
 
 int dfs(int sx,int sy,int count){
-  if(count <= 0) return Field(stage,score).compute_score();
+  if(count <= 0) return 0;
 
   int res = 0;
   for(int i = 0; i < 4; i++){
@@ -146,7 +165,6 @@ int main(){
     for(int y = 0; y < 5; y++){
       for(int x = 0; x < 5; x++){
 	scanf("%d",&stage[y][x]);
-	stage[y][x];
       }
     }
 
@@ -155,12 +173,17 @@ int main(){
     }
 
     int res = 0;
-    for(int y = 0; y < 5; y++){
-      for(int x = 0; x < 5; x++){
-	res = max(res,dfs(x,y,move_limit));
+
+    if(move_limit == 0){
+      res = Field(stage,score).compute_score();
+    }
+    else{
+      for(int y = 0; y < 5; y++){
+	for(int x = 0; x < 5; x++){
+	  res = max(res,dfs(x,y,move_limit));
+	}
       }
     }
-    
     printf("%d\n",res);
   }
 }
