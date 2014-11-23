@@ -30,7 +30,7 @@ int ty[] = {-1,0,1,0};
  
 static const double EPS = 1e-8;
 
-double dp[101][101][101][11][4];//dp[note_i][prev_combo][prev_score][prev_st][prev]
+double dp[101][101][101][11][5];//dp[note_i][prev_combo][prev_score][prev_stability][prev_action]
 
 int main(){
   while(true){
@@ -60,87 +60,65 @@ int main(){
     
     memset(dp,0,sizeof(dp));
 
-    dp[0][0][0][0][0] = 1.0;
+    for(int prev_combo = len; prev_combo >= 0; prev_combo--){
+      for(int prev_action = 3; prev_action >= 0; prev_action--){
+	for(int prev_stability = 10; prev_stability >= 0; prev_stability--){
+	  dp[len][prev_combo][100][prev_stability][prev_action] = 1.0;
+	}
+      }
+    }
 
     //dp[note_i][prev_combo][prev_score][prev_st][prev]
-    for(int note_i = 0; note_i < len; note_i++){
-      for(int prev_combo = note_i; prev_combo >= 0; prev_combo--){
-	for(int prev = 0; prev < 4; prev++){
-	  for(int prev_st = 10; prev_st >= 0; prev_st--){
+    for(int note_i = len - 1; note_i >= 0; note_i--){
+      if(notes[note_i] == 0){
+	for(int prev_combo = len; prev_combo >= 0; prev_combo--){
+	  for(int prev_stability = 10; prev_stability >= 0; prev_stability--){
 	    for(int prev_score = 100; prev_score >= 0; prev_score--){
-	      if(notes[note_i] == 0){
-		dp[note_i+1][0][prev_score][10][prev]
-		  += dp[note_i][prev_combo][prev_score][prev_st][prev];
+	      for(int prev_action = 4; prev_action >= 0; prev_action--){
+		dp[note_i][prev_combo][prev_score][prev_stability][prev_action]
+		  = dp[note_i+1][prev_combo][prev_score][10][prev_action];
 	      }
-	      
-	      else if(notes[note_i] == 1){
-		int st0 = max(0,(stability[prev][0] - 10) * 10 + prev_st * 10);
-		int st1 = max(0,(stability[prev][1] - 10) * 10 + prev_st * 10);
-		int added = (A + B * min(prev_combo + 1,10)) / 100;
-
-		if(note_i == 0) st0 = st1 = 100;
+	    }
+	  }
+	}
+      }	      
+      else if(notes[note_i] > 0){
+	int offset = (notes[note_i] == 1 ? 0 : 2);
+	for(int prev_combo = len; prev_combo >= 0; prev_combo--){
+	  for(int prev_stability = 10; prev_stability >= 0; prev_stability--){
+	    for(int prev_score = 100; prev_score >= 0; prev_score--){
+	      int added = (A + B * min(prev_combo + 1,10)) / 100;
+	      for(int prev_action = 3; prev_action >= 0; prev_action--){
+		int st0 = max(0,(stability[prev_action][offset + 0] - 10) * 10 + prev_stability * 10);
+		int st1 = max(0,(stability[prev_action][offset + 1] - 10) * 10 + prev_stability * 10);
+		
 		double precision0 = (double)st0/100.0;
 		double precision1 = (double)st1/100.0;
+		
+		//bang
+		dp[note_i][prev_combo][prev_score][prev_stability][prev_action] 
+		  = max(dp[note_i][prev_combo][prev_score][prev_stability][prev_action] ,
+			dp[note_i + 1][min(10,prev_combo + 1)][min(100,prev_score + added)][st0 / 10][offset + 0] * precision0
+			+ dp[note_i + 1][0][prev_score][st0 / 10][offset + 0] * (1.0 - precision0));
 
-		//correct
-		if(prev_score + added < 100){
-		  dp[note_i+1][prev_combo + 1][prev_score + added][st0 / 10][0]
-		    += dp[note_i][prev_combo][prev_score][prev_st][prev] * precision0;
-		  // dp[note_i+1][prev_combo + 1][prev_score + added][st1 / 10][1]
-		  //   += dp[note_i][prev_combo][prev_score][prev_st][prev] * precision1;
-		}
-
-		//mistake
-		dp[note_i+1][0][prev_score][st0 / 10][0]
-		  += dp[note_i][prev_combo][prev_score][prev_st][prev] * (1.0 - precision0);
-		// dp[note_i+1][0][prev_score][st1 / 10][1]
-		//   += dp[note_i][prev_combo][prev_score][prev_st][prev] * (1.0 - precision1);
-
-		//ignore
-		// dp[note_i+1][0][prev_score][10][prev]
-		//   += dp[note_i][prev_combo][prev_score][prev_st][prev];
+		dp[note_i][prev_combo][prev_score][prev_stability][prev_action] 
+		  = max(dp[note_i][prev_combo][prev_score][prev_stability][prev_action],
+			dp[note_i + 1][min(10,prev_combo + 1)][min(100,prev_score + added)][st1 / 10][offset + 1] * precision1
+			+ dp[note_i + 1][0][prev_score][st1 / 10][offset + 1] * (1.0 - precision1));
+		
 	      }
-	      else if(notes[note_i] == 2){
-		int st2 = max(0,(stability[prev][2] - 10) * 10 + prev_st * 10);
-		int st3 = max(0,(stability[prev][3] - 10) * 10 + prev_st * 10);
-		int added = (A + B * min(prev_combo + 1,10)) / 100;
-		if(note_i == 0) st2 = st3 = 100;
-		double precision2 = (double)st2/100.0;
-		double precision3 = (double)st3/100.0;
 
-		if(prev_score + added < 100){
-		  dp[note_i+1][prev_combo + 1][prev_score + added][st2 / 10][2]
-		    += dp[note_i][prev_combo][prev_score][prev_st][prev] * precision2;
-		  dp[note_i+1][prev_combo + 1][prev_score + added][st3 /10][3]
-		    += dp[note_i][prev_combo][prev_score][prev_st][prev] * precision3;
-		}
-
-		dp[note_i+1][0][prev_score][st2 / 10][2]
-		  += dp[note_i][prev_combo][prev_score][prev_st][prev] * (1.0 - precision2);
-		dp[note_i+1][0][prev_score][st3 / 10][3]
-		  += dp[note_i][prev_combo][prev_score][prev_st][prev] * (1.0 - precision3);
-	      }
+	      //ignore
+	      dp[note_i][prev_combo][prev_score][prev_stability][4]
+		= max(dp[note_i + 1][0][prev_score][10][4],
+		      max(dp[note_i + 1][min(10,prev_combo + 1)][min(100,prev_score + added)][10][offset + 0],
+			  dp[note_i + 1][min(10,prev_combo + 1)][min(100,prev_score + added)][10][offset + 1]));
 	    }
 	  }
 	}
       }
     }
-    
-    double res = 0.0;
-
-    for(int score = 0; score <= 100; score++){
-      double tmp = 0;
-      for(int prev_st = 0; prev_st <= 10; prev_st++){
-	for(int combo = 0; combo <= len; combo++){
-	  for(int next = 0; next < 4; next++){
-	    res += dp[len][combo][score][prev_st][next];
-	    tmp += dp[len][combo][score][prev_st][next];
-	  }
-	}
-      }
-      printf("%d %.6lf\n",score,tmp);
-    }
-    printf("%.6lf\n",1.0 - res);
+    printf("%.6lf\n",dp[0][0][0][10][4]);
   }
   over:;
 
