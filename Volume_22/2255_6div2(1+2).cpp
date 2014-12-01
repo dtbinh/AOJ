@@ -45,14 +45,11 @@ ParseResult num(int pos,const string& str);
 
 ParseResult expr(int pos,const string& str){
   ParseResult r = factor(pos,str);
-  while(r.pos < str.size() && str[r.pos] == '+'){
-    ParseResult tmp = factor(pos+1,str);
-    r.num += tmp.num;
-    r.pos = tmp.pos;
-  }
-  while(r.pos < str.size() && str[r.pos] == '-'){
-    ParseResult tmp = factor(pos+1,str);
-    r.num -= tmp.num;
+  while(r.pos < str.size()
+	&& (str[r.pos] == '+' || str[r.pos] == '-')){
+    ParseResult tmp = factor(r.pos+1,str);
+    if(str[r.pos] == '+') r.num += tmp.num;
+    if(str[r.pos] == '-') r.num -= tmp.num;
     r.pos = tmp.pos;
   }
   return r;
@@ -60,14 +57,11 @@ ParseResult expr(int pos,const string& str){
 
 ParseResult factor(int pos, const string& str){
   ParseResult r = term(pos,str);
-  while(r.pos < str.size() && str[r.pos] == '*'){
+  while(r.pos < str.size()
+	&& (str[r.pos] == '*' || str[r.pos] == '/')){
     ParseResult tmp = term(r.pos+1,str);
-    r.num *= tmp.num;
-    r.pos = tmp.pos;
-  }
-  while(r.pos < str.size() && str[r.pos] == '/'){
-    ParseResult tmp = term(r.pos+1,str);
-    r.num /= tmp.num;
+    if(str[r.pos] == '*') r.num *= tmp.num;
+    if(str[r.pos] == '/') r.num /= tmp.num;
     r.pos = tmp.pos;
   }
   return r;
@@ -79,7 +73,7 @@ ParseResult term(int pos, const string& str){
     r.pos++; // for ')'
     return r;
   }
-  else if(isdigit(str[pos])){
+  else {
     return num(pos,str);
   }
 }
