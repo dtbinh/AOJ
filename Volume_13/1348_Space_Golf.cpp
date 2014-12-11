@@ -59,10 +59,15 @@ int main(){
 
     double g = 1.0;
     double res = numeric_limits<double>::max();
-    for(double vx = 0.0001; vx <= 1000.0; vx += 0.0001){
-      for(double div = 1.0; div <= 5.0; div+=1.0){
-	double vy = (distance/div * g) / (2.0 * vx);
-	double interval = compute_interval(g,vx,vy);
+    double max_viy = 100000000.0;
+    double min_viy = EPS;
+
+    for(int round = 0; round < 50; round++){
+      double viy = min_viy + (max_viy - min_viy) / 2.0;
+      bool has_path = false;
+      for(double div = 1.0; div <= 15.0; div+=1.0){
+	double vix = (distance/div * g) / (2.0 * viy);
+	double interval = compute_interval(g,vix,viy);
 	if(interval < EPS) continue;
 	if((int)(distance / (interval + EPS)) > bounce_limit) continue;
 
@@ -70,14 +75,21 @@ int main(){
 	for(int obstacle_i = 0; obstacle_i < num_of_obstacles; obstacle_i++){
 	  // cout << h(g,vx,vy,obstacles[obstacle_i].pos) << endl;
 	  int offset = (int)(obstacles[obstacle_i].pos / interval + EPS);
-	  if(h(g,vx,vy,obstacles[obstacle_i].pos - ((double)offset * interval)) < obstacles[obstacle_i].height){
+	  if(h(g,vix,viy,obstacles[obstacle_i].pos - ((double)offset * interval)) < obstacles[obstacle_i].height){
 	    isok = false;
 	    break;
 	  }
 	}
 	if(isok){
-	  res = min(res,sqrt(vx * vx + vy * vy));
+	  has_path = true;
+	  if(res > sqrt(vix * vix + viy * viy)){
+	    res = sqrt(vix * vix + viy * viy);
+	    max_viy = viy;
+	  }
 	}
+      }
+      if(!has_path) {
+	min_viy = viy;
       }
     }
     printf("%lf\n",res);
