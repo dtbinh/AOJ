@@ -25,7 +25,7 @@ typedef long long ll;
 typedef pair <int,int> P;
 typedef pair <int,P > PP;
 
-const static double EPS = 1e-12;
+const static double EPS = 1e-10;
 
 struct Obstacle {
   double pos;
@@ -38,11 +38,13 @@ double h(double g,double vix,double viy,double x){
   return -(g / (2.0 * vix * vix)) * x * x + (viy / vix) * x;
 }
 
-double compute_interval(double g,double vix,double viy){
-  double a = - (g / (2.0 * vix * vix));
-  double b = viy / vix;
-  double c = 0.0;
-  return (-b - sqrt(b * b - 4 * a * c)) / (2.0 * a);
+double compute_viy(double g,double interval,double vi){
+  double a = 4.0;
+  double b = - 4 * vi * vi;
+  double c = interval * interval * g * g;
+  if(b * b - 4 * a * c < 0) return -1;
+
+  return sqrt((-b + sqrt(b * b - 4 * a * c)) / (2.0 * a));
 }
 
 int main(){
@@ -59,39 +61,39 @@ int main(){
 
     double g = 1.0;
     double res = numeric_limits<double>::max();
-    double max_viy = 100000000.0;
-    double min_viy = EPS;
 
-    for(int round = 0; round < 50; round++){
-      double viy = min_viy + (max_viy - min_viy) / 2.0;
-      bool has_path = false;
-      for(double div = 1.0; div <= 15.0; div+=1.0){
-	double vix = (distance/div * g) / (2.0 * viy);
-	double interval = compute_interval(g,vix,viy);
-	if(interval < EPS) continue;
-	if((int)(distance / (interval + EPS)) > bounce_limit) continue;
+    for(int div = 1; div <= bounce_limit + 1; div++){
+      double rhs = 10000.0;
+      double lhs = 0;
+      double interval = distance / div;
+
+      for(int round = 0; round < 50; round++){
+	double vi = lhs + (rhs - lhs) / 2.0;
+	double viy = compute_viy(g,interval,vi);
+	if(viy < 0) {
+	  lhs = vi;
+	  continue;
+	}
+
+	double vix = sqrt(vi * vi - viy * viy);
 
 	bool isok = true;
 	for(int obstacle_i = 0; obstacle_i < num_of_obstacles; obstacle_i++){
-	  // cout << h(g,vx,vy,obstacles[obstacle_i].pos) << endl;
-	  int offset = (int)(obstacles[obstacle_i].pos / interval + EPS);
+	  int offset = (int)(obstacles[obstacle_i].pos / (interval + EPS) );
 	  if(h(g,vix,viy,obstacles[obstacle_i].pos - ((double)offset * interval)) < obstacles[obstacle_i].height){
 	    isok = false;
 	    break;
 	  }
 	}
 	if(isok){
-	  has_path = true;
-	  if(res > sqrt(vix * vix + viy * viy)){
-	    res = sqrt(vix * vix + viy * viy);
-	    max_viy = viy;
-	  }
+	  rhs = vi;
+	  res = min(res,vi);
+	}
+	else{
+	  lhs = vi;
 	}
       }
-      if(!has_path) {
-	min_viy = viy;
-      }
     }
-    printf("%lf\n",res);
+    printf("%.5lf\n",res);
   }
 }
