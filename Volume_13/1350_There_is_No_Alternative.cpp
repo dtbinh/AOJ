@@ -31,25 +31,24 @@ const static double EPS = 1e-12;
 const static int MAX_V = 501;
 
 class UnionFindTree {
-  int* par;
-  int* rank;
+  int _par[501];
+  int _rank[501];
 public:
   UnionFindTree(int N){
-    par = new int[N];
-    rank = new int[N];
     for(int i = 0; i < N; i++){
-      par[i] = i;
-      rank[i] = 0;
+      _par[i] = i;
+      _rank[i] = 0;
     }
   }
-  ~UnionFindTree(){
-    delete[] par;
-    delete[] rank;
+
+  UnionFindTree(int par[501]){
+    memcpy(_par,par,sizeof(int)*501);
+    memset(_rank,0,sizeof(_rank));
   }
 
   int find(int u){
-    if(par[u] == u) return u;
-    return find(par[u]);
+    if(_par[u] == u) return u;
+    return find(_par[u]);
   }
 
   bool unite(int u,int v){
@@ -57,13 +56,13 @@ public:
     v = find(v);
     if(u == v) return false;
 
-    if(rank[u] >= rank[v]){
-      par[u] = v;
-      rank[v] = rank[u] + 1;
+    if(_rank[u] >= _rank[v]){
+      _par[u] = v;
+      _rank[v] = _rank[u] + 1;
     }
     else{
-      par[v] = u;
-      rank[u] = rank[v] + 1;
+      _par[v] = u;
+      _rank[u] = _rank[v] + 1;
     }
     return true;
   }
@@ -118,8 +117,10 @@ int main(){
   while(~scanf("%d %d",&num_of_islands,&num_of_pairs)){
     priority_queue<Edge,vector<Edge>, greater<Edge> > que;
     vector<Edge> orig;
+    int par[501];
     for(int i = 0; i <= 500; i++){
       graph[i].clear();
+      par[i] = i;
     }
 
     memset(idx,-1,sizeof(idx));
@@ -136,7 +137,7 @@ int main(){
       graph[to].push_back(from);
     }
 
-    UnionFindTree uft(num_of_islands);
+    UnionFindTree uft(par);
 
     vector<P> candidates;
     int sum = 0;
@@ -159,7 +160,7 @@ int main(){
 	if(idx[from][to] == i) continue;
 	que.push(orig[i]);
       }
-      UnionFindTree uft2(num_of_islands);
+      UnionFindTree uft2(par);
       int sum2 = 0;
       while(!que.empty()){
 	Edge e = que.top();
