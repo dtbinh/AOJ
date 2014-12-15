@@ -86,7 +86,6 @@ public:
 
 int num_of_islands;
 int num_of_pairs;
-bool candidate[501][501];
 int idx[501][501];
 bool used[501][501];
 vector<int> graph[501];
@@ -104,6 +103,7 @@ bool bfs(int from,int to){
       if(visited[graph[current][i]]) continue;
       if((current == from && graph[current][i] == to)
 	 || (current == to && graph[current][i] == from)) continue;
+      visited[graph[current][i]] = true;
       que.push(graph[current][i]);
     }
   }
@@ -137,42 +137,40 @@ int main(){
     }
 
     UnionFindTree uft(num_of_islands);
-    memset(candidate,false,sizeof(candidate));
 
+    vector<P> candidates;
     int sum = 0;
     while(!que.empty()){
       Edge e = que.top();
       que.pop();
       if(uft.unite(e.from,e.to)){
-	candidate[e.from][e.to] = true;
-	candidate[e.to][e.from] = true;
 	sum += e.cost;
+	candidates.push_back(P(e.from,e.to));
       }
     }
 
     int res_cost = 0;
     int res_count = 0;
-    for(int from = 0; from < num_of_islands; from++){
-      for(int to = from + 1; to < num_of_islands; to++){
-	if(idx[from][to] == -1) continue;
-	if(!candidate[from][to]) continue;
-	for(int i = 0; i < orig.size(); i++){
-	  if(idx[from][to] == i) continue;
-	  que.push(orig[i]);
+    for(int candidate_i = 0; candidate_i < candidates.size(); candidate_i++){
+      int from = candidates[candidate_i].first;
+      int to = candidates[candidate_i].second;
+      
+      for(int i = 0; i < orig.size(); i++){
+	if(idx[from][to] == i) continue;
+	que.push(orig[i]);
+      }
+      UnionFindTree uft2(num_of_islands);
+      int sum2 = 0;
+      while(!que.empty()){
+	Edge e = que.top();
+	que.pop();
+	if(uft2.unite(e.from,e.to)){
+	  sum2 += e.cost;
 	}
-	UnionFindTree uft2(num_of_islands);
-	int sum2 = 0;
-	while(!que.empty()){
-	  Edge e = que.top();
-	  que.pop();
-	  if(uft2.unite(e.from,e.to)){
-	    sum2 += e.cost;
-	  }
-	}
-	if(sum2 > sum || (bfs(from,to))){
-	  res_cost += orig[idx[from][to]].cost;
-	  res_count++;
-	}
+      }
+      if(sum2 > sum || (bfs(from,to))){
+	res_cost += orig[idx[from][to]].cost;
+	res_count++;
       }
     }
     printf("%d %d\n",res_count,res_cost);
