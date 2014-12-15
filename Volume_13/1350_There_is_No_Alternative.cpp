@@ -58,11 +58,10 @@ public:
 
     if(_rank[u] >= _rank[v]){
       _par[u] = v;
-      _rank[v] = _rank[u] + 1;
+      if(_rank[u] == _rank[v]) _rank[v]++;
     }
     else{
       _par[v] = u;
-      _rank[u] = _rank[v] + 1;
     }
     return true;
   }
@@ -93,10 +92,12 @@ bool bfs(int from,int to){
   bool visited[501];
   memset(visited,false,sizeof(visited));
   queue<int> que;
-  que.push(0);
+  que.push(from);
   while(!que.empty()){
     int current = que.front();
     visited[current] = true;
+    if(visited[from] && visited[to]) return false;
+
     que.pop();
     for(int i = 0; i < graph[current].size(); i++){
       if(visited[graph[current][i]]) continue;
@@ -107,10 +108,7 @@ bool bfs(int from,int to){
     }
   }
 
-  for(int i = 0; i < num_of_islands; i++){
-    if(!visited[i]) return true;
-  }
-  return false;
+  return true;
 }
 
 int main(){
