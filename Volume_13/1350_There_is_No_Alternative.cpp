@@ -55,7 +55,7 @@ public:
     u = find(u);
     v = find(v);
     if(u == v) return false;
-
+    
     if(_rank[u] >= _rank[v]){
       _par[u] = v;
       if(_rank[u] == _rank[v]) _rank[v]++;
@@ -72,8 +72,9 @@ public:
   int from;
   int to;
   int cost;
-  Edge(int from,int to,int cost) 
-    : from(from), to(to), cost(cost) {}
+  int id;
+  Edge(int from,int to,int cost,int id) 
+    : from(from), to(to), cost(cost), id(id) {}
   bool operator<(const Edge& e) const {
     return cost < e.cost;
   }
@@ -96,7 +97,7 @@ bool bfs(int from,int to){
   while(!que.empty()){
     int current = que.front();
     visited[current] = true;
-    if(visited[from] && visited[to]) return false;
+    if(visited[to]) return false;
 
     que.pop();
     for(int i = 0; i < graph[current].size(); i++){
@@ -127,8 +128,8 @@ int main(){
       int cost;
       scanf("%d %d %d",&from,&to,&cost);
       from--; to--;
-      que.push(Edge(from,to,cost));
-      orig.push_back(Edge(from,to,cost));
+      que.push(Edge(from,to,cost,i));
+      orig.push_back(Edge(from,to,cost,i));
       idx[from][to] = i;
       idx[to][from] = i;
       graph[from].push_back(to);
@@ -137,37 +138,38 @@ int main(){
 
     UnionFindTree uft(par);
 
-    vector<P> candidates;
+    vector<Edge> candidates;
     int sum = 0;
     while(!que.empty()){
       Edge e = que.top();
       que.pop();
       if(uft.unite(e.from,e.to)){
 	sum += e.cost;
-	candidates.push_back(P(e.from,e.to));
+	candidates.push_back(e);
       }
     }
-
+    for(int i = 0; i < orig.size(); i++){
+      que.push(orig[i]);
+    }
     int res_cost = 0;
     int res_count = 0;
+
     for(int candidate_i = 0; candidate_i < candidates.size(); candidate_i++){
-      int from = candidates[candidate_i].first;
-      int to = candidates[candidate_i].second;
-      
-      for(int i = 0; i < orig.size(); i++){
-	if(idx[from][to] == i) continue;
-	que.push(orig[i]);
-      }
+      int from = candidates[candidate_i].from;
+      int to = candidates[candidate_i].to;
+
       UnionFindTree uft2(par);
       int sum2 = 0;
-      while(!que.empty()){
-	Edge e = que.top();
-	que.pop();
+      priority_queue<Edge,vector<Edge>, greater<Edge> > tmp(que);
+      while(!tmp.empty()){
+	Edge e = tmp.top();
+	tmp.pop();
+	if(e.id == candidates[candidate_i].id) continue;
 	if(uft2.unite(e.from,e.to)){
 	  sum2 += e.cost;
 	}
       }
-      if(sum2 > sum || (bfs(from,to))){
+      if(sum2 != sum){// || (bfs(from,to))){
 	res_cost += orig[idx[from][to]].cost;
 	res_count++;
       }
