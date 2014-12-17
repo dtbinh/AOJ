@@ -35,7 +35,7 @@ class UnionFindTree {
   int _rank[501];
 public:
   UnionFindTree(int N){
-    for(int i = 0; i < N; i++){
+    for(int i = 0; i < N; ++i){
       _par[i] = i;
       _rank[i] = 0;
     }
@@ -50,18 +50,23 @@ public:
     if(_par[u] == u) return u;
     return find(_par[u]);
   }
+  bool same(int u,int v){
+    u = find(u);
+    v = find(v);
+    return (u == v);
+  }
 
   bool unite(int u,int v){
     u = find(u);
     v = find(v);
     if(u == v) return false;
     
-    if(_rank[u] >= _rank[v]){
+    if(_rank[u] < _rank[v]){
       _par[u] = v;
-      if(_rank[u] == _rank[v]) _rank[v]++;
     }
     else{
       _par[v] = u;
+      if(_rank[u] == _rank[v]) _rank[u]++;
     }
     return true;
   }
@@ -72,9 +77,8 @@ public:
   int from;
   int to;
   int cost;
-  int id;
-  Edge(int from,int to,int cost,int id) 
-    : from(from), to(to), cost(cost), id(id) {}
+  Edge(int from,int to,int cost) 
+    : from(from), to(to), cost(cost) {}
   bool operator<(const Edge& e) const {
     return cost < e.cost;
   }
@@ -85,84 +89,62 @@ public:
 
 int num_of_islands;
 int num_of_pairs;
-bool used[501][501];
-vector<int> graph[501];
 
-bool bfs(int from,int to){
-  bool visited[501];
-  memset(visited,false,sizeof(visited));
-  queue<int> que;
-  que.push(from);
-  while(!que.empty()){
-    int current = que.front();
-    visited[current] = true;
-    if(visited[to]) return false;
-
-    que.pop();
-    for(int i = 0; i < graph[current].size(); i++){
-      if(visited[graph[current][i]]) continue;
-      if((current == from && graph[current][i] == to)
-	 || (current == to && graph[current][i] == from)) continue;
-      visited[graph[current][i]] = true;
-      que.push(graph[current][i]);
-    }
+bool check_connect(UnionFindTree& uft){
+  for(int i = 1; i < num_of_islands; i++){
+    if(!uft.same(0,i)) return false;
   }
-
   return true;
 }
 
 int main(){
   while(~scanf("%d %d",&num_of_islands,&num_of_pairs)){
-    priority_queue<Edge,vector<Edge>, greater<Edge> > que;
     vector<Edge> orig;
     int par[501];
-    for(int i = 0; i <= 500; i++){
-      graph[i].clear();
+    for(int i = 0; i <= 500; ++i){
       par[i] = i;
     }
 
-    for(int i = 0; i < num_of_pairs; i++){
+    for(int i = 0; i < num_of_pairs; ++i){
       int from,to;
       int cost;
       scanf("%d %d %d",&from,&to,&cost);
       from--; to--;
-      que.push(Edge(from,to,cost,i));
-      orig.push_back(Edge(from,to,cost,i));
-      graph[from].push_back(to);
-      graph[to].push_back(from);
+      orig.push_back(Edge(from,to,cost));
     }
 
     UnionFindTree uft(par);
+    sort(orig.begin(),orig.end());
 
-    vector<Edge> candidates;
     int sum = 0;
-    while(!que.empty()){
-      Edge e = que.top();
-      que.pop();
-      if(uft.unite(e.from,e.to)){
-	sum += e.cost;
-	candidates.push_back(e);
+    bool used[50001] = {};
+    for(int i = 0; i < orig.size(); ++i){
+      if(uft.unite(orig[i].from,orig[i].to)){
+	sum += orig[i].cost;
+	used[i] = true;
       }
     }
     int res_cost = 0;
     int res_count = 0;
-    sort(orig.begin(),orig.end());
 
-    for(int candidate_i = 0; candidate_i < candidates.size(); candidate_i++){
-      int from = candidates[candidate_i].from;
-      int to = candidates[candidate_i].to;
-      int id = candidates[candidate_i].id;
+    for(int i = 0; i < orig.size(); ++i){
+      if(!used[i]) continue;
 
       UnionFindTree uft2(par);
       int sum2 = 0;
-      for(int i = 0; i < orig.size(); i++){
-	if(id == orig[i].id) continue;
-	if(uft2.unite(orig[i].from,orig[i].to)){
-	  sum2 += orig[i].cost;
+      int prev = orig[i].cost;
+      orig[i].cost = INF;
+
+      for(int j = 0; j < orig.size(); ++j){
+	if(orig[j].cost >= INF) continue;
+	if(uft2.unite(orig[j].from,orig[j].to)){
+	  sum2 += orig[j].cost;
 	}
       }
-      if(sum2 != sum || (bfs(from,to))){
-	res_cost += candidates[candidate_i].cost;
+      orig[i].cost = prev;
+
+      if(sum2 > sum || !check_connect(uft2)){
+	res_cost += orig[i].cost;
 	res_count++;
       }
     }
