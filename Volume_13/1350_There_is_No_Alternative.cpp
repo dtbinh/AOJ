@@ -85,7 +85,6 @@ public:
 
 int num_of_islands;
 int num_of_pairs;
-int idx[501][501];
 bool used[501][501];
 vector<int> graph[501];
 
@@ -122,7 +121,6 @@ int main(){
       par[i] = i;
     }
 
-    memset(idx,-1,sizeof(idx));
     for(int i = 0; i < num_of_pairs; i++){
       int from,to;
       int cost;
@@ -130,8 +128,6 @@ int main(){
       from--; to--;
       que.push(Edge(from,to,cost,i));
       orig.push_back(Edge(from,to,cost,i));
-      idx[from][to] = i;
-      idx[to][from] = i;
       graph[from].push_back(to);
       graph[to].push_back(from);
     }
@@ -148,29 +144,25 @@ int main(){
 	candidates.push_back(e);
       }
     }
-    for(int i = 0; i < orig.size(); i++){
-      que.push(orig[i]);
-    }
     int res_cost = 0;
     int res_count = 0;
+    sort(orig.begin(),orig.end());
 
     for(int candidate_i = 0; candidate_i < candidates.size(); candidate_i++){
       int from = candidates[candidate_i].from;
       int to = candidates[candidate_i].to;
+      int id = candidates[candidate_i].id;
 
       UnionFindTree uft2(par);
       int sum2 = 0;
-      priority_queue<Edge,vector<Edge>, greater<Edge> > tmp(que);
-      while(!tmp.empty()){
-	Edge e = tmp.top();
-	tmp.pop();
-	if(e.id == candidates[candidate_i].id) continue;
-	if(uft2.unite(e.from,e.to)){
-	  sum2 += e.cost;
+      for(int i = 0; i < orig.size(); i++){
+	if(id == orig[i].id) continue;
+	if(uft2.unite(orig[i].from,orig[i].to)){
+	  sum2 += orig[i].cost;
 	}
       }
-      if(sum2 != sum){// || (bfs(from,to))){
-	res_cost += orig[idx[from][to]].cost;
+      if(sum2 != sum || (bfs(from,to))){
+	res_cost += candidates[candidate_i].cost;
 	res_count++;
       }
     }
