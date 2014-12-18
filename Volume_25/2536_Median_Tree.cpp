@@ -70,14 +70,11 @@ public:
     if(lhs == rhs) return;
     
     if(mRank[lhs] > mRank[rhs]){
-      mParent[lhs] = rhs;
-      mRank[rhs] += mRank[lhs];
-      mRank[lhs] = 0;
+      mParent[rhs] = lhs;
     }
     else{
       mParent[rhs] = lhs;
-      mRank[lhs] += mRank[rhs];
-      mRank[rhs] = 0;
+      if(mRank[lhs] == mRank[rhs]) mRank[lhs]++;
     }
   }
 

@@ -89,12 +89,11 @@ public:
     if(lhs == rhs) return;
     
     if(rank[lhs] < rank[rhs]){
-      parent[rhs] = lhs;
-      rank[rhs]++;
+      parent[lhs] = rhs;
     }
     else{
-      parent[lhs] = rhs;
-      rank[lhs]++;
+      parent[rhs] = lhs;
+      if(rank[lhs] == rank[rhs]) rank[lhs]++;
     }
   }
 

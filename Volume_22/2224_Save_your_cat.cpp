@@ -69,12 +69,11 @@ public:
     if(same(lhs,rhs)) return false;
     
     if(_rank[lhs] < _rank[rhs]){
-      _parent[rhs] = lhs;
-      _rank[lhs] += _rank[rhs];
+      _parent[lhs] = rhs;
     }
     else {
-      _parent[lhs] = rhs;
-      _rank[rhs] += _rank[lhs];
+      _parent[rhs] = lhs;
+      if(_rank[rhs] == _rank[lhs]) _rank[lhs]++;
     }
     return true;
   }
