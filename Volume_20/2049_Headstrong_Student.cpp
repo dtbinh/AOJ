@@ -42,16 +42,12 @@ int main(){
 
     int pos = 0;
     int len = 0;
-    for(int i = 0; i < 10; i++){
-      // cout << "i" << i << " ";
+    for(int i = 0; i < 1000000; i++){
       if(dividend % divisor == 0){
-	// cout << dividend / divisor << endl;
 	pos = i;
 	len = 0;
 	break;
       }
-      // cout << dividend / divisor << endl;
-      // cout << dividend % divisor << endl;
       if(visited[dividend % divisor] != -1){
 	pos = visited[dividend % divisor];
 	len = i - visited[dividend % divisor];
