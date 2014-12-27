@@ -88,6 +88,8 @@ double cost[2001][2001];
 int main(){
   int n;
   while(~scanf("%d",&n)){
+    if(n == 0) break;
+
     double vw,vc;    
     scanf("%lf %lf",&vw,&vc);
     vector<Point> points;
@@ -109,7 +111,7 @@ int main(){
       x.push_back(points[i].real());
       Line here2right(points[i],Point(1e10,points[i].imag()));
       for(int j = i + 1; j + 1 < n; j++){
-	if(points[i].imag() > points[j].imag()) break;
+	if(points[i].imag() + EPS >= points[j].imag()) break;
 	Line target(points[j],points[j+1]);
 	if(intersectSS(here2right,target)){
 	  x.push_back(crosspoint(here2right,target).real());
@@ -119,16 +121,17 @@ int main(){
 
       Line here2left(Point(-1e10,points[i].imag()),points[i]);
       for(int j = i - 1; j - 1 >= 0; j--){
-	if(points[i].imag() > points[j].imag()) break;
-	Line target(points[j],points[j-1]);
+	if(points[i].imag() + EPS >= points[j].imag()) break;
+	Line target(points[j-1],points[j]);
 	if(intersectSS(here2left,target)){
 	  x.push_back(crosspoint(here2left,target).real());
 	  break;
 	}
       }
     }
-
     sort(x.begin(),x.end());
+    x.erase(unique(x.begin(),x.end()),x.end());
+
     for(int i = 0; i < n; i++){
       int from = lower_bound(x.begin(),x.end(),points[i].real() - EPS) - x.begin();
       if(i + 1 < n){
@@ -138,7 +141,7 @@ int main(){
       }
       Line here2right(points[i],Point(1e10,points[i].imag()));
       for(int j = i + 1; j + 1 < n; j++){
-	if(points[i].imag() > points[j].imag()) break;
+	if(points[i].imag() + EPS >= points[j].imag()) break;
 	Line target(points[j],points[j+1]);
 	if(intersectSS(here2right,target)){
 	  Point p = crosspoint(here2right,target);
@@ -151,8 +154,8 @@ int main(){
 
       Line here2left(Point(-1e10,points[i].imag()),points[i]);
       for(int j = i - 1; j - 1 >= 0; j--){
-	if(points[i].imag() > points[j].imag()) break;
-	Line target(points[j],points[j-1]);
+	if(points[i].imag() + EPS >= points[j].imag()) break;
+	Line target(points[j-1],points[j]);
 	if(intersectSS(here2left,target)){
 	  Point p = crosspoint(here2left,target);
 	  int to = lower_bound(x.begin(),x.end(),p.real() - EPS) - x.begin();
