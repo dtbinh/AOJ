@@ -18,6 +18,8 @@
 #include <list>
 #include <cctype>
 #include <utility>
+#include <complex>
+#include <assert.h>
  
 using namespace std;
  
@@ -27,7 +29,7 @@ typedef pair <double,double> P;
 static const int tx[] = {+0,+1,+0,-1};
 static const int ty[] = {-1,+0,+1,+0};
  
-static const double EPS = 1e-8;
+static const double EPS = 1e-12;
 
 typedef complex<double> Point;
 
@@ -80,15 +82,14 @@ bool is_equal(const Point &l,const Point &m){
   return ((abs(real(l) - real(m)) < EPS) && (abs(imag(l) - imag(m) < EPS)));
 }
 
-double dp[1001];
-bool tunnel[1001][1001];
-bool is_top[1001];
+double dp[2001];
+double cost[2001][2001];
 
 int main(){
   int n;
   while(~scanf("%d",&n)){
     double vw,vc;    
-    scanf("%lf %lf"&vw,&vc);
+    scanf("%lf %lf",&vw,&vc);
     vector<Point> points;
     for(int i = 0; i < n; i++){
       double x,y;
@@ -96,36 +97,80 @@ int main(){
       points.push_back(Point(x,y));
     }
 
-    memset(is_top,false,sizeof(is_top));
+
+    for(int i = 0; i <= 2000; i++){
+      dp[i] = 1e10;
+      for(int j = 0; j <= 2000; j++){
+	cost[i][j] = 1e10;
+      }
+    }
+    vector<double> x;
     for(int i = 0; i < n; i++){
-      if(i == 0){
-	int next = i + 1;
-	if(points[i].imag() > points[next].imag()){
-	  is_top[i] = true;
+      x.push_back(points[i].real());
+      Line here2right(points[i],Point(1e10,points[i].imag()));
+      for(int j = i + 1; j + 1 < n; j++){
+	if(points[i].imag() > points[j].imag()) break;
+	Line target(points[j],points[j+1]);
+	if(intersectSS(here2right,target)){
+	  x.push_back(crosspoint(here2right,target).real());
+	  break;
 	}
       }
-      else if(i == n - 1){
-	int prev = i - 1;
-	if(points[prev].imag() < points[i].imag()){
-	  is_top[i] = true;
-	}
-      }
-      else{
-	int prev = i - 1;
-	int next = i + 1;
-	if(points[prev].imag() < points[i].imag()
-	   && points[i].imag() > points[next].imag()){
-	  is_top[i] = true;
+
+      Line here2left(Point(-1e10,points[i].imag()),points[i]);
+      for(int j = i - 1; j - 1 >= 0; j--){
+	if(points[i].imag() > points[j].imag()) break;
+	Line target(points[j],points[j-1]);
+	if(intersectSS(here2left,target)){
+	  x.push_back(crosspoint(here2left,target).real());
+	  break;
 	}
       }
     }
+
+    sort(x.begin(),x.end());
     for(int i = 0; i < n; i++){
-      int height = points[i].second;
-      for(int j = i + 1; j < n; j++){
-	if(height > points[i].second){
-	  tunnel[i][j + 1] = true;
+      int from = lower_bound(x.begin(),x.end(),points[i].real() - EPS) - x.begin();
+      if(i + 1 < n){
+	int to = lower_bound(x.begin(),x.end(),points[i+1].real() - EPS) - x.begin();  
+	cost[from][to] = abs(points[i+1]-points[i])/vw;
+	cost[to][from] = abs(points[i+1]-points[i])/vw;
+      }
+      Line here2right(points[i],Point(1e10,points[i].imag()));
+      for(int j = i + 1; j + 1 < n; j++){
+	if(points[i].imag() > points[j].imag()) break;
+	Line target(points[j],points[j+1]);
+	if(intersectSS(here2right,target)){
+	  Point p = crosspoint(here2right,target);
+	  int to = lower_bound(x.begin(),x.end(),p.real() - EPS) - x.begin();  	  
+	  cost[from][to] = abs(p - points[i])/vc;
+	  cost[to][from] = abs(p - points[i])/vc;
+	  break;
+	}
+      }
+
+      Line here2left(Point(-1e10,points[i].imag()),points[i]);
+      for(int j = i - 1; j - 1 >= 0; j--){
+	if(points[i].imag() > points[j].imag()) break;
+	Line target(points[j],points[j-1]);
+	if(intersectSS(here2left,target)){
+	  Point p = crosspoint(here2left,target);
+	  int to = lower_bound(x.begin(),x.end(),p.real() - EPS) - x.begin();
+	  cost[from][to] = abs(p - points[i])/vc;
+	  cost[to][from] = abs(p - points[i])/vc;
+	  break;
 	}
       }
     }
+    
+    int goal_pos = x.size() - 1;
+    dp[0] = 0.0;
+    for(int i = 0; i <= goal_pos; i++){
+      for(int j = 0; j < i; j++){
+	dp[i] = min(dp[i],dp[j] + cost[j][i]);
+      }
+    }
+
+    printf("%lf\n",dp[goal_pos]);
   }
 }
