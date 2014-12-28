@@ -29,7 +29,7 @@ typedef pair <double,double> P;
 static const int tx[] = {+0,+1,+0,-1};
 static const int ty[] = {-1,+0,+1,+0};
  
-static const double EPS = 1e-12;
+static const double EPS = 1e-8;
 
 typedef complex<double> Point;
 
@@ -82,8 +82,22 @@ bool is_equal(const Point &l,const Point &m){
   return ((abs(real(l) - real(m)) < EPS) && (abs(imag(l) - imag(m) < EPS)));
 }
 
-double dp[2001];
-double cost[2001][2001];
+class State {
+public:
+  int pos;
+  double cost;
+  State(int pos,double cost) :
+    pos(pos), cost(cost) {}
+  bool operator<(const State& s) const {
+    return cost < s.cost;
+  }
+  bool operator>(const State& s) const {
+    return cost > s.cost;
+  }
+};
+
+double dp[3001];
+vector<State> costs[3001];
 
 int main(){
   int n;
@@ -99,12 +113,9 @@ int main(){
       points.push_back(Point(x,y));
     }
 
-
     for(int i = 0; i <= 2000; i++){
       dp[i] = 1e10;
-      for(int j = 0; j <= 2000; j++){
-	cost[i][j] = 1e10;
-      }
+      costs[i].clear();
     }
     vector<double> x;
     for(int i = 0; i < n; i++){
@@ -136,8 +147,8 @@ int main(){
       int from = lower_bound(x.begin(),x.end(),points[i].real() - EPS) - x.begin();
       if(i + 1 < n){
 	int to = lower_bound(x.begin(),x.end(),points[i+1].real() - EPS) - x.begin();  
-	cost[from][to] = abs(points[i+1]-points[i])/vw;
-	cost[to][from] = abs(points[i+1]-points[i])/vw;
+	costs[from].push_back(State(to,abs(points[i+1]-points[i])/vw));
+	costs[to].push_back(State(from,abs(points[i+1]-points[i])/vw));
       }
       Line here2right(points[i],Point(1e10,points[i].imag()));
       for(int j = i + 1; j + 1 < n; j++){
@@ -145,9 +156,18 @@ int main(){
 	Line target(points[j],points[j+1]);
 	if(intersectSS(here2right,target)){
 	  Point p = crosspoint(here2right,target);
-	  int to = lower_bound(x.begin(),x.end(),p.real() - EPS) - x.begin();  	  
-	  cost[from][to] = abs(p - points[i])/vc;
-	  cost[to][from] = abs(p - points[i])/vc;
+	  int lhs = lower_bound(x.begin(),x.end(),points[j].real() - EPS) - x.begin();  
+	  int mid = lower_bound(x.begin(),x.end(),p.real() - EPS) - x.begin();
+	  int rhs = lower_bound(x.begin(),x.end(),points[j+1].real() - EPS) - x.begin();  
+
+	  costs[from].push_back(State(mid,abs(p - points[i])/vc));
+	  costs[mid].push_back(State(from,abs(p - points[i])/vc));
+
+	  costs[lhs].push_back(State(mid,abs(p - points[j])/vw));
+	  costs[mid].push_back(State(rhs,abs(p - points[j+1])/vw));
+
+	  costs[mid].push_back(State(lhs,abs(p - points[j])/vw));
+	  costs[rhs].push_back(State(mid,abs(p - points[j+1])/vw));
 	  break;
 	}
       }
@@ -158,9 +178,18 @@ int main(){
 	Line target(points[j-1],points[j]);
 	if(intersectSS(here2left,target)){
 	  Point p = crosspoint(here2left,target);
-	  int to = lower_bound(x.begin(),x.end(),p.real() - EPS) - x.begin();
-	  cost[from][to] = abs(p - points[i])/vc;
-	  cost[to][from] = abs(p - points[i])/vc;
+	  int rhs = lower_bound(x.begin(),x.end(),points[j].real() - EPS) - x.begin();  
+	  int mid = lower_bound(x.begin(),x.end(),p.real() - EPS) - x.begin();
+	  int lhs = lower_bound(x.begin(),x.end(),points[j-1].real() - EPS) - x.begin();  
+
+	  costs[from].push_back(State(mid,abs(p - points[i])/vc));
+	  costs[mid].push_back(State(from,abs(p - points[i])/vc));
+
+	  costs[rhs].push_back(State(mid,abs(p - points[j])/vw));
+	  costs[mid].push_back(State(rhs,abs(p - points[j])/vw));
+
+	  costs[mid].push_back(State(lhs,abs(p - points[j-1])/vw));
+	  costs[lhs].push_back(State(mid,abs(p - points[j-1])/vw));
 	  break;
 	}
       }
@@ -168,12 +197,23 @@ int main(){
     
     int goal_pos = x.size() - 1;
     dp[0] = 0.0;
-    for(int i = 0; i <= goal_pos; i++){
-      for(int j = 0; j < i; j++){
-	dp[i] = min(dp[i],dp[j] + cost[j][i]);
+    priority_queue<State,vector<State>,greater<State> > que;
+    que.push(State(0,0));
+
+    while(!que.empty()){
+      State s = que.top();
+      que.pop();
+      if(s.pos == goal_pos) break;
+
+      for(int i = 0; i < costs[s.pos].size(); i++){
+	int next_pos = costs[s.pos][i].pos;
+	double next_cost = costs[s.pos][i].cost;
+	if(dp[next_pos] > s.cost + next_cost){
+	  dp[next_pos] = s.cost + next_cost;
+	  que.push(State(next_pos,s.cost + next_cost));
+	}
       }
     }
-
-    printf("%lf\n",dp[goal_pos]);
+    printf("%.7lf\n",dp[goal_pos]);
   }
 }
