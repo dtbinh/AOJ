@@ -148,12 +148,31 @@ int main(){
     double rhs = 0.0;
     double lhs = -(double)r;
 
+    bool has_point[50][50] = {};
     for(int i = 0; i < n; i++){
       int lx,rx;
       int h;
       scanf("%d %d %d",&lx,&rx,&h);
-      lines.push_back(Line(Point(lx,h),Point(rx,h)));
+      for(int x = lx; x < rx; x++){
+	has_point[x + 20][h] = true;
+      }
       rhs = max(rhs,(double)h);
+    }
+
+    lines.push_back(Line(Point(-10000,0),Point(-20,0)));
+    lines.push_back(Line(Point(20,0),Point(10000,0)));
+    for(int x = -20; x + 1 <= 20; x++){
+      bool isok = false;
+      for(int y = 40; y >= 0; y--){
+	if(has_point[x + 20][y]){
+	  lines.push_back(Line(Point(x,y),Point(x+1,y)));
+	  isok = true;
+	  break;
+	}
+      }
+      if(!isok){
+	lines.push_back(Line(Point(x,0),Point(x+1,0)));
+      }
     }
 
     for(int round = 0; round < 50; round++){
@@ -176,6 +195,6 @@ int main(){
       }
     }
 
-    printf("%lf %lf\n",lhs,rhs);
+    printf("%lf\n",rhs + (double)r);
   }
 }
