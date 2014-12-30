@@ -108,11 +108,12 @@ bool intersectCS(const Circle& s,const Line& t){
   }
   else{
     if(dot(v,c) > dot(v,v)){
-      if(s.r * s.r > dot(b,b)) return true;
+      if(dot(s.r,s.r) > dot(b,b)) return true;
       return false;
     }
     else{
-      if(dot(c,c) - dot(dot(v,c),dot(v,c)) / dot(v,v) < dot(s.r,s.r)) return true;
+      if(dot(c,c) - dot(v,c) * dot(v,c) / dot(v,v) < dot(s.r,s.r)) return true;
+      if(abs(c) < s.r || abs(b) < s.r) return true;
       return false;
     }
   }
@@ -145,10 +146,11 @@ int main(){
     if(r == 0 && n == 0) break;
     
     vector<Line> lines;
-    double rhs = 0.0;
     double lhs = -(double)r;
-
     bool has_point[50][50] = {};
+    int min_x = 100;
+    int max_x = -100;
+    double max_h = 0.0;
     for(int i = 0; i < n; i++){
       int lx,rx;
       int h;
@@ -156,29 +158,43 @@ int main(){
       for(int x = lx; x < rx; x++){
 	has_point[x + 20][h] = true;
       }
-      rhs = max(rhs,(double)h);
+      min_x = min(lx,min_x);
+      max_x = max(rx,max_x);
+      max_h = max((double)h,max_h);
     }
 
-    lines.push_back(Line(Point(-10000,0),Point(-20,0)));
-    lines.push_back(Line(Point(20,0),Point(10000,0)));
-    for(int x = -20; x + 1 <= 20; x++){
+    lines.push_back(Line(Point(-10000,0),Point(min_x,0)));
+    lines.push_back(Line(Point(max_x,0),Point(10000,0)));
+
+    for(int x = -20; x < 20; x++){
       bool isok = false;
-      for(int y = 40; y >= 0; y--){
+      for(int y = 20; y >= 0; y--){
 	if(has_point[x + 20][y]){
+	  //horizontal
 	  lines.push_back(Line(Point(x,y),Point(x+1,y)));
+
+	  //vertical
+	  lines.push_back(Line(Point(x,y),Point(x,100)));
+	  lines.push_back(Line(Point(x+1,y),Point(x+1,100)));
 	  isok = true;
 	  break;
 	}
       }
       if(!isok){
+	  //horizontal
 	lines.push_back(Line(Point(x,0),Point(x+1,0)));
+
+	//vertical
+	lines.push_back(Line(Point(x,0),Point(x,100)));
+	lines.push_back(Line(Point(x+1,0),Point(x+1,100)));
       }
     }
 
+    double rhs = max_h;
     for(int round = 0; round < 50; round++){
       double mid = lhs + (rhs - lhs) / 2.0;
       Circle c(Point(0,mid),r);
-
+      
       bool has_crosspoint = false;
       for(int i = 0; i < lines.size(); i++){
 	if(intersectCS(c,lines[i])){
@@ -186,7 +202,7 @@ int main(){
 	  break;
 	}
       }
-
+      
       if(has_crosspoint){
 	rhs = mid;
       }
@@ -194,7 +210,6 @@ int main(){
 	lhs = mid;
       }
     }
-
-    printf("%lf\n",rhs + (double)r);
+    printf("%.4lf\n",rhs + (double)r);
   }
 }
