@@ -64,7 +64,7 @@ int main(){
       for(int i = 0; i < 5; i++){
 	cout << candidates[i] << endl;
       }
-      for(int i = candidates.size() - 6; i < candidates.size(); i++){
+      for(int i = candidates.size() - 5; i < candidates.size(); i++){
 	cout << candidates[i] << endl;
       }
     }
