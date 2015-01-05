@@ -30,8 +30,11 @@ const static int ty[] = {-1,0,1,0};
 
 const static double EPS = 1e-8;
 
-int dfs(int pos,int used,const string& encrypted){
+vector<string> candidates;
+
+int dfs(int pos,int used,const string& encrypted,string current){
   if(pos == encrypted.size()){
+    candidates.push_back(current);
     return 1;
   }
   int res = 0;
@@ -40,11 +43,11 @@ int dfs(int pos,int used,const string& encrypted){
     if(offset == 0){
       if(encrypted[pos] != 'a' 
 	 && !(used & (1 << ((encrypted[pos] + offset) - 'a')))) continue;
-      res += dfs(pos + 1,used,encrypted);
+      res += dfs(pos + 1,used,encrypted,current + (char)(encrypted[pos] + offset));
     }
     else if(offset == 1){
       if(used & (1 << ((encrypted[pos] + offset) - 'a'))) continue;
-      res += dfs(pos + 1,used | (1 << ((encrypted[pos] + offset) - 'a')),encrypted);
+      res += dfs(pos + 1,used | (1 << ((encrypted[pos] + offset) - 'a')),encrypted,current + (char)(encrypted[pos] + offset));
     }
   }
   return res;
@@ -54,6 +57,21 @@ int main(){
   string str;
   while(cin >> str){
     if(str == "#") break;
-    printf("%d\n",dfs(0,0,str));
+    candidates.clear();
+    printf("%d\n",dfs(0,0,str,""));
+    sort(candidates.begin(),candidates.end());
+    if(candidates.size() > 10){
+      for(int i = 0; i < 5; i++){
+	cout << candidates[i] << endl;
+      }
+      for(int i = candidates.size() - 6; i < candidates.size(); i++){
+	cout << candidates[i] << endl;
+      }
+    }
+    else{
+      for(int i = 0; i < candidates.size(); i++){
+	cout << candidates[i] << endl;
+      }
+    }
   }
 }
