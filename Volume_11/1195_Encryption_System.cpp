@@ -38,7 +38,8 @@ int dfs(int pos,int used,const string& encrypted){
   for(int offset = 0; offset <= 1; offset++){
     if(encrypted[pos] == 'z' && offset == 1) continue;
     if(offset == 0){
-      if(!(used & (1 << ((encrypted[pos] + offset) - 'a')))) continue;
+      if(encrypted[pos] != 'a' 
+	 && !(used & (1 << ((encrypted[pos] + offset) - 'a')))) continue;
       res += dfs(pos + 1,used,encrypted);
     }
     else if(offset == 1){
