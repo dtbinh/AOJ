@@ -93,9 +93,6 @@ int main(){
       }
     }
 
-    ll div = GCD(numerator,denominator);
-    numerator /= div;
-    denominator /= div;
     if(denominator <= 1){
       printf("%lld\n",numerator);
     }
