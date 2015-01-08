@@ -23,7 +23,7 @@
 using namespace std;
   
 typedef long long ll;
-typedef pair <int,int> P;
+typedef pair <ll,ll> P;
 typedef pair <int,P> PP;
   
 static const double EPS = 1e-8;
@@ -45,6 +45,16 @@ ll GCD(ll a ,ll b){
   return b > 0 ? GCD(b,a%b) : a;
 }
 
+P compute_dir(ll lhs_numerator,ll lhs_denominator,
+	      ll rhs_numerator,ll rhs_denominator){
+
+  ll numerator = lhs_numerator * rhs_denominator + rhs_numerator * lhs_denominator;
+  ll denominator = lhs_denominator * rhs_denominator;
+  ll div = GCD(numerator,denominator);
+  return P(numerator / div,denominator / div);
+
+}
+
 int main(){
   string str;
   while(cin >> str){
@@ -52,32 +62,45 @@ int main(){
 
     int west_count = 0;
     int north_count = 0;
-    for(int i = 0; i < str.size(); i++){
+    ll numerator = -1;
+    ll denominator = -1;
+    for(int i = str.size() -1; i >= 0; i--){
       if(str[i] == 'n'){
+	if(numerator == -1){
+	  numerator = 0;
+	  denominator = 1;
+	}
+	else{
+	  P next = compute_dir(numerator,denominator,
+			       -90,fast_pow(2,north_count + west_count));
+	  numerator = next.first;
+	  denominator = next.second;
+	}
 	north_count++;
       }
       else if(str[i] == 'w'){
+	if(numerator == -1){
+	  numerator = 90;
+	  denominator = 1;
+	}
+	else{
+	  P next = compute_dir(numerator,denominator,
+			       90,fast_pow(2,north_count + west_count));
+	  numerator = next.first;
+	  denominator = next.second;
+	}
 	west_count++;
       }
     }
 
-    ll max_count = max(north_count,west_count);
-
-    int sum = 0;
-    sum += fast_pow(2,max_count - 1) * 90;
-    for(ll i = 1; i <= north_count; i++){
-      sum -= 90 * fast_pow(2,max_count - i);
-    }
-    for(ll i = 1; i <= west_count; i++){
-      sum += 90 * fast_pow(2,max_count - i);
-    }
-    ll div = GCD(sum,fast_pow(2,max_count));
-
-    if(fast_pow(2,max_count) / div == 1){
-      printf("%lld\n",sum / div);
+    ll div = GCD(numerator,denominator);
+    numerator /= div;
+    denominator /= div;
+    if(denominator <= 1){
+      printf("%lld\n",numerator);
     }
     else{
-      printf("%lld/%lld\n",sum / div,fast_pow(2,max_count) / div);
+      printf("%lld/%lld\n",numerator,denominator);
     }
   }
 }
