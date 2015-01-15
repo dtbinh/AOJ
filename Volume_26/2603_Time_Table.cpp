@@ -38,15 +38,15 @@ struct User {
     : time(time),pos(pos) {}
 };
  
-int dp[10001];
+int dp[2001];
  
 int dfs(int start_time,int cost,int limit,const vector<User>& users){
   if(limit <= 0) return cost;
   if(start_time > 100) return cost;
  
   int res = cost;
-  int tmp[10001];
-  memcpy(tmp,dp,sizeof(int)*10000);
+  int tmp[2001];
+  memcpy(tmp,dp,sizeof(int)*2000);
   for(int user_i = 0; user_i < users.size(); user_i++){
     //in-time
     int diff;
@@ -68,7 +68,7 @@ int dfs(int start_time,int cost,int limit,const vector<User>& users){
   }
   res = min(res,dfs(start_time + 1,sum,limit - 1,users));
  
-  memcpy(dp,tmp,sizeof(int)*10000);
+  memcpy(dp,tmp,sizeof(int)*2000);
   res = min(res,dfs(start_time + 1,cost,limit,users));
   return res;
 }
