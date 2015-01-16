@@ -37,42 +37,13 @@ struct User {
   User(int time,int pos)
     : time(time),pos(pos) {}
 };
+
+int dp[2001][2001];
  
-int dp[2001];
- 
-int dfs(int start_time,int cost,int limit,const vector<User>& users){
-  if(limit <= 0) return cost;
-  if(start_time > 100) return cost;
- 
-  int res = cost;
-  int tmp[2001];
-  memcpy(tmp,dp,sizeof(int)*2000);
-  for(int user_i = 0; user_i < users.size(); user_i++){
-    //in-time
-    int diff;
-    if((diff = (users[user_i].pos - start_time) - users[user_i].time) >= 0){
-      if(dp[user_i] > diff){
-        dp[user_i] = diff;
-      }
-    }
-    //too fast
-    else{
-      continue;
-    }
-  }
- 
-  int sum = 0;
-  for(int user_i = 0; user_i < users.size(); user_i++){
-    sum += dp[user_i];
-    if(sum >= INF) break;
-  }
-  res = min(res,dfs(start_time + 1,sum,limit - 1,users));
- 
-  memcpy(dp,tmp,sizeof(int)*2000);
-  res = min(res,dfs(start_time + 1,cost,limit,users));
-  return res;
+bool comp_user(const User& s,const User& t){
+  return (s.pos - s.time) < (t.pos - t.time);
 }
- 
+
 int main(){
   int total_stops;
   int total_users;
@@ -81,9 +52,8 @@ int main(){
                &total_stops,
                &total_users,
                &total_buses)){
-    memset(dp,0x3f,sizeof(dp));
     vector<User> users;
- 
+  
     int stops[10001];
     for(int stop_i = 0; stop_i < total_stops; stop_i++){
       int dist;
@@ -96,7 +66,35 @@ int main(){
       stop_i--;
       users.push_back(User(time,stops[stop_i]));
     }
- 
-    printf("%d\n",dfs(-100,INF,total_buses,users));
+
+    sort(users.begin(),users.end(),comp_user);
+    memset(dp,0x3f,sizeof(dp));
+    dp[0][0] = 0;
+    // for(int user_i = 0; user_i < users.size(); user_i++){
+    //   dp[user_i][0] = 0;
+    // }
+
+    for(int used_count = 0; used_count < total_buses; used_count++){
+      for(int user_i = 0; user_i < users.size(); user_i++){
+	for(int user_j = 0; user_j <= user_i; user_j++){
+	  int sum = 0;
+	  for(int user_k = user_j + 1; user_k <= user_i; user_k++){
+	    int len
+	      = (users[user_i].pos - users[user_i].time)
+	      - (users[user_k].pos - users[user_k].time);
+
+	    cout << users[user_i].pos << endl;
+	    cout << users[user_i].time << endl;
+	    cout << users[user_k].pos << endl;
+	    cout << users[user_k].time << endl;
+	    sum += len;
+	  } 	
+	  // cout << sum << endl;
+	  dp[user_i][used_count + 1] = min(dp[user_i][used_count + 1],
+					   dp[user_j][used_count] + sum);
+	}
+      }
+    }
+    printf("%d\n",dp[total_users - 1][total_buses]);
   }
 }
