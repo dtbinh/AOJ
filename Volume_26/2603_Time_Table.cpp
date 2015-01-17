@@ -41,7 +41,7 @@ struct User {
 int dp[2001][2001];
  
 bool comp_user(const User& s,const User& t){
-  return (s.pos - s.time) < (t.pos - t.time);
+  return (s.time - s.pos) < (t.time - t.pos);
 }
 
 int main(){
@@ -69,32 +69,33 @@ int main(){
 
     sort(users.begin(),users.end(),comp_user);
     memset(dp,0x3f,sizeof(dp));
-    dp[0][0] = 0;
+    // dp[0][0] = 0;
     // for(int user_i = 0; user_i < users.size(); user_i++){
     //   dp[user_i][0] = 0;
     // }
-
+    dp[0][0] = 0;
     for(int used_count = 0; used_count < total_buses; used_count++){
       for(int user_i = 0; user_i < users.size(); user_i++){
 	for(int user_j = 0; user_j <= user_i; user_j++){
 	  int sum = 0;
-	  for(int user_k = user_j + 1; user_k <= user_i; user_k++){
+	  for(int user_k = user_j; user_k <= user_i; user_k++){
 	    int len
-	      = (users[user_i].pos - users[user_i].time)
-	      - (users[user_k].pos - users[user_k].time);
+	      = (users[user_i].time - users[user_i].pos) //dept time for user_i
+	      - (users[user_k].time - users[user_k].pos); 
 
-	    cout << users[user_i].pos << endl;
-	    cout << users[user_i].time << endl;
-	    cout << users[user_k].pos << endl;
-	    cout << users[user_k].time << endl;
+	    // cout << "dept: " << (users[user_i].time - users[user_i].pos) << endl;
+	    // cout << users[user_i].pos << endl;
+	    // cout << users[user_i].time << endl;
+	    // cout << users[user_k].pos << endl;
+	    // cout << users[user_k].time << endl;
 	    sum += len;
 	  } 	
-	  // cout << sum << endl;
-	  dp[user_i][used_count + 1] = min(dp[user_i][used_count + 1],
-					   dp[user_j][used_count] + sum);
+	  // cout << "sum " << sum << endl;
+	  dp[user_i + 1][used_count + 1] = min(dp[user_i + 1][used_count + 1],
+					       dp[user_j][used_count] + sum);
 	}
       }
     }
-    printf("%d\n",dp[total_users - 1][total_buses]);
+    printf("%d\n",dp[total_users][total_buses]);
   }
 }
