@@ -47,37 +47,39 @@ bool comp_user(const User& s,const User& t){
 
 int compute_sum(int user_i,int user_j,const vector<User>& users){
   int sum = 0;
-  for(int user_k = user_j; user_k <= user_i; user_k++){
+  for(int user_k = user_j; user_k < user_i; user_k++){
     int wait
-      = (users[user_i].time - users[user_i].pos) //dept time for user_i
+      = (users[user_i].time - users[user_i].pos) //user_i's waiting time is zero
       - (users[user_k].time - users[user_k].pos);
     sum += wait;
   }
+  // cout << "sum: " << sum << endl;
   return sum;
 }
 
 int compute_opt_waiting_time(int used_count,int user_i,int user_j,const vector<User>& users){
-  return dp[used_count][user_i] + compute_sum(user_i,user_j,users);
+  if(user_j > user_i) return INF;
+  return dp[used_count][user_j] + compute_sum(user_i,user_j,users);
 }
 
 void dfs(int lx,int ly,int rx,int ry,int used_count,const vector<User>& users){
   if(lx > rx || ly > ry) return;
-  int res = INF;
   int pivot_y = (ly + ry) / 2;
-  int tmp_min = INF;
+  int current_opt = INF;
   int pivot_x;
   for(int x = lx; x <= rx; x++){
-    int len = compute_opt_waiting_time(used_count,pivot_y,x,users);
+    int opt_candidate = compute_opt_waiting_time(used_count,pivot_y,x,users);
     // cout << "len " << len << endl;
-    if(tmp_min > len){
-      tmp_min = len;
+    if(current_opt > opt_candidate){
+      current_opt = opt_candidate;
       pivot_x = x;
     }
   }
 
-  opt_x[pivot_y] = pivot_x;
-  dfs(lx,ly,pivot_x - 1,pivot_y - 1,used_count,users);
-  dfs(pivot_x + 1,pivot_y + 1,rx,ry,used_count,users);
+  cout << "co " << current_opt << endl;
+  opt_x[pivot_y] = current_opt;
+  dfs(lx,ly,pivot_x,pivot_y - 1,used_count,users);
+  dfs(pivot_x,pivot_y + 1,rx,ry,used_count,users);
 }
 
 int main(){
@@ -107,13 +109,12 @@ int main(){
 
     dp[0][0] = 0;
     for(int used_count = 0; used_count < total_buses; used_count++){
-      dfs(0,0,total_users - 1,total_users - 1,used_count,users);
+      dfs(0,0,total_users,total_users,used_count,users);
       for(int user_i = 0; user_i < total_users; user_i++){
 	dp[used_count + 1][user_i]
-	  = min(dp[used_count + 1][user_i],
-		compute_opt_waiting_time(used_count,user_i,opt_x[user_i],users));
+	  = min(dp[used_count + 1][user_i],opt_x[user_i]);
       }
     }
-    printf("%d\n",dp[total_buses]);
+    printf("%d\n",dp[total_buses][total_users - 1]);
   }
 }
