@@ -40,12 +40,17 @@ struct User {
 
 int dp[2001][2001];
 int opt_waiting_time[2001];
+int waiting_sum[2001][2001];
  
 bool comp_user(const User& s,const User& t){
   return (s.time - s.pos) < (t.time - t.pos);
 }
 
 int compute_sum(int user_i,int user_j,int used_count,const vector<User>& users){
+  if(waiting_sum[user_j + (used_count == 0 ? 0 : 1)][user_i] != -1){
+    return waiting_sum[user_j + (used_count == 0 ? 0 : 1)][user_i];
+  }
+
   int sum = 0;
   for(int user_k = user_j + (used_count == 0 ? 0 : 1); user_k < user_i; user_k++){
     int wait
@@ -54,7 +59,7 @@ int compute_sum(int user_i,int user_j,int used_count,const vector<User>& users){
     sum += wait;
   }
 
-  return sum;
+  return (waiting_sum[user_j + (used_count == 0 ? 0 : 1)][user_i] = sum);
 }
 
 int compute_opt_waiting_time(int user_i,int user_j,int used_count,const vector<User>& users){
@@ -128,6 +133,7 @@ int main(){
 
     sort(users.begin(),users.end(),comp_user);
     memset(dp,0x3f,sizeof(dp));
+    memset(waiting_sum,-1,sizeof(waiting_sum));
 
     dp[0][0] = 0;
     for(int used_count = 0; used_count < total_buses; used_count++){
