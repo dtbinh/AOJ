@@ -39,31 +39,34 @@ struct User {
 };
 
 int dp[2001][2001];
-int opt_x[2001];
+int opt_waiting_time[2001];
  
 bool comp_user(const User& s,const User& t){
   return (s.time - s.pos) < (t.time - t.pos);
 }
 
-int compute_sum(int user_i,int user_j,const vector<User>& users){
+int compute_sum(int user_i,int user_j,int used_count,const vector<User>& users){
   int sum = 0;
-  for(int user_k = user_j; user_k < user_i; user_k++){
+  for(int user_k = user_j + (used_count == 0 ? 0 : 1); user_k < user_i; user_k++){
     int wait
       = (users[user_i].time - users[user_i].pos) //user_i's waiting time is zero
       - (users[user_k].time - users[user_k].pos);
     sum += wait;
   }
-  // cout << "sum: " << sum << endl;
+
   return sum;
 }
 
 int compute_opt_waiting_time(int used_count,int user_i,int user_j,const vector<User>& users){
   if(user_j > user_i) return INF;
-  return dp[used_count][user_j] + compute_sum(user_i,user_j,users);
+  // printf("dp[used_count][user_j] := dp[%d][%d] := %d\n",used_count,user_j,dp[used_count][user_j]);
+  // printf("sum(user_i,user_j) := sum(%d,%d) = %d\n",user_i,user_j,compute_sum(user_i,user_j,used_count,users));
+  return dp[used_count][user_j] + compute_sum(user_i,user_j,used_count,users);
 }
 
 void dfs(int lx,int ly,int rx,int ry,int used_count,const vector<User>& users){
-  if(lx > rx || ly > ry) return;
+  if(ly > ry) return;
+
   int pivot_y = (ly + ry) / 2;
   int current_opt = INF;
   int pivot_x;
@@ -76,10 +79,21 @@ void dfs(int lx,int ly,int rx,int ry,int used_count,const vector<User>& users){
     }
   }
 
-  cout << "co " << current_opt << endl;
-  opt_x[pivot_y] = current_opt;
+  // printf("pivot_y: %d pivot_x: %d opt: %d\n",pivot_y,pivot_x,current_opt);
+  opt_waiting_time[pivot_y] = current_opt;
   dfs(lx,ly,pivot_x,pivot_y - 1,used_count,users);
   dfs(pivot_x,pivot_y + 1,rx,ry,used_count,users);
+}
+
+void print_monotone_minimal_table(int used_count,vector<User>& users){
+  for(int y = 0; y < users.size(); y++){
+    for(int x = 0; x < users.size(); x++){
+      int opt_candidate = compute_opt_waiting_time(used_count,y,x,users);
+      printf("%d ",opt_candidate);
+    }
+    printf("\n");
+  }
+  printf("\n");
 }
 
 int main(){
@@ -109,11 +123,12 @@ int main(){
 
     dp[0][0] = 0;
     for(int used_count = 0; used_count < total_buses; used_count++){
-      dfs(0,0,total_users,total_users,used_count,users);
+      // print_monotone_minimal_table(used_count,users);
+      dfs(0,0,total_users - 1,total_users - 1,used_count,users);
       for(int user_i = 0; user_i < total_users; user_i++){
-	dp[used_count + 1][user_i]
-	  = min(dp[used_count + 1][user_i],opt_x[user_i]);
+	dp[used_count + 1][user_i] = opt_waiting_time[user_i];
       }
+      // cout << "\n";
     }
     printf("%d\n",dp[total_buses][total_users - 1]);
   }
