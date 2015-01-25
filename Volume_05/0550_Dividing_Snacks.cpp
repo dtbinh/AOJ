@@ -43,15 +43,17 @@ int main(){
     }
 
     memset(dp,0x3f,sizeof(dp));
-    dp[0][0][1] = dp[0][0][0] = 0;
+    dp[0][0][0] = 0;
     for(int pos = 0; pos < N; pos++){
       for(int num_of_zero = pos; num_of_zero >= 0; num_of_zero--){
 	dp[(pos+1) % 2][num_of_zero+1][0]
-	  = min(dp[pos % 2][num_of_zero+1][0],dp[pos % 2][num_of_zero][1] + costs[pos]);
+	  = min(dp[pos % 2][num_of_zero][0],dp[pos % 2][num_of_zero][1] + costs[pos]);
 	dp[(pos+1) % 2][num_of_zero][1]
 	  = min(dp[pos % 2][num_of_zero][1],dp[pos % 2][num_of_zero][0] + costs[pos]);
       }
+      memset(dp[pos % 2],0x3f,sizeof(dp[pos % 2]));
     }
-    printf("%d\n",dp[0][N / 2][0]);
+    printf("%d\n",dp[N % 2][N / 2][0]);
+    break;
   }
 }
