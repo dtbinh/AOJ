@@ -37,8 +37,8 @@ static const int short_sides[4] = {16,19,13,10};
 void rotate(int cell[31],int pattern_i){
   for(int i = 0; i < 3; i++){
     swap(cell[31 - tops[pattern_i][i]],cell[tops[pattern_i][2 - i]]);
-    swap(cell[long_sides[pattern_i][2 - i]],cell[long_sides[pattern_i][i]]);
   }
+  swap(cell[long_sides[pattern_i][0]],cell[long_sides[pattern_i][2]]);
   swap(cell[31-short_sides[pattern_i]],cell[short_sides[pattern_i]]);
 }
 
@@ -87,11 +87,20 @@ int dfs(int cell[31],int depth){
   return res;
 }
 
+void debug(int cell[31]){
+  printf(" %d%d%d    \n",cell[21],cell[20],cell[19]);
+  printf("%d%d%d%d%d%d%d%d\n",cell[16],cell[1],cell[2],cell[3],cell[15],cell[28],cell[29],cell[30]);
+  printf("%d%d%d%d%d%d%d%d\n",cell[17],cell[4],cell[5],cell[6],cell[14],cell[25],cell[26],cell[27]);
+  printf("%d%d%d%d%d%d%d%d\n",cell[18],cell[7],cell[8],cell[9],cell[13],cell[22],cell[23],cell[24]);
+  printf(" %d%d%d    \n",cell[10],cell[11],cell[12]);
+  printf("\n");
+}
+
 int main(){
   int total_test_cases;
   while(~scanf("%d",&total_test_cases)){
-    int cell[31];
     for(int test_i = 0; test_i < total_test_cases; test_i++){
+      int cell[31];
       for(int cell_i = 1; cell_i <= 30; cell_i++){
 	int num;
 	scanf("%d",&num);
