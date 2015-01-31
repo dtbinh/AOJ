@@ -38,13 +38,42 @@ int main(){
 	       &total_students,
 	       &total_repeat_count,
 	       &total_questions)){
+
+    vector<bool> students;
+    for(int student_i = 0; student_i < total_students; student_i++){
+      students.push_back(true);
+    }
+    
+    int current_pos = 0;
+
     for(int repeat_i = 0; repeat_i < total_repeat_count; repeat_i++){
       int target;
       scanf("%d",&target);
+      int limit = target;
+      while(limit > 0){
+	if(target % 2 == 0){
+	  current_pos++;
+	  current_pos %= total_students;
+	}
+	else{
+	  current_pos--;
+	  if(current_pos < 0){
+	    current_pos = total_students - 1;
+	  }
+	}
+	if(!students[current_pos]) continue;
+	limit--;
+      }
+
+      students[current_pos] = false;
+      current_pos++;
+      current_pos %= total_students;
     }
+
     for(int question_i = 0; question_i < total_questions; question_i++){
       int query;
       scanf("%d",&query);
+      printf("%d\n",students[query] ? 1 : 0);
     }
   }
 }
