@@ -30,6 +30,14 @@ const static int ty[] = {-1,0,1,0};
  
 static const double EPS = 1e-8;
 
+struct Student {
+  bool win;
+  int next;
+  int prev;
+  Student(bool _win,int _prev,int _next)
+    : win(_win),prev(_prev),next(_next) {}
+};
+
 int main(){
   int total_students;
   int total_repeat_count;
@@ -39,9 +47,11 @@ int main(){
 	       &total_repeat_count,
 	       &total_questions)){
 
-    vector<bool> students;
+    vector<Student> students;
     for(int student_i = 0; student_i < total_students; student_i++){
-      students.push_back(true);
+      students.push_back(Student(true,
+				 ((student_i - 1) + total_students) % total_students,
+				 (student_i + 1) % total_students));
     }
     
     int current_pos = 0;
@@ -52,31 +62,26 @@ int main(){
       int limit = target;
       while(limit > 0){
 	if(target % 2 == 0){
-	  current_pos++;
-	  current_pos %= total_students;
+	  current_pos = students[current_pos].next;
 	}
 	else{
-	  current_pos--;
-	  if(current_pos < 0){
-	    current_pos = total_students - 1;
-	  }
+	  current_pos = students[current_pos].prev;
 	}
-	if(!students[current_pos]) continue;
 	limit--;
       }
 
-      students[current_pos] = false;
-
-      do{
-	current_pos++;
-	current_pos %= total_students;
-      } while(!students[current_pos]);
+      students[current_pos].win = false;
+      students[students[current_pos].prev].next
+	= students[current_pos].next;
+      students[students[current_pos].next].prev
+	= students[current_pos].prev;
+      current_pos = students[current_pos].next;
     }
 
     for(int question_i = 0; question_i < total_questions; question_i++){
       int query;
       scanf("%d",&query);
-      printf("%d\n",students[query] ? 1 : 0);
+      printf("%d\n",students[query].win ? 1 : 0);
     }
   }
 }
