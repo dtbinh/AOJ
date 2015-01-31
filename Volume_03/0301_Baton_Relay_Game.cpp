@@ -66,8 +66,11 @@ int main(){
       }
 
       students[current_pos] = false;
-      current_pos++;
-      current_pos %= total_students;
+
+      do{
+	current_pos++;
+	current_pos %= total_students;
+      } while(!students[current_pos]);
     }
 
     for(int question_i = 0; question_i < total_questions; question_i++){
