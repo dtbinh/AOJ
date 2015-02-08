@@ -28,18 +28,20 @@ int compute_cost(int p1,int p2,int dept_station,int total_stations,
 		 const vector<int>& stations){
   
   int res = INF;
-  if(stations[p1] == dept_station 
-     || stations[p2] == dept_station){
-    int dist1 = abs(stations[p2] - stations[p1]);
-    int dist2 = total_stations - abs(stations[p2] - stations[p1]);
-    res = 100 * min(dist1 * 2 + dist2,dist1 + dist2 * 2);
+
+  if(stations[p1] < dept_station
+     && dept_station < stations[p2] ){
+    int dist1 = abs(stations[p1] - dept_station);
+    int dist2 = abs(stations[p2] - dept_station);
+    res = 100 * min(dist1 + dist2 * 2, dist1 * 2 + dist2);
   }
+
   else if(stations[p1] > dept_station){
     int dist1 = abs(dept_station - stations[p1]);
     int dist2 = (total_stations - stations[p2]) + dept_station;
     res = 100 * min(dist1 * 2 + dist2,dist1 + dist2 * 2);
   }
-  else if(stations[p1] < dept_station){
+  else if(stations[p2] < dept_station){
     int dist1 = abs(dept_station - stations[p2]);
     int dist2 = (total_stations - dept_station) + stations[p1];
     res = 100 * min(dist1 * 2 + dist2,dist1 + dist2 * 2);
