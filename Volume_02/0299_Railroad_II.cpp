@@ -49,6 +49,7 @@ int compute_cost(int p1,int p2,int dept_station,int total_stations,
 
   return res;
 }
+
 int main(){
   int total_stations;
   int total_buy_stations;
@@ -70,6 +71,12 @@ int main(){
 
     if(dept_station < stations[0]){
       res = 100 * (stations[stations.size() - 1] - dept_station);
+      res = min(res,100 * (dept_station + (total_stations - stations[0])));
+    }
+
+    if(dept_station > stations[stations.size() - 1]){
+      res = min(res,100 * (dept_station - stations[0]));
+      res = min(res,100 * ((total_stations - dept_station) + stations[stations.size() - 1]));
     }
 
     for(int i = 0; i < stations.size(); i++){
