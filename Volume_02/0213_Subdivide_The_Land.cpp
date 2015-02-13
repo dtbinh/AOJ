@@ -31,20 +31,87 @@ static const double EPS = 1e-8;
 static const int tx[] = {0,1,0,-1};
 static const int ty[] = {-1,0,1,0};
 
+int stage_w,stage_h,total_buyers;
+
+bool check(int stage[50][50]){
+  for(int y = 0; y < stage_h; y++){
+    for(int x = 0; x < stage_w; x++){
+      if(stage[y][x] == 0) return false;
+    }
+  }
+  return true;
+}
+
+int dfs(int id,int areas[50],P occupied[50],int stage[50][50]){
+  if(id > total_buyers){
+    return check(stage) ? 1 : 0;
+  }
+
+  bool res = false;
+  for(int w = 1; w <= areas[id]; w++){
+    int h = areas[id] / w;
+    if(h * w != areas[id]) continue;
+    int cx = occupied[id].first;
+    int cy = occupied[id].second;
+
+    for(int lx = cx - w; lx <= cx; lx++){
+      if(lx < 0) continue;
+
+      int rx = cx + w;
+
+      if(rx >= stage_w) continue;
+      for(int ly = cy - h; ly <= cy; ly++){
+	if(ly < 0) continue;
+
+	int ry = cy + h;
+	if(ry >= stage_h) continue;
+
+	int prev[50][50];
+	memcpy(stage,prev,sizeof(int)*50*50);
+	for(int x = lx; x <= rx; x++){
+	  for(int y = ly; y <= ry; y++){
+	    if(stage[y][x] == 0){
+	      stage[y][x] = id;
+	    }
+	    else if(stage[y][x] != id){
+	      goto fail;
+	    }
+	  }
+	}
+	res += dfs(id + 1,areas,occupied,stage);
+      fail:;
+	memcpy(prev,stage,sizeof(int)*50*50);
+      }
+    }
+  }
+
+  return res;
+}
+
 int main(){
-  int W,H,total_buyer;
-  while(~scanf("%d %d %d",&W,&H,&total_buyers)){
+
+  while(~scanf("%d %d %d",&stage_w,&stage_h,&total_buyers)){
+    if(stage_w == 0 && stage_h == 0) break;
+
     int stage[50][50];
+    int areas[50];
     for(int buyer_i = 0; buyer_i < total_buyers; buyer_i++){
       int id;
       int area;
       scanf("%d %d",&id,&area);
+      areas[id] = area;
     }
 
-    for(int y = 0; y < H; y++){
-      for(int x = 0; x < W; x++){
+    P occupied[50];
+    for(int y = 0; y < stage_h; y++){
+      for(int x = 0; x < stage_w; x++){
 	scanf("%d",&stage[y][x]);
+	if(stage[y][x] != 0){
+	  occupied[stage[y][x]] = P(x,y);
+	}
       }
     }
+
+    printf("%d\n",dfs(1,areas,occupied,stage));
   }
 }
