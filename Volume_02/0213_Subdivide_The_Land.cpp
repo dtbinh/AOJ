@@ -37,7 +37,7 @@ int ans[50][50];
 void disp(int stage[50][50]){
   for(int y = 0; y < stage_h; y++){
     for(int x = 0; x < stage_w; x++){
-      printf("%d",stage[y][x]);
+      printf("%d%s",stage[y][x], x == stage_w - 1 ? "" : " ");
     }
     printf("\n");
   }
