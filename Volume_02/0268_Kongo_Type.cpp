@@ -32,8 +32,9 @@ static const int tx[] = {0,1,0,-1};
 static const int ty[] = {-1,0,1,0};
 
 string hex2bin(const char hex[256]){
-  int parts[4];
-  sscanf(hex,"%2x%2x%2x%2x",parts,parts+1,parts+2,parts+3);
+  int parts[8];
+  sscanf(hex,"%2x%2x%2x%2x",
+	 parts,parts+1,parts+2,parts+3);
 
   string res = "";
   for(int i = 0; i < 4; i++){
@@ -49,32 +50,46 @@ string hex2bin(const char hex[256]){
 }
 
 string bin2dec(const string& bin){
-  double sign = (bin[0] == '1' ?  -1 : +1);
+  int sign = (bin[0] == '1' ?  -1 : +1);
 
-  double integers = 0.0;
-  double mul = 1.0;
+  int integers = 0;;
+  int int_mul = 1;
   for(int i = 1 + 24 - 1,j = 0; i >= 1; i--,j++){
     if(bin[i] == '1'){
-      integers += mul;
+      integers += int_mul;
     }
-    mul *= 2.0;
+    int_mul *= 2;
   }
 
-  mul = 0.5;
+  double dec_mul = 0.5;
   double decimals = 0.0;
   for(int i = 25; i < 32; i++){
     if(bin[i] == '1'){
-      decimals += mul;
+      decimals += dec_mul;
     }
-    mul *= 0.5;
+    dec_mul *= 0.5;
   }
 
+  char tmp_decimals[10];
+  sprintf(tmp_decimals,"%.10lf",decimals);
+  int r_pos = 10;
+  int l_pos = 1;
+  for(int i = 10; i >= 0; i--){
+    if(tmp_decimals[i] != '0'){
+      r_pos = i;
+      break;
+    }
+    r_pos = i;
+  }
+  
   string res = "";
   stringstream ss;
-  ss << sign * (integers + decimals);
+  res += (sign < 0 ? "-" : "");
+  ss << integers;
   res += ss.str();
-  if(decimals == 0){
-    res += ".0";
+  if(l_pos == r_pos) r_pos++;
+  for(int i = l_pos; i <= r_pos; i++){
+    res.push_back(tmp_decimals[i]);
   }
   return res;
 }
