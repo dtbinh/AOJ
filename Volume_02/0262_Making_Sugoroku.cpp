@@ -70,7 +70,37 @@ int main(){
 	que.push(State(next,s.cost + 1));
       }
     }
+    vector<int> starts;
+    for(int i = 0; i <= total_cells + 1; i++){
+      if(dp[i] < INF) starts.push_back(i);
+    }
 
-    printf("%s\n", dp[total_cells + 1] < INF ? "OK" : "NG");
+    bool has_unable = false;
+    for(int start_i = 0; start_i < starts.size(); start_i++){
+      int start = starts[start_i];
+      memset(dp,0x3f,sizeof(dp));
+
+      que.push(State(start,0));
+      dp[start] = 0;
+      while(!que.empty()){
+	State s = que.top();
+	que.pop();
+	for(int i = 1; i <= max_roulette_num; i++){
+	  int next = s.x + i;
+	  if(next > total_cells + 1) continue;
+	  next += stage[next];
+	  if(dp[next] <= s.cost + 1) continue;
+	  dp[next] = s.cost + 1;
+	  que.push(State(next,s.cost + 1));
+	}
+      }
+
+      if(dp[total_cells + 1] >= INF){
+	has_unable = true;
+	break;
+      }
+    }
+    
+    printf("%s\n", has_unable ? "NG" : "OK");
   }
 }
