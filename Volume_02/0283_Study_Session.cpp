@@ -41,24 +41,22 @@ int main(){
       scanf("%d",&score);
       scores.push_back(score);
     }
-    vector<int> leaders;
+    set<int> leaders;
     for(int query_i = 0; query_i < total_queries; query_i++){
       string operation;
       int num;
       cin >> operation >> num;
       if(operation == "ADD"){
-	leaders.push_back(num - 1);
-	sort(leaders.begin(),leaders.end());
+	leaders.insert(num - 1);
       }
       else if(operation == "REMOVE"){
 	leaders.erase(lower_bound(leaders.begin(),leaders.end(),num - 1));
-	sort(leaders.begin(),leaders.end());
       }
       else if(operation == "CHECK"){
 	vector<int> leader_scores;
 
-	for(int leader_i = 0; leader_i < leaders.size(); leader_i++){
-	  leader_scores.push_back(scores[leaders[leader_i]]);
+	for(set<int>::iterator leader_it = leaders.begin(); leader_it != leaders.end(); leader_it++){
+	  leader_scores.push_back(scores[*leader_it]);
 	}
 	sort(leader_scores.begin(),leader_scores.end());
 
