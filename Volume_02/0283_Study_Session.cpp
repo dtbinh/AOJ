@@ -48,9 +48,11 @@ int main(){
       cin >> operation >> num;
       if(operation == "ADD"){
 	leaders.push_back(num - 1);
+	sort(leaders.begin(),leaders.end());
       }
       else if(operation == "REMOVE"){
 	leaders.erase(lower_bound(leaders.begin(),leaders.end(),num - 1));
+	sort(leaders.begin(),leaders.end());
       }
       else if(operation == "CHECK"){
 	vector<int> leader_scores;
@@ -58,6 +60,7 @@ int main(){
 	for(int leader_i = 0; leader_i < leaders.size(); leader_i++){
 	  leader_scores.push_back(scores[leaders[leader_i]]);
 	}
+	sort(leader_scores.begin(),leader_scores.end());
 
 	priority_queue<int> diff_log;
 	for(int score_i = 0; score_i < scores.size(); score_i++){
@@ -67,13 +70,14 @@ int main(){
 	    if(pos == leader_scores.size()){
 	      diff_log.push(INF);
 	    }
-	    else if(pos == 0 || leader_scores[pos] == score){
+	    else if(pos <leader_scores.size()){
 	      int diff = leader_scores[pos] - score;
-	      diff_log.push(diff);
-	    }
-	    else if(pos < leader_scores.size()){	    
-	      int diff = leader_scores[pos - 1] - score;
-	      diff_log.push(diff);
+	      if(diff >= 0){
+		diff_log.push(diff);
+	      }
+	      else{
+		diff_log.push(INF);
+	      }
 	    }
 	  }
 	}
