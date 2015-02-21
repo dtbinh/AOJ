@@ -35,12 +35,17 @@ int main(){
   int total_students;
   int total_queries;
   while(~scanf("%d %d",&total_students,&total_queries)){
-    vector<int> scores;
+    vector<int> student_scores;
+    vector<int> sorted_student_scores;
     for(int student_i = 0; student_i < total_students; student_i++){
       int score;
       scanf("%d",&score);
-      scores.push_back(score);
+      student_scores.push_back(score);
+      sorted_student_scores.push_back(score);;
     }
+
+    sort(sorted_student_scores.begin(),sorted_student_scores.end());
+
     set<int> leaders;
     for(int query_i = 0; query_i < total_queries; query_i++){
       string operation;
@@ -56,43 +61,45 @@ int main(){
 	vector<int> leader_scores;
 
 	for(set<int>::iterator leader_it = leaders.begin(); leader_it != leaders.end(); leader_it++){
-	  leader_scores.push_back(scores[*leader_it]);
+	  leader_scores.push_back(student_scores[*leader_it]);
+
 	}
 	sort(leader_scores.begin(),leader_scores.end());
+	
+	int rhs = INF;
+	int lhs = 0;
 
-	priority_queue<int> diff_log;
-	for(int score_i = 0; score_i < scores.size(); score_i++){
-	  if(!binary_search(leaders.begin(),leaders.end(),score_i)){
-	    int score = scores[score_i];
-	    int pos = lower_bound(leader_scores.begin(),leader_scores.end(),score) - leader_scores.begin();
-	    if(pos == leader_scores.size()){
-	      diff_log.push(INF);
-	    }
-	    else if(pos <leader_scores.size()){
-	      int diff = leader_scores[pos] - score;
-	      if(diff >= 0){
-		diff_log.push(diff);
-	      }
-	      else{
-		diff_log.push(INF);
-	      }
-	    }
+	for(int round = 0; round < 50; round++){
+	  int mid = lhs + (rhs - lhs) / 2;
+	  int prev = 0;
+	  int fail_sum = 0;
+	  for(int leader_i = 0; leader_i < leader_scores.size(); leader_i++){
+	    int score = leader_scores[leader_i];
+	    int current= lower_bound(sorted_student_scores.begin(),
+				 sorted_student_scores.end(),
+				 score - mid)
+	      - sorted_student_scores.begin();
+	    int fail = max(0,current - prev);
+	    fail_sum += fail;
+	    prev = upper_bound(sorted_student_scores.begin(),
+			       sorted_student_scores.end(),score)
+	      - sorted_student_scores.begin();
 	  }
-	}
-	while(num > 0 && !diff_log.empty()){
-	  diff_log.pop();
-	  num--;
-	}
-	if(!diff_log.empty()){
-	  if(diff_log.top() == INF){
-	    printf("NA\n");
+	  fail_sum += max(total_students - prev,0);
+
+	  if(fail_sum > num){
+	    lhs = mid;
 	  }
 	  else{
-	    printf("%d\n",diff_log.top());
+	    rhs = mid;
 	  }
 	}
+
+	if(rhs < INF){
+	  printf("%d\n",rhs);
+	}
 	else{
-	  printf("%d\n",0);
+	  printf("NA\n");
 	}
       }
     }
