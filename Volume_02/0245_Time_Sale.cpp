@@ -108,7 +108,7 @@ int main(){
 	int dx = s.x + tx[i];
 	int dy = s.y + ty[i];
 	if(dx < 0 || dx >= W || dy < 0 || dy >= H) continue;
-	if(stage[dy][dx] != '.') continue;
+	if(stage[dy][dx] != '.' && stage[dy][dx] != 'P') continue;
 	if(dp[dx][dy][s.time+1][s.got]) continue;
 	if(s.time+1 > 100) continue;
 	dp[dx][dy][s.time+1][s.got] = true;
@@ -119,15 +119,17 @@ int main(){
     int res = 0;
     for(int y = 0; y < H; y++){
       for(int x = 0; x < W; x++){
-	for(int S = 0; S < (1<<10); S++){
-	  if(dp[x][y][100][S]){
-	    int sum = 0;
-	    for(int i = 0; i < 10; i++){
-	      if(S & (1<<i)){
-		sum += goods[i].discounted_price;
+	for(int time = 0; time <= 100; time++){
+	  for(int S = 0; S < (1<<10); S++){
+	    if(dp[x][y][time][S]){
+	      int sum = 0;
+	      for(int i = 0; i < 10; i++){
+		if(S & (1<<i)){
+		  sum += goods[i].discounted_price;
+		}
 	      }
+	      res = max(res,sum);
 	    }
-	    res = max(res,sum);
 	  }
 	}
       }
