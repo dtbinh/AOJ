@@ -33,13 +33,13 @@ static const double EPS = 1e-8;
 
 map<vector<int>,int> dp;
 
-int dfs(vector<int> buns,int sum,int comb_i,vector<vector<int> >& all_combinations){
+int dfs(vector<int>& buns,int sum,int comb_i,vector<vector<int> >& all_combinations){
   if(comb_i >= all_combinations.size()) return sum;
   if(dp.find(buns) != dp.end()) return dp[buns];
 
   vector<int> prev = buns;
   bool isok = true;
-  for(int weight = 1; weight <= 10; weight++){
+  for(int weight = 1; weight <= 9; weight++){
     int use_count = all_combinations[comb_i][weight];
     buns[weight] -= use_count;
     if(buns[weight] < 0){
@@ -57,6 +57,7 @@ int dfs(vector<int> buns,int sum,int comb_i,vector<vector<int> >& all_combinatio
     res = max(sum,dfs(buns,sum,comb_i + 1,all_combinations));
   }
 
+  buns = prev;
   return (dp[buns] = max(res,dp[buns]));
 }
 
@@ -65,7 +66,7 @@ void make_combinations(int weight,int sum,vector<int>& current,vector<vector<int
     if(sum == 10) all_combinations.push_back(current);
     return;
   }
-  if(weight > 10) return;
+  if(weight >= 10) return;
 
   for(int use_count = 0; use_count <= 10; use_count++){
     current[weight] = use_count;
@@ -80,10 +81,11 @@ int main(){
   vector<vector<int> > all_combinations;
   vector<int> current(11);
   make_combinations(1,0,current,all_combinations);
+
   while(~scanf("%d",&total_buns)){
     if(total_buns == 0) break;
-    dp.clear();
     vector<int> buns(11);
+    dp.clear();
 
     for(int i = 0; i < total_buns; i++){
       int weight;
@@ -92,7 +94,7 @@ int main(){
     }
 
     int greedy_sum = 0;
-    for(int weight = 1; weight <= 10; weight++){
+    for(int weight = 1; weight <= 5; weight++){
       if(weight == 5){
 	int use_count = (buns[weight] / 2) * 2;
 	greedy_sum += use_count / 2;
