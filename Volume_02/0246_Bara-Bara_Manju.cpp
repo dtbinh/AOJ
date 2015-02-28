@@ -54,7 +54,7 @@ int dfs(vector<int>& buns,int sum,int comb_i,vector<vector<int> >& all_combinati
   }
   buns = prev;
   res = max(res,dfs(buns,sum,comb_i + 1,all_combinations));
-
+  buns = prev;
   return (dp[buns] = max(res,dp[buns]));
 }
 
