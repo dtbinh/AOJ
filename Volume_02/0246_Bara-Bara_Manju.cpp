@@ -48,14 +48,15 @@ int dfs(vector<int> buns,int sum,int comb_i,vector<vector<int> >& all_combinatio
     }
   }
 
-  int res = sum;
+  int res = 0;
   if(isok){
-    res = max(res,dfs(buns,sum + 1,comb_i,all_combinations));
+    res = max(sum + 1,dfs(buns,sum + 1,comb_i,all_combinations));
   }
   else{
     buns = prev;
-    res = max(res,dfs(buns,sum,comb_i + 1,all_combinations));
+    res = max(sum,dfs(buns,sum,comb_i + 1,all_combinations));
   }
+
   return (dp[buns] = max(res,dp[buns]));
 }
 
@@ -64,7 +65,9 @@ void make_combinations(int weight,int sum,vector<int>& current,vector<vector<int
     if(sum == 10) all_combinations.push_back(current);
     return;
   }
-  for(int use_count = 1; use_count <= 10; use_count++){
+  if(weight > 10) return;
+
+  for(int use_count = 0; use_count <= 10; use_count++){
     current[weight] = use_count;
     make_combinations(weight + 1,sum + weight * use_count,current,all_combinations);
     current[weight] = 0;
@@ -77,7 +80,6 @@ int main(){
   vector<vector<int> > all_combinations;
   vector<int> current(11);
   make_combinations(1,0,current,all_combinations);
-
   while(~scanf("%d",&total_buns)){
     if(total_buns == 0) break;
     dp.clear();
@@ -103,6 +105,7 @@ int main(){
 	buns[10 - weight] -= use_count;
       }
     }
+
     printf("%d\n",greedy_sum + dfs(buns,0,0,all_combinations));
   }
 }
