@@ -78,7 +78,6 @@ int main(){
   vector<vector<int> > all_combinations;
   vector<int> current(11);
   make_combinations(1,0,current,all_combinations);
-  sort(all_combinations.begin(),all_combinations.end());
 
   while(~scanf("%d",&total_buns)){
     if(total_buns == 0) break;
