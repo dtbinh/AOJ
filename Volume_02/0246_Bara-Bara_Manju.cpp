@@ -52,12 +52,9 @@ int dfs(vector<int>& buns,int sum,int comb_i,vector<vector<int> >& all_combinati
   if(isok){
     res = max(sum + 1,dfs(buns,sum + 1,comb_i,all_combinations));
   }
-  else{
-    buns = prev;
-    res = max(sum,dfs(buns,sum,comb_i + 1,all_combinations));
-  }
-
   buns = prev;
+  res = max(res,dfs(buns,sum,comb_i + 1,all_combinations));
+
   return (dp[buns] = max(res,dp[buns]));
 }
 
@@ -81,6 +78,7 @@ int main(){
   vector<vector<int> > all_combinations;
   vector<int> current(11);
   make_combinations(1,0,current,all_combinations);
+  sort(all_combinations.begin(),all_combinations.end());
 
   while(~scanf("%d",&total_buns)){
     if(total_buns == 0) break;
