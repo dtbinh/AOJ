@@ -30,8 +30,25 @@ static const int ty[] = {-1,+0,+1,+0};
  
 static const double EPS = 1e-8;
 
+int dfs(){
+}
+
+void make_combinations(int weight,int sum,vector<int> current,vector<vector<int> >& all_combinations){
+  if(sum >= 10){
+    if(sum == 10) all_combinations.push_back(current);
+    return;
+  }
+  for(int count = 1; count <= 10; count++){
+    current[weight] = count;
+    make_combinations(weight + 1,sum + weight * count,current,all_combinations);
+    current[weight] = 0;
+  }
+}
+
 int main(){
   int total_buns;
+  
+  vector<vector<int> > all_combinations;
   while(~scanf("%d",&total_buns)){
     if(total_buns == 0) break;
 
@@ -41,18 +58,7 @@ int main(){
       scanf("%d",&weight);
       buns.push_back(weight);
     }
-    sort(buns.begin(),buns.end());
-    int dp[11];
-    memset(dp,0,sizeof(dp));
-    dp[0] = 1;
-    for(int i = 0; i < buns.size(); i++){
-      for(int prev = 10; prev >= 0; prev--){
-	if(prev + buns[i] > 10) continue;
-	dp[prev + buns[i]] += dp[prev];
-      }
-    }
-    for(int i = 0; i <= 10; i++){
-      printf("%d: %d\n",i,dp[i]);
-    }
+    vector<int> current(10);
+    make_combinations(1,0,current,all_combinations);
   }
 }
