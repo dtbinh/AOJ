@@ -31,9 +31,34 @@ static const int ty[] = {-1,0,1,0};
  
 static const double EPS = 1e-10;
 
+int dp[2001][2001];
+
 int main(){
   string str;
+  memset(dp,0,sizeof(dp));
   while(cin >> str){
-    
+    string r_str = str;
+    reverse(r_str.begin(),r_str.end());
+    for(int i = 0; i < str.size(); i++){
+      for(int j = 0; j< r_str.size(); j++){
+	if(str[i] == r_str[j]){
+	  dp[i+1][j+1] = dp[i][j] + 1;
+	}
+	else{
+	  dp[i+1][j+1] = max(dp[i][j+1],dp[i+1][j]);
+	}
+      }
+    }
+
+    int sx = r_str.size();
+    int sy = str.size();
+    for(int y = 0; y <= str.size(); y++){
+      for(int x = 0; x <= r_str.size(); x++){
+	printf("%d ",dp[y][x]);
+      }
+      printf("\n");
+    }
+    printf("\n");
+    printf("%d\n",dp[str.size()][r_str.size()]);
   }
 }
