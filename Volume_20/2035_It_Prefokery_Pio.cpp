@@ -26,33 +26,34 @@ typedef long long ll;
 typedef pair <int,int> P;
 typedef pair <int,P > PP;
  
-static const int tx[] = {0,1,0,-1};
-static const int ty[] = {-1,0,1,0};
+static const int tx[] = {-1,+0,-1};
+static const int ty[] = {-1,-1,+0};
  
 static const double EPS = 1e-10;
 
 int dp[2001][2001];
-P prev[2001][2001];
+int prev[2001][2001];
 
 int main(){
   string str;
   memset(dp,0,sizeof(dp));
+  memset(prev,-1,sizeof(prev));
   while(cin >> str){
     string r_str = str;
     reverse(r_str.begin(),r_str.end());
-    for(int i = 0; i < str.size(); i++){
-      for(int j = 0; j< r_str.size(); j++){
-	if(str[i] == r_str[j]){
-	  dp[i+1][j+1] = dp[i][j] + 1;
-	  prev[i+1][j+1] = P(i,j);
+    for(int y = 0; y < str.size(); y++){
+      for(int x = 0; x < r_str.size(); x++){
+	if(str[y] == r_str[x]){
+	  dp[y+1][x+1] = dp[y][x] + 1;
+	  prev[y+1][x+1] = 0;
 	}
-	else if(dp[i][j+1] < dp[i+1][j]){
-	  dp[i+1][j+1] = dp[i+1][j];
-	  prev[i+1][j+1] = P(i+1,j);
+	else if(dp[y][x+1] < dp[y+1][x]){
+	  dp[y+1][x+1] = dp[y+1][x];
+	  prev[y+1][x+1] = 2;
 	}
 	else {
-	  dp[i+1][j+1] = dp[i][j+1];
-	  prev[i+1][j+1] = P(i,j+1);
+	  dp[y+1][x+1] = dp[y][x+1];
+	  prev[y+1][x+1] = 1;
 	}
       }
     }
@@ -63,13 +64,16 @@ int main(){
     while(!que.empty()){
       P p = que.front();
       que.pop();
-      int i = p.first;
-      int j = p.second;
-      P next = prev[i][j];
-      if(str[i] == r_str[j]){
-	res.push_back(str[i]);
+      int y = p.first;
+      int x = p.second;
+      int dir = prev[y][x];
+      if(dir == 0){
+	res.push_back(str[y-1]);
       }
-      if(i == 0 || j == 0) break;
+      int dx = x + tx[dir];
+      int dy = y + ty[dir];
+      if(prev[dy][dx] == -1) break;
+      P next(dy,dx);
       que.push(next);
     }
     cout << res << endl;
