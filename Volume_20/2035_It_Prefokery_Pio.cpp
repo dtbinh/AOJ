@@ -32,6 +32,7 @@ static const int ty[] = {-1,0,1,0};
 static const double EPS = 1e-10;
 
 int dp[2001][2001];
+P prev[2001][2001];
 
 int main(){
   string str;
@@ -43,22 +44,34 @@ int main(){
       for(int j = 0; j< r_str.size(); j++){
 	if(str[i] == r_str[j]){
 	  dp[i+1][j+1] = dp[i][j] + 1;
+	  prev[i+1][j+1] = P(i,j);
 	}
-	else{
-	  dp[i+1][j+1] = max(dp[i][j+1],dp[i+1][j]);
+	else if(dp[i][j+1] < dp[i+1][j]){
+	  dp[i+1][j+1] = dp[i+1][j];
+	  prev[i+1][j+1] = P(i+1,j);
+	}
+	else {
+	  dp[i+1][j+1] = dp[i][j+1];
+	  prev[i+1][j+1] = P(i,j+1);
 	}
       }
     }
 
-    int sx = r_str.size();
-    int sy = str.size();
-    for(int y = 0; y <= str.size(); y++){
-      for(int x = 0; x <= r_str.size(); x++){
-	printf("%d ",dp[y][x]);
+    string res = "";
+    queue<P> que;
+    que.push(P(str.size(),r_str.size()));
+    while(!que.empty()){
+      P p = que.front();
+      que.pop();
+      int i = p.first;
+      int j = p.second;
+      P next = prev[i][j];
+      if(str[i] == r_str[j]){
+	res.push_back(str[i]);
       }
-      printf("\n");
+      if(i == 0 || j == 0) break;
+      que.push(next);
     }
-    printf("\n");
-    printf("%d\n",dp[str.size()][r_str.size()]);
+    cout << res << endl;
   }
 }
