@@ -30,23 +30,22 @@ static const int ty[] = {-1,0,1,0};
  
 static const double EPS = 1e-8;
 
-map<vector<int>,bool> visited;
-vector<int> answer;
+vector<char> answer;
 
-bool dfs(int sum,int total_rank,vector<int>& cards,vector<int>& order){
-  if(sum == total_rank){
+bool dfs(int sum,vector<char>& cards,vector<char>& order){
+  if(sum == 0){
+    reverse(order.begin(),order.end());
     answer = order;
     return true;
   }
   bool res = false;
-  if(visited.find(cards) != visited.end()) return false;
 
-  visited[cards] = true;
   for(int i = 1; i <= 13; i++){
-    if(cards[i] > 0 && sum % i == 0){
+    if(cards[i] > 0 && (sum - i) % i == 0){
       cards[i]--;
       order.push_back(i);
-      res |= dfs(sum + i,total_rank,cards,order);
+      res |= dfs(sum - i,cards,order);
+      if(res) return true;
       order.pop_back();
       cards[i]++;
     }
@@ -59,7 +58,7 @@ int main(){
   while(~scanf("%d",&num_of_cards)){
     if(num_of_cards == 0) break;
 
-    vector<int> cards(14);
+    vector<char> cards(14);
     int total_rank = 0;
     for(int i = 0; i < num_of_cards; i++){
       int rank;
@@ -67,8 +66,8 @@ int main(){
       cards[rank]++;
       total_rank += rank;
     }
-    vector<int> order;
-    bool isok = dfs(0,total_rank,cards,order);
+    vector<char> order;
+    bool isok = dfs(total_rank,cards,order);
     bool is_first = true;
 
     if(isok){
