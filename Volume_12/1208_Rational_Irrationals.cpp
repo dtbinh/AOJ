@@ -37,30 +37,33 @@ int gcd(int a, int b)
 
 class Rational {
 public:
-  double value;
-  int x;
-  int y;
-  Rational(double value,int x,int y)
-    : value(value),x(x),y(y) {}
+  ll x;
+  ll y;
+  Rational(ll x,ll y)
+    : x(x),y(y) {}
   bool operator<(const Rational& r) const{
-    return value < r.value;
+    // (x*x)/(y*y) < (r.x*r.x)/(r.y*r.y)
+    return x * x * r.y * r.y < r.x * r.x * y * y;
   }
   bool operator>(const Rational& r) const{
-    return value > r.value;
+    return x * x * r.y * r.y > r.x * r.x * y * y;
   }
-  bool operator>(const double v) const{
-    return value > v;
+  bool operator>(const ll v) const{
+    return x * x > v * y * y;
   }
-  bool operator<(const double v) const{
-    return value < v;
+  bool operator<(const ll v) const{
+    // x/y < sqrt(v)
+    // (x*x)/(y*y) < v
+    // x * x < v * y * y
+    return x * x < v * y * y;
   }
 };
 
 int main(){
-  double p;
+  int p;
   int n;
 
-  while(~scanf("%lf %d",&p,&n)){
+  while(~scanf("%d %d",&p,&n)){
     if(p == 0 && n == 0) break;
 
     vector<Rational> rational_numbers;
@@ -70,12 +73,12 @@ int main(){
 	int x = numerator / div;
 	int y = denominator / div;
 	if(x != numerator || y != denominator) continue;
-	rational_numbers.push_back(Rational((double)x/(double)y,x,y));
+	rational_numbers.push_back(Rational(x,y));
       }
     }
     sort(rational_numbers.begin(),rational_numbers.end());
 
-    int i = lower_bound(rational_numbers.begin(),rational_numbers.end(),sqrt(p)) - rational_numbers.begin();
+    int i = lower_bound(rational_numbers.begin(),rational_numbers.end(),p) - rational_numbers.begin();
     i--;
     int u = rational_numbers[i].x;
     int v = rational_numbers[i].y;
