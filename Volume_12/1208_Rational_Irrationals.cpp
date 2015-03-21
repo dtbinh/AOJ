@@ -35,27 +35,41 @@ int gcd(int a, int b)
   return gcd(b, a % b);
 }
 
-class Rational {
+class SternBrocotTree {
 public:
-  ll x;
-  ll y;
-  Rational(ll x,ll y)
-    : x(x),y(y) {}
-  bool operator<(const Rational& r) const{
-    // (x*x)/(y*y) < (r.x*r.x)/(r.y*r.y)
-    return x * x * r.y * r.y < r.x * r.x * y * y;
+  SternBrocotTree(int B,int p) {
+    this->B = B;
+    this->p = p;
   }
-  bool operator>(const Rational& r) const{
-    return x * x * r.y * r.y > r.x * r.x * y * y;
+
+  void dfs(int left_numerator,int left_denominator,
+	   int right_numerator,int right_denominator){
+    int next_numerator = left_numerator + right_numerator;
+    int next_denominator = left_denominator + right_denominator;
+
+    if(contains(left_numerator,left_denominator,next_numerator,next_denominator)){
+      dfs(left_numerator,left_denominator,next_numerator,next_denominator);
+    }
+    printf("%d/%d %d/%d\n",
+	   right_numerator,right_denominator,
+	   left_numerator,left_denominator);
+    if(contains(next_numerator,next_denominator,right_numerator,right_denominator)){
+      dfs(next_numerator,next_denominator,right_numerator,right_denominator);
+    }
   }
-  bool operator>(const ll v) const{
-    return x * x > v * y * y;
-  }
-  bool operator<(const ll v) const{
-    // x/y < sqrt(v)
-    // (x*x)/(y*y) < v
-    // x * x < v * y * y
-    return x * x < v * y * y;
+  
+private:
+  int B;
+  int p;
+  bool contains(int left_numerator,int left_denominator,
+		int right_numerator,int right_denominator){
+    if(left_numerator > B || left_denominator > B
+       || right_numerator > B || right_denominator > B) return false;
+    if(left_numerator * left_numerator < left_denominator * left_denominator * p
+       && p * right_denominator * right_denominator < right_numerator * right_numerator){
+      return true;
+    }
+    return false;
   }
 };
 
@@ -65,26 +79,7 @@ int main(){
 
   while(~scanf("%d %d",&p,&n)){
     if(p == 0 && n == 0) break;
-
-    vector<Rational> rational_numbers;
-    for(int numerator = 1; numerator <= n; numerator++){
-      for(int denominator = 1; denominator <= numerator; denominator++){
-	int div = gcd(numerator,denominator);
-	int x = numerator / div;
-	int y = denominator / div;
-	if(x != numerator || y != denominator) continue;
-	rational_numbers.push_back(Rational(x,y));
-      }
-    }
-    sort(rational_numbers.begin(),rational_numbers.end());
-
-    int i = lower_bound(rational_numbers.begin(),rational_numbers.end(),p) - rational_numbers.begin();
-    i--;
-    int u = rational_numbers[i].x;
-    int v = rational_numbers[i].y;
-    
-    int x = rational_numbers[i+1].x;
-    int y = rational_numbers[i+1].y;
-    printf("%d/%d %d/%d\n",x,y,u,v);
+    SternBrocotTree sbt(n,p);
+    sbt.dfs(0,1,1,0);
   }
 }
