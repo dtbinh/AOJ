@@ -52,6 +52,9 @@ int take_book(int id,deque<int> desks[101]){
 
 int main(){
   while(~scanf("%d %d %d",&num_of_desks,&book_limit,&num_of_students)){
+    if(num_of_desks == 0
+       && book_limit == 0
+       && num_of_students == 0) break;
     vector<int> students[101];
     int max_request = 0;
     for(int student_i = 0; student_i < num_of_students; student_i++){
@@ -78,10 +81,10 @@ int main(){
     while(!books.empty()){
       int id = books.front();
       books.pop();
-      // cout << "book:" << id << endl;
+
       //take from desk/shelf
       score += take_book(id,desks);
-      // cout << "take:" << score << endl;
+
       //put 
       if(desks[0].size() < book_limit){
 	desks[0].push_back(id);
@@ -135,7 +138,6 @@ int main(){
 	desks[0].push_back(id);
 	score += 1;
       }
-      // cout << score << endl;
     }
     printf("%d\n",score);
   }
