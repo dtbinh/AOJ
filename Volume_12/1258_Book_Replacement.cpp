@@ -93,15 +93,8 @@ int main(){
       else{
 	int tmp_place = -1;
 	for(int desk_i = 1; desk_i <= num_of_desks; desk_i++){
-	  //put to shelf
-	  if(desk_i == num_of_desks){
-	    desks[desk_i].push_back(id);
-	    tmp_place = desk_i;
-	    score += desk_i + 1;
-	    break;
-	  }
-	  //put to desk
-	  else if(desks[desk_i].size() < book_limit){
+	  //put book
+	  if(desk_i == num_of_desks || desks[desk_i].size() < book_limit){
 	    desks[desk_i].push_back(id);
 	    tmp_place = desk_i;
 	    score += desk_i + 1;
@@ -114,15 +107,14 @@ int main(){
 	desks[0].pop_front();
 	score += 1;
 
+	bool same_flag = false;
 	for(int desk_i = 1; desk_i <= num_of_desks; desk_i++){
 	  //put book
-	  if(desk_i == num_of_desks){
-	    desks[desk_i].push_back(old);
-	    score += desk_i + 1;
-	    break;
-	  }
-	  //put book
-	  else if(desks[desk_i].size() < book_limit){
+	  if(desk_i == num_of_desks || desks[desk_i].size() < book_limit){
+	    if(tmp_place == desk_i){
+	      desks[desk_i].pop_back();
+	      same_flag = true;
+	    }
 	    desks[desk_i].push_back(old);
 	    score += desk_i + 1;
 	    break;
@@ -131,7 +123,9 @@ int main(){
 	}
 
 	//take book
-	desks[tmp_place].pop_back();
+	if(!same_flag){
+	  desks[tmp_place].pop_back();
+	}
 	score += tmp_place + 1;
 
 	//put book
