@@ -160,46 +160,31 @@ double distancePP(const Point& s,const Point& t) {
   return norm(Point(s.x - t.x,s.y - t.y,s.z - t.z));
 }
 
-double intersectLC(const Line& l,const Circle& c){
-  Point lv = l[1] - l[0];
-  Point cv = c.p - l[0];
-  if(dot(lv,cv) && norm(cv) < c.r) return true;
-  else{
-    if(dot(lv,cv) > dot(lv,lv)){
-      if(norm(l[1] - c.p) < c.r){
-	return true;
-      }
-    }
-    else{
-      if(dot(cv,cv) - dot(lv*cv,lv*cv)/dot(lv,lv) < c.r * c.r){
-	return true;
-      }
-    }
-  }
-  return false;
-}
-
-Point crosspointLC(const Line& l,const Circle& ci){
+vector<Point> crosspointLC(const Line& l,const Circle& ci){
   Point dv = unit(l[1] - l[0]);
   // a * t^2 + b * t + c = 0
   double a = dv.x * dv.x + dv.y * dv.y + dv.z * dv.z;
-  double b = 2.0 * ((l[0].x * dv.x - l[1].x * ci.p.x)
-		    + (l[0].y * dv.y - l[1].y * ci.p.y)
-		    + (l[0].z * dv.z - l[1].z * ci.p.z));
+  double b = 2.0 * ((l[0].x * dv.x - dv.x * ci.p.x)
+		    + (l[0].y * dv.y - dv.y * ci.p.y)
+		    + (l[0].z * dv.z - dv.z * ci.p.z));
   double c = (l[0].x * l[0].x + l[0].y * l[0].y + l[0].z * l[0].z)
     + (ci.p.x * ci.p.x + ci.p.y * ci.p.y + ci.p.z * ci.p.z)
-    + 2.0 * ((l[0].x * ci.p.x) + (l[0].y * ci.p.y) + (l[0].z * ci.p.z)) - (ci.r * ci.r);
+    - 2.0 * ((l[0].x * ci.p.x) + (l[0].y * ci.p.y) + (l[0].z * ci.p.z))
+    - (ci.r * ci.r);
   double D = b * b - 4.0 * a * c;
-  if(D < 0) return Point(1000.0,1000.0,1000.0);
+
+  vector<Point> res;
+  if(D < 0) return res;
   
   double t1 = (-b - sqrt(D))/(2.0 * a);
   double t2 = (-b + sqrt(D))/(2.0 * a);
-  return l[0] + dv * (abs(t1) < abs(t2) ? t1 : t2);
+  res.push_back(l[0] + dv * t1);
+  res.push_back(l[0] + dv * t2);
+  return res;
 }
 
-Point reflection(const Line& l, const Point& p) {
-  Point dv = unit(l[1] - l[0]);
-  return dv - p * 2.0 * dot(dv,p);
+Point reflection(const Line& l,const Point& p){
+  return p + (projection(l,p) - p) * 2.0;
 }
 
 int main(){
@@ -221,34 +206,33 @@ int main(){
     Line laser(Point(0,0,0),Point(u,v,w));
 
     int prev_sphere = -1;
-    for(int round = 0; round < 10; round++){
-
+    for(int round = 0; round < 100; round++){
       double min_norm = numeric_limits<double>::max();
-
       int current_sphere = -1;
       for(int sphere_i = 0; sphere_i < num_of_spheres; sphere_i++){
 	if(prev_sphere == sphere_i) continue;
-	Point p = crosspointLC(laser,spheres[sphere_i]);
-	if(norm(p - laser[0]) < min_norm && !EQ(p,Point(1000.0,1000.0,1000.0))){
-	  reflection_point = p;
-	  current_sphere = sphere_i;
-	  min_norm = norm(p - laser[0]);
-	  // reflection_point.print_vec();
+	vector<Point> p = crosspointLC(laser,spheres[sphere_i]);
+	for(int i = 0; i < p.size(); i++){
+	  if(norm(p[i] - laser[0]) < min_norm){
+	    reflection_point = p[i];
+	    current_sphere = sphere_i;
+	    min_norm = norm(p[i] - laser[0]);
+	  }
 	}
       }
-      if(current_sphere == -1){
-	printf("%lf %lf %lf\n",
-	       reflection_point.x,reflection_point.y,reflection_point.z);
-	break;
-      }
-      Point nv = spheres[current_sphere].p - reflection_point;
+      if(current_sphere == -1) break;
+
+      Line nv(spheres[current_sphere].p,reflection_point);
       laser = Line(reflection_point,
-		   unit(reflection(laser,nv)));
+		   reflection(nv,laser[0]));
 
       prev_sphere = current_sphere;
-      // cout << "laser" << endl;
-      // laser[0].print_vec();
-      // laser[1].print_vec();
     }
+
+    printf("%.4lf %.4lf %.4lf\n",
+	   reflection_point.x,
+	   reflection_point.y,
+	   reflection_point.z);
+
   }
 }
