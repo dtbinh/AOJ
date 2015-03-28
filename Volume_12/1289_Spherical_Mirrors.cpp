@@ -104,11 +104,15 @@ public:
 };
 
 double norm(const Point& p){
-  return sqrt(p.x * p.x + p.y * p.y + p.z * p.z);
+  return p.x * p.x + p.y * p.y + p.z * p.z;
+}
+
+double abs(const Point& p){
+  return sqrt(norm(p));
 }
 
 Point unit(const Point& p){
-  return p/norm(p);
+  return p/abs(p);
 }
 
 double dot(const Point& p1,const Point& p2){
@@ -122,7 +126,7 @@ Point cross(const Point& p1,const Point& p2){
 }
 
 Point projection(const Line& l,const Point& p){
-  double t = dot(p - l[0],l[0]-l[1]) / norm(l[0] - l[1]);
+  double t = dot(p - l[0],l[0]-l[1]) / abs(l[0] - l[1]);
   return l[0] + unit(l[0] - l[1]) * t;
 }
 
@@ -138,12 +142,12 @@ bool parallelLL(const Line &l, const Line &m) {
 }
 
 bool intersectLP(const Line &l, const Point &p) {
-  return (norm(cross(l[1]-p, l[0]-p)) < EPS);
+  return (abs(cross(l[1]-p, l[0]-p)) < EPS);
 }
 
 double distanceLP(const Line& l,const Point& p){
   if(intersectLP(l,p)) return 0;
-  return norm(p - projection(l,p));
+  return abs(p - projection(l,p));
 }
 
 double distanceLL(const Line& l,const Line& m){
@@ -152,34 +156,28 @@ double distanceLL(const Line& l,const Line& m){
   const Point V1 = l[1] - l[0];
   const Point V2 = m[1] - m[0];
   const Point V3 = m[0] - l[0];
-  return abs(dot(cross(V1,V2),V3)/norm(cross(V1,V2)));
+  return abs(dot(cross(V1,V2),V3)/abs(cross(V1,V2)));
 }
 
 double distancePP(const Point& s,const Point& t) {
   if(EQ(s,t)) return 0;
-  return norm(Point(s.x - t.x,s.y - t.y,s.z - t.z));
+  return abs(Point(s.x - t.x,s.y - t.y,s.z - t.z));
 }
 
 vector<Point> crosspointLC(const Line& l,const Circle& ci){
-  Point dv = unit(l[1] - l[0]);
+  Point dir = l[1] - l[0];
   // a * t^2 + b * t + c = 0
-  double a = dv.x * dv.x + dv.y * dv.y + dv.z * dv.z;
-  double b = 2.0 * ((l[0].x * dv.x - dv.x * ci.p.x)
-		    + (l[0].y * dv.y - dv.y * ci.p.y)
-		    + (l[0].z * dv.z - dv.z * ci.p.z));
-  double c = (l[0].x * l[0].x + l[0].y * l[0].y + l[0].z * l[0].z)
-    + (ci.p.x * ci.p.x + ci.p.y * ci.p.y + ci.p.z * ci.p.z)
-    - 2.0 * ((l[0].x * ci.p.x) + (l[0].y * ci.p.y) + (l[0].z * ci.p.z))
-    - (ci.r * ci.r);
+  double a = norm(dir);
+  double b = 2.0 * dot(l[0] - ci.p,dir);
+  double c = norm(l[0]) + norm(ci.p) - 2.0 * dot(l[0],ci.p) - ci.r * ci.r;
   double D = b * b - 4.0 * a * c;
 
   vector<Point> res;
-  if(D < 0) return res;
-  
+  if(D < EPS) return res;
   double t1 = (-b - sqrt(D))/(2.0 * a);
   double t2 = (-b + sqrt(D))/(2.0 * a);
-  res.push_back(l[0] + dv * t1);
-  res.push_back(l[0] + dv * t2);
+  res.push_back(l[0] + dir * t1);
+  res.push_back(l[0] + dir * t2);
   return res;
 }
 
@@ -192,13 +190,13 @@ int main(){
   while(~scanf("%d",&num_of_spheres)){
     if(num_of_spheres == 0) break;
 
-    int u,v,w;
-    scanf("%d %d %d",&u,&v,&w);
+    double u,v,w;
+    scanf("%lf %lf %lf",&u,&v,&w);
 
     vector<Circle> spheres;
     for(int sphere_i = 0; sphere_i < num_of_spheres; sphere_i++){
-      int x,y,z,r;
-      scanf("%d %d %d %d",&x,&y,&z,&r);
+      double x,y,z,r;
+      scanf("%lf %lf %lf %lf",&x,&y,&z,&r);
       spheres.push_back(Circle(Point(x,y,z),r));
     }
 
@@ -207,20 +205,21 @@ int main(){
 
     int prev_sphere = -1;
     for(int round = 0; round < 100; round++){
-      double min_norm = numeric_limits<double>::max();
+      double min_abs = numeric_limits<double>::max();
       int current_sphere = -1;
       for(int sphere_i = 0; sphere_i < num_of_spheres; sphere_i++){
 	if(prev_sphere == sphere_i) continue;
 	vector<Point> p = crosspointLC(laser,spheres[sphere_i]);
 	for(int i = 0; i < p.size(); i++){
-	  if(norm(p[i] - laser[0]) < min_norm){
+	  if(abs(p[i] - laser[0]) < min_abs){
 	    reflection_point = p[i];
 	    current_sphere = sphere_i;
-	    min_norm = norm(p[i] - laser[0]);
+	    min_abs = abs(p[i] - laser[0]);
 	  }
 	}
       }
       if(current_sphere == -1) break;
+
 
       Line nv(spheres[current_sphere].p,reflection_point);
       laser = Line(reflection_point,
@@ -229,7 +228,7 @@ int main(){
       prev_sphere = current_sphere;
     }
 
-    printf("%.4lf %.4lf %.4lf\n",
+    printf("%.4lf %.4lf %.4f\n",
 	   reflection_point.x,
 	   reflection_point.y,
 	   reflection_point.z);
