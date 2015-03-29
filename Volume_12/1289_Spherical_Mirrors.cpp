@@ -62,17 +62,6 @@ public:
 		 this->y * p.y,
 		 this->z * p.z);
   }
-  void operator*=(const double t) const {
-    this->x * t;
-    this->y * t;
-    this->z * t;
-  }
-  void operator*=(const Point&p) const {
-    this->x * p.x;
-    this->y * p.y;
-    this->z * p.z;
-  }
-
   Point operator/(const double t) const {
     return Point(this->x / t,
 		 this->y / t,
@@ -126,8 +115,8 @@ Point cross(const Point& p1,const Point& p2){
 }
 
 Point projection(const Line& l,const Point& p){
-  double t = dot(p - l[0],l[0]-l[1]) / abs(l[0] - l[1]);
-  return l[0] + unit(l[0] - l[1]) * t;
+  double t = dot(p - l[0],l[0]-l[1]) / norm(l[0] - l[1]);
+  return l[0] + (l[0] - l[1]) * t;
 }
 
 bool EQ(const Point& s,const Point& t) {
@@ -165,19 +154,24 @@ double distancePP(const Point& s,const Point& t) {
 }
 
 vector<Point> crosspointLC(const Line& l,const Circle& ci){
-  Point dir = l[1] - l[0];
+  Point dir = unit(l[1] - l[0]);
   // a * t^2 + b * t + c = 0
   double a = norm(dir);
-  double b = 2.0 * dot(l[0] - ci.p,dir);
-  double c = norm(l[0]) + norm(ci.p) - 2.0 * dot(l[0],ci.p) - ci.r * ci.r;
-  double D = b * b - 4.0 * a * c;
+  double b = dot(l[0] - ci.p,dir);
+  double c = norm(l[0] - ci.p) - ci.r * ci.r;
+  double D = b * b - a * c;
 
   vector<Point> res;
   if(D < EPS) return res;
-  double t1 = (-b - sqrt(D))/(2.0 * a);
-  double t2 = (-b + sqrt(D))/(2.0 * a);
-  res.push_back(l[0] + dir * t1);
-  res.push_back(l[0] + dir * t2);
+  double t1 = (-b - sqrt(D))/a;
+  double t2 = (-b + sqrt(D))/a;
+
+  if(abs(t1) < abs(t2)){
+    res.push_back(l[0] + dir * t1);
+  }
+  else{
+    res.push_back(l[0] + dir * t2);
+  }
   return res;
 }
 
@@ -200,17 +194,18 @@ int main(){
       spheres.push_back(Circle(Point(x,y,z),r));
     }
 
-    Point reflection_point;
     Line laser(Point(0,0,0),Point(u,v,w));
+    Point reflection_point;
 
     int prev_sphere = -1;
-    for(int round = 0; round < 100; round++){
+    for(int round = 0; round < 5; round++){
       double min_abs = numeric_limits<double>::max();
       int current_sphere = -1;
       for(int sphere_i = 0; sphere_i < num_of_spheres; sphere_i++){
 	if(prev_sphere == sphere_i) continue;
 	vector<Point> p = crosspointLC(laser,spheres[sphere_i]);
 	for(int i = 0; i < p.size(); i++){
+	  if(dot(laser[1] - laser[0],p[i] -laser[0]) < EPS) continue;
 	  if(abs(p[i] - laser[0]) < min_abs){
 	    reflection_point = p[i];
 	    current_sphere = sphere_i;
@@ -220,8 +215,8 @@ int main(){
       }
       if(current_sphere == -1) break;
 
+      Line nv(reflection_point,spheres[current_sphere].p);
 
-      Line nv(spheres[current_sphere].p,reflection_point);
       laser = Line(reflection_point,
 		   reflection(nv,laser[0]));
 
