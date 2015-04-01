@@ -160,37 +160,38 @@ int main(){
   while(~scanf("%d %d",&n,&m)){
     if(n == 0 && m == 0) break;
 
-    vector<Point> white;
-    for(int i = 0; i < n; i++){
-      double x,y;
-      scanf("%lf %lf",&x,&y);
-      white.push_back(Point(x,y));
-    }
-    vector<Point> white_convex_hull = compute_convex_hull(white);
-
     vector<Point> black;
-    for(int i = 0; i < m; i++){
+    for(int i = 0; i < n; i++){
       double x,y;
       scanf("%lf %lf",&x,&y);
       black.push_back(Point(x,y));
     }
     vector<Point> black_convex_hull = compute_convex_hull(black);
 
+    vector<Point> white;
+    for(int i = 0; i < m; i++){
+      double x,y;
+      scanf("%lf %lf",&x,&y);
+      white.push_back(Point(x,y));
+    }
+    vector<Point> white_convex_hull = compute_convex_hull(white);
+
+
     bool dividable = true;
 
-    if(black_convex_hull.size() == 1 && white_convex_hull.size() == 2){
-      if(ccw(white_convex_hull[0],white_convex_hull[1],black_convex_hull[0]) == 0){
+    if(black.size() == 1 && white.size() == 2){
+      if(ccw(white[0],black[0],white[1]) == -2){
 	dividable = false;
       }
     }
-    else if(black_convex_hull.size() == 2 && white_convex_hull.size() == 1){
-      if(ccw(black_convex_hull[0],black_convex_hull[1],white_convex_hull[0]) == 0){
+    else if(black.size() == 2 && white.size() == 1){
+      if(ccw(black[0],white[0],black[1]) == -2){
 	dividable = false;
       }
     }
-    else if(black_convex_hull.size() == 2 && white_convex_hull.size() == 2){
-      if(intersectSS(Line(black_convex_hull[0],black_convex_hull[1]),
-		     Line(white_convex_hull[0],white_convex_hull[1]))){
+    else if(black.size() == 2 && white.size() == 2){
+      if(intersectSS(Line(black[0],black[1]),
+		     Line(white[0],white[1]))){
 	dividable = false;
       }
     }
