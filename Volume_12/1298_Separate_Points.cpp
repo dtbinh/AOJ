@@ -127,6 +127,34 @@ bool is_convex_hull(vector<Point>& ps,const Point& c){
   return false;
 }
 
+bool is_inner_polygon(const vector<Point>& outer,const vector<Point>& inner){
+
+  Point center;
+  for(int i = 0; i < outer.size(); i++){
+    center += outer[i];
+    for(int j = 0; j < inner.size(); j++){
+      if(ccw(outer[i],outer[(i+1) % outer.size()],inner[j]) == 0){
+	return true;
+      }
+    }
+  }
+  center /= outer.size();
+  for(int i = 0; i < inner.size(); i++){
+    for(int j = 0; j < outer.size(); j++){
+      double a = cross(center - outer[j],inner[i] - center);
+      double b = cross(outer[j] - outer[(j+1) % outer.size()],inner[i] - outer[j]);
+      double c = cross(outer[(j+1) % outer.size()] - center,inner[i] - outer[(j+1) % outer.size()]);
+
+      if((a > 0 && b > 0 && c > 0)
+	 || (a < 0 && b < 0 && c < 0)){
+	return true;
+      }
+    }
+  }
+
+  return false;
+}
+
 int main(){
   int n,m;
   while(~scanf("%d %d",&n,&m)){
@@ -148,19 +176,30 @@ int main(){
     }
     vector<Point> black_convex_hull = compute_convex_hull(black);
 
-    bool isok = true;
-    for(int i = 0; i < white_convex_hull.size(); i++){
-      for(int j = 0; j < black_convex_hull.size(); j++){
-	for(int k = j + 1; k < black_convex_hull.size(); k++){
-	  if(intersectSS(Line(white_convex_hull[i],white_convex_hull[(i+1) % white_convex_hull.size()]),
-			 Line(black_convex_hull[j],black_convex_hull[k]))){
-	    isok = false;
-	    goto found;
-	  }
-	}
+    bool dividable = true;
+
+    if(black_convex_hull.size() == 1 && white_convex_hull.size() == 2){
+      if(ccw(white_convex_hull[0],white_convex_hull[1],black_convex_hull[0]) == 0){
+	dividable = false;
       }
     }
-  found:;
-    printf("%s\n",isok ? "YES" : "NO");
+    else if(black_convex_hull.size() == 2 && white_convex_hull.size() == 1){
+      if(ccw(black_convex_hull[0],black_convex_hull[1],white_convex_hull[0]) == 0){
+	dividable = false;
+      }
+    }
+    else if(black_convex_hull.size() == 2 && white_convex_hull.size() == 2){
+      if(intersectSS(Line(black_convex_hull[0],black_convex_hull[1]),
+		     Line(white_convex_hull[0],white_convex_hull[1]))){
+	dividable = false;
+      }
+    }
+    else {
+      if(black_convex_hull.size() >= 3 && is_inner_polygon(black_convex_hull,white_convex_hull)
+	 || white_convex_hull.size() >= 3 && is_inner_polygon(white_convex_hull,black_convex_hull)){
+	dividable = false;
+      }
+    }
+    printf("%s\n", dividable ? "YES" : "NO");
   }
 }
