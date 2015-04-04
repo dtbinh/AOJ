@@ -84,11 +84,9 @@ int main(){
 
       for(int i = 0; i < swimmers.size(); i++){
 	if(swimmers[i].pos >= 1.0 - EPS) continue;
-	if(swimmers[i].laps == 0) continue;
 
 	for(int j = i+1; j < swimmers.size(); j++){
 	  if(swimmers[j].pos >= 1.0 - EPS) continue;
-	  if(swimmers[j].laps == 0) continue;
 
 	  if(swimmers[i].dir == swimmers[j].dir
 	     && abs(swimmers[i].pos) > EPS){
@@ -119,6 +117,10 @@ int main(){
 	  swimmers[i].dir = (swimmers[i].dir == 1 ? 0 : 1);
 	  swimmers[i].current_pace = swimmers[i].natural_pace;
 	  swimmers[i].pos = 0.0;
+	  if(swimmers[i].laps == 0){
+	    swimmers.erase(swimmers.begin() + i);
+	    i--;
+	  }
 	}
       }
 
