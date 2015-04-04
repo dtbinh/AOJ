@@ -46,8 +46,8 @@ public:
   int current_pace;
   int natural_pace;
   int laps;
-  int pos;
-  int prev_pos;
+  double pos;
+  double prev_pos;
   int dir;
   Swimmer(int current_pace,int natural_pace,int laps)
     : current_pace(current_pace),natural_pace(natural_pace),laps(laps),pos(0),prev_pos(0),dir(0) {}
@@ -58,13 +58,11 @@ int main(){
   while(~scanf("%d",&num_of_swimmers)){
     if(num_of_swimmers == 0) break;
     
-    int length = 1;
     vector<Swimmer> swimmers;
     for(int i = 0; i < num_of_swimmers; i++){
       int natural_pace;
       int laps;
       scanf("%d %d",&natural_pace,&laps);
-      length = LCM(natural_pace,length);
       swimmers.push_back(Swimmer(natural_pace,natural_pace,laps));
     }
 
@@ -74,9 +72,9 @@ int main(){
       for(int i = 0; i < swimmers.size(); i++){
 	if(swimmers[i].laps == 0) continue;
 	has_swimmer = true;
-	int speed = length / swimmers[i].current_pace;
+	double speed = 1.0 / (double)swimmers[i].current_pace;
 	swimmers[i].prev_pos = swimmers[i].pos;
-	swimmers[i].pos += speed * 1;
+	swimmers[i].pos += speed * 1.0;
       }
 
       if(!has_swimmer){
@@ -85,10 +83,15 @@ int main(){
       }
 
       for(int i = 0; i < swimmers.size(); i++){
+	if(swimmers[i].pos >= 1.0 - EPS) continue;
+	if(swimmers[i].laps == 0) continue;
+
 	for(int j = i+1; j < swimmers.size(); j++){
-	  if(swimmers[i].laps == 0 || swimmers[j].laps == 0) continue;
+	  if(swimmers[j].pos >= 1.0 - EPS) continue;
+	  if(swimmers[j].laps == 0) continue;
+
 	  if(swimmers[i].dir == swimmers[j].dir
-	     && swimmers[i].pos != 0){
+	     && abs(swimmers[i].pos) > EPS){
 	    if(swimmers[i].pos > swimmers[j].pos
 	       && swimmers[i].prev_pos < swimmers[j].prev_pos){
 	      swimmers[i].pos = swimmers[j].pos;
@@ -99,7 +102,7 @@ int main(){
 	      swimmers[j].pos = swimmers[i].pos;
 	      swimmers[j].current_pace = swimmers[i].current_pace;
 	    }
-	    else if(swimmers[i].pos == swimmers[j].pos){
+	    else if(abs(swimmers[i].pos - swimmers[j].pos) < EPS){
 	      swimmers[i].current_pace = max(swimmers[i].current_pace,swimmers[j].current_pace);
 	      swimmers[j].current_pace = max(swimmers[i].current_pace,swimmers[j].current_pace);
 	    }
@@ -108,14 +111,14 @@ int main(){
       }
 
       for(int i = 0; i < swimmers.size(); i++){
-	if(swimmers[i].pos == length){
+	if(swimmers[i].pos >= 1.0 - EPS){
 	  if(swimmers[i].dir == 1){
 	    swimmers[i].laps--;
 	  }
 
 	  swimmers[i].dir = (swimmers[i].dir == 1 ? 0 : 1);
 	  swimmers[i].current_pace = swimmers[i].natural_pace;
-	  swimmers[i].pos = 0;
+	  swimmers[i].pos = 0.0;
 	}
       }
 
