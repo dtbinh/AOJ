@@ -115,73 +115,100 @@ public:
 };
 
 char stage[31][31];
-bool visited[31][31][7];
 char order[8];
 int H,W;
+int visited[31][31][6][6];
 
 void disp(){
   for(int y = 0; y < H; y++){
     for(int x = 0; x < W; x++){
-      printf("%d",visited[y][x] ? 1 : 0);
+      printf("%d",visited[y][x][0][0] == INF ? 0 : 1);
     }
     printf("\n");
   }
   printf("\n");
 }
 
-int dfs(Cube& cube,int sx,int sy,int step,int cost){
-  if(step == 6){
-    disp();
-    return cost;
+class State {
+public:
+  Cube cube;
+  int x;
+  int y;
+  int cost;
+  int step;
+  State(const Cube& cube,int x,int y,int cost,int step)
+    : cube(cube),x(x),y(y),cost(cost),step(step) {}
+  bool operator<(const State& s) const {
+    return cost < s.cost;
+  }
+  bool operator>(const State& s) const {
+    return cost > s.cost;
+  }
+};
+
+int bfs(int sx,int sy){
+  priority_queue<State,vector<State>,greater<State> > que;
+  Cube init;
+  que.push(State(init,sx,sy,0,0));
+  visited[sy][sx][init.get_bottom()][0] = 0;
+
+  while(!que.empty()){
+    State s = que.top();
+    que.pop();
+    if(s.step == 6){
+      return s.cost;
+    }
+
+    Cube prev = s.cube;
+    for(int i = 0; i < 4; i++){
+      int dx = tx[i] + sx;
+      int dy = ty[i] + sy;
+      if(dx >= W || dy >= H || dx < 0 || dy < 0) continue;
+      if(stage[dy][dx] == 'k') continue;
+      
+      if(i == 0){
+	s.cube.pitch(1);
+      }
+      else if(i == 1){
+	s.cube.roll(1);
+      }
+      else if(i == 2){
+	s.cube.pitch(3);
+      }
+      else if(i == 3){
+	s.cube.roll(3);
+      }
+      
+      if(stage[dy][dx] == 'w'){
+	if(visited[dy][dx][s.cube.get_bottom()][s.step] <= s.cost + 1) continue;
+	visited[dy][dx][s.cube.get_bottom()][s.step] = s.cost + 1;
+	que.push(State(s.cube,dx,dy,s.cost + 1, s.step));
+      }
+      else if(s.cube.get_bottom() == stage[dy][dx]){
+	if(visited[dy][dx][s.cube.get_bottom()][s.step] <= s.cost + 1) continue;
+	if(order[s.step] == stage[dy][dx]){
+	  visited[dy][dx][s.cube.get_bottom()][s.step] = s.cost + 1;
+	  que.push(State(s.cube,dx,dy,s.cost + 1, s.step + 1));
+	}
+	else{
+	  visited[dy][dx][s.cube.get_bottom()][s.step] = s.cost + 1;
+	  que.push(State(s.cube,dx,dy,s.cost + 1, s.step));
+	}
+      }
+      
+      s.cube = prev;
+    }
   }
 
-  int res = INF;
-  // printf("%d %d\n",sx,sy);
-
-  Cube prev = cube;
-  for(int i = 0; i < 4; i++){
-    int dx = tx[i] + sx;
-    int dy = ty[i] + sy;
-    if(dx >= W || dy >= H || dx < 0 || dy < 0) continue;
-    if(stage[dy][dx] == 'k') continue;
-    if(visited[dy][dx][6]) continue;
-    if(visited[dy][dx][cube.get_bottom()]) continue;
-
-    if(i == 0){
-      cube.pitch(1);
-    }
-    else if(i == 1){
-      cube.roll(1);
-    }
-    else if(i == 2){
-      cube.pitch(3);
-    }
-    else if(i == 3){
-      cube.roll(3);
-    }
-
-    if(stage[dy][dx] == 'w'){
-      visited[dy][dx][cube.get_bottom()] = true;
-      res = min(dfs(cube,dx,dy,step,cost + 1),res);
-      visited[dy][dx][cube.get_bottom()] = false;
-    }
-    else if(cube.get_bottom() == stage[dy][dx]
-	    && order[step] == stage[dy][dx]){
-      visited[dy][dx][6] = true;
-      res = min(dfs(cube,dx,dy,step + 1,cost + 1),res);
-      visited[dy][dx][6] = false;
-    }
-
-    cube = prev;
-  }
-  return res;
+  return INF;
 }
+
 
 int main(){
 
   while(~scanf("%d %d",&W,&H)){
     if(W == 0 && H == 0) break;
-    memset(visited,false,sizeof(visited));
+    memset(visited,0x3f,sizeof(visited));
     int sx,sy;
     for(int y = 0; y < H; y++){
       scanf("%s",stage[y]);
@@ -194,8 +221,6 @@ int main(){
     }
 
     scanf("%s",order);
-    Cube cube;
-    visited[sy][sx][cube.get_bottom()] = true;
-    cout << dfs(cube,sx,sy,0,0) << endl;
+    cout << bfs(sx,sy) << endl;
   }
 }
