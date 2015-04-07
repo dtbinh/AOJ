@@ -109,18 +109,18 @@ public:
     }
   }
   int get_hash() const{
-    return 7 * 7 * (surface[BOTTOM] + 1) + 7 * (surface[NORTH] + 1) + (surface[EAST] + 1);
+    return 7 * 7 * (surface[TOP] + 1) + 7 * (surface[NORTH] + 1) + (surface[EAST] + 1);
   }
-  char get_bottom() const{
+  char get_top() const{
     const char dict[] = {'r','c','g','m','b','y'};
-    return dict[surface[BOTTOM]];
+    return dict[surface[TOP]];
   }
 };
 
 char stage[31][31];
 char order[8];
 int H,W;
-int visited[31][31][7*7*7*7][6];
+int visited[31][31][7*7*7][6];
 
 void disp(){
   for(int y = 0; y < H; y++){
@@ -149,15 +149,21 @@ public:
   }
 };
 
+bool invalid(int step,char square){
+  for(int i = 0; i < step; i++){
+    if(order[i] == square){
+      return true;
+    }
+  }
+  return false;
+}
+
 int bfs(int sx,int sy){
   priority_queue<State,vector<State>,greater<State> > que;
   Cube init;
 
-  for(int i = 0; i < 4; i++){
-    que.push(State(init,sx,sy,0,0));
-    visited[sy][sx][init.get_hash()][0] = 0;
-    init.yaw(1);
-  }
+  que.push(State(init,sx,sy,0,0));
+  visited[sy][sx][init.get_hash()][0] = 0;
 
   while(!que.empty()){
     State s = que.top();
@@ -166,56 +172,50 @@ int bfs(int sx,int sy){
       return s.cost;
     }
     Cube prev = s.cube;
-    for(int j = 0; j < 4; j++){
-      s.cube = prev;
-      s.cube.yaw(j);
-      Cube prev2 = s.cube;
-      for(int i = 0; i < 4; i++){
-	int dx = tx[i] + s.x;
-	int dy = ty[i] + s.y;
-	if(dx >= W || dy >= H || dx < 0 || dy < 0) continue;
-	if(stage[dy][dx] == 'k') continue;
+    for(int i = 0; i < 4; i++){
+      int dx = tx[i] + s.x;
+      int dy = ty[i] + s.y;
+      if(dx >= W || dy >= H || dx < 0 || dy < 0) continue;
+      if(stage[dy][dx] == 'k') continue;
 	
-	if(i == 0){
-	  s.cube.pitch(1);
-	}
-	else if(i == 1){
-	  s.cube.roll(1);
-	}
-	else if(i == 2){
-	  s.cube.pitch(3);
-	}
-	else if(i == 3){
-	  s.cube.roll(3);
-	}
-
-	// printf("%d %d\n",s.x,s.y);
-	// printf("color:%c cost:%d\n",s.cube.get_bottom(),s.cost);
-	
-	// printf("%d %d %d\n",dx,dy,s.cost);
-	if(stage[dy][dx] == 'w'){
-	  if(visited[dy][dx][s.cube.get_hash()][s.step] <= s.cost + 1) continue;
-	  visited[dy][dx][s.cube.get_hash()][s.step] = s.cost + 1;
-	  que.push(State(s.cube,dx,dy,s.cost + 1, s.step));
-	}
-	else if(s.cube.get_bottom() == stage[dy][dx]){
-	  if(order[s.step] == stage[dy][dx]){
-	    if(visited[dy][dx][s.cube.get_hash()][s.step] <= s.cost + 1) continue;
-	    visited[dy][dx][s.cube.get_hash()][s.step] = s.cost + 1;
-	    que.push(State(s.cube,dx,dy,s.cost + 1, s.step + 1));
-	  }
-	  else{
-	    if(visited[dy][dx][s.cube.get_hash()][s.step] <= s.cost + 1) continue;
-	    visited[dy][dx][s.cube.get_hash()][s.step] = s.cost + 1;
-	    que.push(State(s.cube,dx,dy,s.cost + 1, s.step));
-	  }
-	}
-
-	s.cube = prev2;
+      if(i == 0){
+	s.cube.pitch(1);
       }
+      else if(i == 1){
+	s.cube.roll(1);
+      }
+      else if(i == 2){
+	s.cube.pitch(3);
+      }
+      else if(i == 3){
+	s.cube.roll(3);
+      }
+      
+      if(stage[dy][dx] == 'w'){
+	if(visited[dy][dx][s.cube.get_hash()][s.step] <= s.cost + 1){
+	  s.cube = prev;
+	  continue;
+	}
+	visited[dy][dx][s.cube.get_hash()][s.step] = s.cost + 1;
+	que.push(State(s.cube,dx,dy,s.cost + 1, s.step));
+      }
+      else if(s.cube.get_top() == stage[dy][dx]){
+	if(order[s.step] == stage[dy][dx]){
+	  if(visited[dy][dx][s.cube.get_hash()][s.step] <= s.cost + 1){
+	    s.cube = prev;
+	    continue;
+	  }
+	  if(invalid(s.step,stage[dy][dx])){
+	    s.cube = prev;
+	    continue;
+	  }
+	  visited[dy][dx][s.cube.get_hash()][s.step] = s.cost + 1;
+	  que.push(State(s.cube,dx,dy,s.cost + 1, s.step + 1));
+	}
+      }
+      s.cube = prev;
     }
   }
-
   return INF;
 }
 
@@ -237,6 +237,12 @@ int main(){
     }
 
     scanf("%s",order);
-    cout << bfs(sx,sy) << endl;
+    int res = bfs(sx,sy);
+    if(res >= INF){
+      printf("unreachable\n");
+    }
+    else{
+      printf("%d\n",res);
+    }
   }
 }
