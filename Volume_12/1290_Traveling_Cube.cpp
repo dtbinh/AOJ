@@ -109,7 +109,10 @@ public:
     }
   }
   int get_hash() const{
-    return 7 * 7 * (surface[TOP] + 1) + 7 * (surface[NORTH] + 1) + (surface[EAST] + 1);
+    return 
+      + 7 * 7 * (surface[TOP] + 1) 
+      + 7 * (surface[EAST] + 1) 
+      + (surface[NORTH] + 1);
   }
   char get_top() const{
     const char dict[] = {'r','c','g','m','b','y'};
@@ -191,7 +194,7 @@ int bfs(int sx,int sy){
 	s.cube.roll(3);
       }
       
-      if(stage[dy][dx] == 'w'){
+      if(stage[dy][dx] == 'w' || stage[dy][dx] == '#'){
 	if(visited[dy][dx][s.cube.get_hash()][s.step] <= s.cost + 1){
 	  s.cube = prev;
 	  continue;
@@ -201,7 +204,7 @@ int bfs(int sx,int sy){
       }
       else if(s.cube.get_top() == stage[dy][dx]){
 	if(order[s.step] == stage[dy][dx]){
-	  if(visited[dy][dx][s.cube.get_hash()][s.step] <= s.cost + 1){
+	  if(visited[dy][dx][s.cube.get_hash()][s.step + 1] <= s.cost + 1){
 	    s.cube = prev;
 	    continue;
 	  }
@@ -209,7 +212,7 @@ int bfs(int sx,int sy){
 	    s.cube = prev;
 	    continue;
 	  }
-	  visited[dy][dx][s.cube.get_hash()][s.step] = s.cost + 1;
+	  visited[dy][dx][s.cube.get_hash()][s.step + 1] = s.cost + 1;
 	  que.push(State(s.cube,dx,dy,s.cost + 1, s.step + 1));
 	}
       }
