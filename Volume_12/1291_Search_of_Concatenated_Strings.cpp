@@ -33,21 +33,52 @@ int ty[] = {-1,+0,+1,+0};
  
 static const double EPS = 1e-8;
 
+bool dp[5500][1<<12];
+
 int main(){
   int num_of_element_strings;
   int num_of_lines;
   while(~scanf("%d %d",&num_of_element_strings,&num_of_lines)){
+    if(num_of_element_strings == 0 && num_of_lines == 0) break;
+
     vector<string> elements;
     for(int i = 0; i < num_of_element_strings; i++){
       string tmp;
       cin >> tmp;
       elements.push_back(tmp);
     }
-    vector<string> lines;
+
+    string text;
     for(int i = 0; i < num_of_lines; i++){
       string tmp;
       cin >> tmp;
-      lines.push_back(tmp);
+      text += tmp;
     }
+
+    memset(dp,false,sizeof(dp));
+    for(int i = 0; i < elements.size(); i++){
+      int index = 0;
+      while(true){
+	int tmp = text.find_first_of(elements[i],index);
+	if(tmp == string::npos) break;
+	index = tmp + elements[i].size();
+	dp[index][1<<i] = true;
+      }
+    }
+
+    for(int text_i = 0; text_i < text.size(); text_i++){
+      for(int S = 0; S < (1<<elements.size()); S++){
+	for(int to = 0; to < elements.size(); to++){
+	  if((S & (1<<to))) continue;
+	  dp[text_i + elements[to].size()][S | (1<<to)]
+	    |= (dp[text_i][S] && dp[text_i + elements[to].size()][1<<to]);
+    	}
+      }
+    }
+    int res = 0;
+    for(int text_i = 0; text_i <= text.size(); text_i++){
+      res += dp[text_i][(1<<elements.size()) - 1];
+    }
+    printf("%d\n",res);
   }
 }
