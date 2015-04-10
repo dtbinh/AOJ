@@ -48,7 +48,7 @@ int main(){
       elements.push_back(tmp);
     }
 
-    string text;
+    string text= "";
     for(int i = 0; i < num_of_lines; i++){
       string tmp;
       cin >> tmp;
@@ -57,27 +57,28 @@ int main(){
 
     memset(dp,false,sizeof(dp));
     for(int i = 0; i < elements.size(); i++){
-      int index = 0;
+      int next = 0;
       while(true){
-	int tmp = text.find_first_of(elements[i],index);
-	if(tmp == string::npos) break;
-	index = tmp + elements[i].size();
-	dp[index][1<<i] = true;
+	int current = text.find(elements[i],next);
+	if(current == string::npos) break;
+	dp[current + elements[i].size()][1<<i] = true;
+	next = current + 1;
       }
     }
 
     for(int text_i = 0; text_i < text.size(); text_i++){
       for(int S = 0; S < (1<<elements.size()); S++){
+	if(!dp[text_i][S]) continue;
 	for(int to = 0; to < elements.size(); to++){
 	  if((S & (1<<to))) continue;
-	  dp[text_i + elements[to].size()][S | (1<<to)]
-	    |= (dp[text_i][S] && dp[text_i + elements[to].size()][1<<to]);
+	  dp[text_i + elements[to].size()][S | (1<<to)] 
+	    |= dp[text_i + elements[to].size()][(1<<to)];
     	}
       }
     }
     int res = 0;
     for(int text_i = 0; text_i <= text.size(); text_i++){
-      res += dp[text_i][(1<<elements.size()) - 1];
+      if(dp[text_i][(1<<elements.size()) - 1]) res++;
     }
     printf("%d\n",res);
   }
