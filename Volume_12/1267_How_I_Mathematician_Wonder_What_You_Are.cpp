@@ -180,16 +180,15 @@ int main(){
     }
 
     vector<Point> polygon;
-    polygon.push_back(Point(-7000,7000));
-    polygon.push_back(Point(7000,7000));
-    polygon.push_back(Point(-7000,-7000));
-    polygon.push_back(Point(7000,-7000));
+    polygon.push_back(Point(-10001,-10001));
+    polygon.push_back(Point(10001,-10001));
+    polygon.push_back(Point(10001,10001));
+    polygon.push_back(Point(-10001,10001));
 
-    bool isok = true;
     for(int i = 0; i < n; i++){
       Point dir = points[(i+1) % n] - points[i];
-      Point A = points[i] - dir * 100000.0;
-      Point B = points[i] + dir * 100000.0;
+      Point A = points[i] - dir * 10000000.0;
+      Point B = points[(i+1) % n] + dir * 10000000.0;
       polygon = convex_cut(polygon,Line(A,B));
     }
       
