@@ -155,6 +155,19 @@ bool is_inner_polygon(const vector<Point>& outer,const vector<Point>& inner){
   return false;
 }
 
+vector<Point> convex_cut(const vector<Point>& p, const Line& l) {
+  vector<Point> q;
+  for (int i = 0; i < p.size(); ++i) {
+    Point A = p[i];
+    Point B = p[(i + 1) % p.size()];
+    if (ccw(l[0], l[1], A) != -1) q.push_back(A);
+    if (ccw(l[0], l[1], A)*ccw(l[0], l[1], B) < 0)
+      q.push_back(crosspoint(Line(A, B), l));
+  }
+  return q;
+}
+
+
 int main(){
   int n;
   while(~scanf("%d",&n)){
@@ -166,23 +179,20 @@ int main(){
       points.push_back(Point(x,y));
     }
 
-    Point center;
-    for(int i = 0; i < n; i++){
-      center += points[i];
-    }
-    center /= n;
+    vector<Point> polygon;
+    polygon.push_back(Point(-7000,7000));
+    polygon.push_back(Point(7000,7000));
+    polygon.push_back(Point(-7000,-7000));
+    polygon.push_back(Point(7000,-7000));
 
     bool isok = true;
     for(int i = 0; i < n; i++){
-      Line l(center,center + (points[i] - center)/abs(points[i]-center)/* * (abs(points[i] - center) - 10000.0 * EPS) */);
-      for(int j = 0; j < n; j++){
-	Line m(points[j],points[(j+1)%n]);
-	if(intersectSS(l,m)){
-	  isok = false;
-	}
-      }
+      Point dir = points[(i+1) % n] - points[i];
+      Point A = points[i] - dir * 100000.0;
+      Point B = points[i] + dir * 100000.0;
+      polygon = convex_cut(polygon,Line(A,B));
     }
       
-    printf("%d\n", isok ? 1 : 0);
+    printf("%d\n", polygon.size() > 0 ? 1 : 0);
   }
 }
