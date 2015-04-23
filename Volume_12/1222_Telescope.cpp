@@ -121,7 +121,16 @@ vector<Point> crosspointCL(const Circle &ci,const Line &l){
   double B = (-2 * a - 2 * b * p + 2 * p * q);
   double C = a * a + b * b - 2 * q + q * q - c * c;
   vector<Point> res;
-  if(B * B - 4 * A * C < 0) return res;
+  if(B * B - 4 * A * C < -EPS) return res;
+  if(-EPS <= B * B - 4 * A * C
+     && B * B - 4 * A * C <= EPS) {
+    double x = -B / (2 * A);
+    double y = p * x + q;
+    if(ccw(l[0],l[1],Point(x,y)) == 0){
+      res.push_back(Point(x,y));
+    }
+    return res;
+  }
 
   double x = (-B + sqrt(B * B - 4 * A * C)) / (2 * A);
   double y = p * x + q;
