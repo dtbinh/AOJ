@@ -130,9 +130,9 @@ vector<Point> crosspointCL(const Circle &ci,const Line& l){
     double A = 1.0;
     double B = -2.0 * b;
     double C = a * a + b * b - c * c;
-    if(B * B - 4.0 * A * C < -EPS) return res;
-    if(-EPS <= B * B - 4.0 * A * C
-       && B * B - 4 * A * C <= EPS) {
+    double D = B * B - 4.0 * A * C;
+    if(D < -EPS) return res;
+    if(-EPS <= D && D <= EPS) {
       double x = 0;
       double y = -B / (2.0 * A);
       if(ccw(l[0],l[1],Point(x,y)) == 0){
@@ -142,11 +142,11 @@ vector<Point> crosspointCL(const Circle &ci,const Line& l){
     }
 
     double x = 0.0;
-    double y = (-B + sqrt(B * B - 4.0 * A * C)) / (2.0 * A);
+    double y = (-B + sqrt(D)) / (2.0 * A);
     if(on_seg(l[0],l[1],Point(x,y))){
       res.push_back(Point(x,y));
     }
-    y = (-B - sqrt(B * B - 4.0 * A * C)) / (2 * A);
+    y = (-B - sqrt(D)) / (2 * A);
     if(on_seg(l[0],l[1],Point(x,y))){
       res.push_back(Point(x,y));
     }
@@ -161,9 +161,9 @@ vector<Point> crosspointCL(const Circle &ci,const Line& l){
     double A = 1.0;
     double B = -2.0 * a;
     double C = a * a + b * b - c * c;
-    if(B * B - 4 * A * C < -EPS) return res;
-    if(-EPS <= B * B - 4.0 * A * C
-       && B * B - 4.0 * A * C <= EPS) {
+    double D = B * B - 4.0 * A * C;
+    if(D < -EPS) return res;
+    if(-EPS <= D && D <= EPS) {
       double x = -B / (2.0 * A);
       double y = 0;
       if(ccw(l[0],l[1],Point(x,y)) == 0){
@@ -172,12 +172,12 @@ vector<Point> crosspointCL(const Circle &ci,const Line& l){
       return res;
     }
 
-    double x = (-B + sqrt(B * B - 4.0 * A * C)) / (2.0 * A);
+    double x = (-B + sqrt(D)) / (2.0 * A);
     double y = 0.0;
     if(on_seg(l[0],l[1],Point(x,y))){
       res.push_back(Point(x,y));
     }
-    x = (-B - sqrt(B * B - 4 * A * C)) / (2 * A);
+    x = (-B - sqrt(D)) / (2 * A);
     if(on_seg(l[0],l[1],Point(x,y))){
       res.push_back(Point(x,y));
     }
@@ -245,7 +245,7 @@ int main(){
     if(num_of_circumference_points == 0
        && num_of_polygon_vertices == 0) break;
 
-    vector<double> points;
+    vector<Point> polygon;
     for(int i = 0; i < num_of_circumference_points; i++){
       double p;
       cin >> p;
@@ -276,22 +276,43 @@ int main(){
 	  x = -10.0;
 	}
 	double y = a * x;
-	printf("y = %lf x\n",a);
-	// printf("t_prev:(%lf %lf)\n",Point(x,y).real(),Point(x,y).imag());
 	Point t = Point(x,y) / abs(Point(x,y));
-	printf("t:(%lf %lf)\n",10.0 * t.real(),10.0 * t.imag());
 	l = Line(Point(0,0),10.0 * t);
       }
 
       Circle ci(Point(0,0),1.0);
       vector<Point> tmp = crosspointCL(ci,l);
+
       if(tmp.size() == 1){
-	printf("cross %lf %lf\n",tmp[0].real(),tmp[0].imag());
+	polygon.push_back(tmp[0]);
       }
       else{
-	printf("dame:%lf\n",p);
+	assert(false);
       }
     }
 
+    double dp[41][41][41];
+    double res = 0.0;
+    memset(dp,0,sizeof(dp));
+
+    for(int used = 2; used < num_of_polygon_vertices; used++){
+      for(int start_i = 0; start_i < polygon.size(); start_i++){
+	for(int mid_i = start_i; mid_i < polygon.size(); mid_i++){
+	  for(int end_i = mid_i + 1; end_i < polygon.size(); end_i++){
+	    dp[used + 1][start_i][end_i]
+	      = max(dp[used + 1][start_i][end_i],
+		    dp[used][start_i][mid_i]
+		    + compute_area(polygon[start_i] - polygon[end_i],
+				   polygon[mid_i] - polygon[end_i]));
+	  }
+	}
+      }
+    }
+    for(int start_i = 0; start_i < polygon.size(); start_i++){
+      for(int end_i = 0; end_i < polygon.size(); end_i++){
+	res = max(res,dp[num_of_polygon_vertices][start_i][end_i]);
+      }
+    }
+    printf("%lf\n",res);
   }
 }
