@@ -107,43 +107,120 @@ Point crosspointLL(const Line &l, const Line &m) {
   return m[0] + B / A * (m[1] - m[0]);
 }
 
-vector<Point> crosspointCL(const Circle &ci,const Line &l){
-  //y = px + q
-  // (x-a)^2 + (y-b)^2 = c^2
-  double p = (imag(l[0]) - imag(l[1])) / (real(l[0]) - real(l[1]));
-  double q = imag(l[1]) - p * real(l[1]);
+bool EQ(double lhs,double rhs) {
+  return (lhs - EPS <= rhs
+	  && rhs <= lhs + EPS);
+}
 
-  double a = ci.p.real();
-  double b = ci.p.imag();
-  double c = ci.r;
+bool on_seg(const Point& p1,const Point&p2,
+	    const Point& q){
+  return abs(cross(p1-q,p2-q)) < EPS && dot(p1-q,p2-q) < EPS;
+}
 
-  double A = 1 + p * p;
-  double B = (-2 * a - 2 * b * p + 2 * p * q);
-  double C = a * a + b * b - 2 * q + q * q - c * c;
+vector<Point> crosspointCL(const Circle &ci,const Line& l){
   vector<Point> res;
-  if(B * B - 4 * A * C < -EPS) return res;
-  if(-EPS <= B * B - 4 * A * C
-     && B * B - 4 * A * C <= EPS) {
-    double x = -B / (2 * A);
-    double y = p * x + q;
-    if(ccw(l[0],l[1],Point(x,y)) == 0){
+  // (x-a)^2 + (y-b)^2 = c^2
+
+  if(EQ(real(l[0]),real(l[1])) && EQ(real(l[0]),0)){
+    // x = 0
+    double a = ci.p.real();
+    double b = ci.p.imag();
+    double c = ci.r;
+
+    double A = 1.0;
+    double B = -2.0 * b;
+    double C = a * a + b * b - c * c;
+    if(B * B - 4.0 * A * C < -EPS) return res;
+    if(-EPS <= B * B - 4.0 * A * C
+       && B * B - 4 * A * C <= EPS) {
+      double x = 0;
+      double y = -B / (2.0 * A);
+      if(ccw(l[0],l[1],Point(x,y)) == 0){
+	res.push_back(Point(x,y));
+      }
+      return res;
+    }
+
+    double x = 0.0;
+    double y = (-B + sqrt(B * B - 4.0 * A * C)) / (2.0 * A);
+    if(on_seg(l[0],l[1],Point(x,y))){
+      res.push_back(Point(x,y));
+    }
+    y = (-B - sqrt(B * B - 4.0 * A * C)) / (2 * A);
+    if(on_seg(l[0],l[1],Point(x,y))){
       res.push_back(Point(x,y));
     }
     return res;
   }
+  else if(EQ(imag(l[0]),imag(l[1])) && EQ(imag(l[0]),0)){
+    // y = 0
+    double a = ci.p.real();
+    double b = ci.p.imag();
+    double c = ci.r;
 
-  double x = (-B + sqrt(B * B - 4 * A * C)) / (2 * A);
-  double y = p * x + q;
-  if(ccw(l[0],l[1],Point(x,y)) == 0){
-    res.push_back(Point(x,y));
+    double A = 1.0;
+    double B = -2.0 * a;
+    double C = a * a + b * b - c * c;
+    if(B * B - 4 * A * C < -EPS) return res;
+    if(-EPS <= B * B - 4.0 * A * C
+       && B * B - 4.0 * A * C <= EPS) {
+      double x = -B / (2.0 * A);
+      double y = 0;
+      if(ccw(l[0],l[1],Point(x,y)) == 0){
+	res.push_back(Point(x,y));
+      }
+      return res;
+    }
+
+    double x = (-B + sqrt(B * B - 4.0 * A * C)) / (2.0 * A);
+    double y = 0.0;
+    if(on_seg(l[0],l[1],Point(x,y))){
+      res.push_back(Point(x,y));
+    }
+    x = (-B - sqrt(B * B - 4 * A * C)) / (2 * A);
+    if(on_seg(l[0],l[1],Point(x,y))){
+      res.push_back(Point(x,y));
+    }
+    return res;
   }
-  
-  x = (-B - sqrt(B * B - 4 * A * C)) / (2 * A);
-  y = p * x + q;
-  if(ccw(l[0],l[1],Point(x,y)) == 0){
-    res.push_back(Point(x,y));
+  else{
+    //y = px + q
+    double p = (imag(l[0]) - imag(l[1])) / (real(l[0]) - real(l[1]));
+    double q = 0;//imag(l[1]) - p * real(l[1]);
+
+    double a = ci.p.real();
+    double b = ci.p.imag();
+    double c = ci.r;
+
+    double A = 1.0 + p * p;
+    double B = (-2.0 * a - 2.0 * b * p + 2.0 * p * q);
+    double C = a * a + b * b - 2.0 * b * q + q * q - c * c;
+    double D = B * B - 4.0 * A * C;
+    if(D < -EPS) return res;
+    if(-EPS <= D && D <= EPS) {
+      double x = -B / (2.0 * A);
+      double y = p * x + q;
+      printf("last\n");
+      if(ccw(l[0],l[1],Point(x,y)) == 0){
+	res.push_back(Point(x,y));
+      }
+      return res;
+    }
+
+    double x = (-B + sqrt(D)) / (2.0 * A);
+    double y = p * x + q;
+    
+    if(on_seg(l[0],l[1],Point(x,y))){
+      res.push_back(Point(x,y));
+    }
+    
+    x = (-B - sqrt(D)) / (2.0 * A);
+    y = p * x + q;
+    if(on_seg(l[0],l[1],Point(x,y))){
+      res.push_back(Point(x,y));
+    }
+    return res;
   }
-  return res;
 }
 
 double compute_area(const Point &l,const Point &m){
@@ -159,7 +236,6 @@ bool include(const Circle& s,Point t){
   return dot(t,t) <= s.r * s.r + EPS;
 }
 
-
 int main(){
   int num_of_circumference_points;
   int num_of_polygon_vertices;
@@ -173,7 +249,49 @@ int main(){
     for(int i = 0; i < num_of_circumference_points; i++){
       double p;
       cin >> p;
-      points.push_back(p);
+      //y = ax + b
+      double rad = M_PI * 2.0 * p;
+      Line l(Point(0,0),Point(0,0));
+
+      if(EQ(p,0.0)){
+	l = Line(Point(0,0),Point(10.0,0));
+      }
+      else if(EQ(p,0.25)){
+	l = Line(Point(0,0),Point(0,10.0));
+      }
+      else if(EQ(p,0.5)){
+	l = Line(Point(0,0),Point(-10.0,0));
+      }
+      else if(EQ(p,0.75)){
+	l = Line(Point(0,0),Point(0,-10.0));
+      }
+      else{
+	double a = tan(rad);
+	double x;
+	if((0 < p && p < 0.25)
+	   || (0.75 < p && p < 1.0)){
+	  x = 10.0;
+	}
+	else{
+	  x = -10.0;
+	}
+	double y = a * x;
+	printf("y = %lf x\n",a);
+	// printf("t_prev:(%lf %lf)\n",Point(x,y).real(),Point(x,y).imag());
+	Point t = Point(x,y) / abs(Point(x,y));
+	printf("t:(%lf %lf)\n",10.0 * t.real(),10.0 * t.imag());
+	l = Line(Point(0,0),10.0 * t);
+      }
+
+      Circle ci(Point(0,0),1.0);
+      vector<Point> tmp = crosspointCL(ci,l);
+      if(tmp.size() == 1){
+	printf("cross %lf %lf\n",tmp[0].real(),tmp[0].imag());
+      }
+      else{
+	printf("dame:%lf\n",p);
+      }
     }
+
   }
 }
