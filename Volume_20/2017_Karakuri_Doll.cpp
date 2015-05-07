@@ -35,10 +35,10 @@ public:
   int y;
   int cost;
   int dir;
-  vector<int> commands;
+  vector<bool> commands;
   State(int x,int y,int cost,int dir)
     : x(x),y(y),cost(cost),dir(dir) {}
-  State(int x,int y,int cost,int dir,const vector<int>& commands)
+  State(int x,int y,int cost,int dir,const vector<bool>& commands)
     : x(x),y(y),cost(cost),dir(dir),commands(commands) {}
   bool operator<(const State& s) const {
     return cost < s.cost;
@@ -73,12 +73,13 @@ int main(){
 
     priority_queue<State,vector<State>,greater<State> > que;
     que.push(State(sx,sy,0,0));
-    bool visited[20][70][4] = {};
+    bool visited[20][70][200][4] = {};
     int flag = 0;
 
     while(!que.empty()){
       State s = que.top();
       que.pop();
+      if(s.commands.size() >= 200) continue;
       if(s.x == gx && s.y == gy){
 	flag |= (1<<0);
 	int dx = s.x;
@@ -87,7 +88,7 @@ int main(){
 	while(true){
 	  if(stage[dy + ty[dir]][dx + tx[dir]] == '#'){
 	    if(s.commands.size() == 0) break;
-	    dir = dir + (s.commands.back() == 0 ? 1 : 3);
+	    dir = dir + (s.commands.back() ? 1 : 3);
 	    dir %= 4;
 	    s.commands.pop_back();
 	  }
@@ -108,23 +109,24 @@ int main(){
 	int dy = ty[s.dir] + s.y;
 	if(dy >= H || dx >= W || dy < 0 || dx < 0) continue;
 	if(stage[dy][dx] == '#'){
-	  if(!visited[s.y][s.x][(s.dir + 1) % 4]){
-	    vector<int> next = s.commands;
-	    next.push_back(1);
-	    visited[s.y][s.x][(s.dir + 1) % 4] = true;
+	  if(!visited[s.y][s.x][s.commands.size() + 1][(s.dir + 1) % 4]){
+	    vector<bool> next = s.commands;
+	    next.push_back(true);
+	    visited[s.y][s.x][s.commands.size() + 1][(s.dir + 1) % 4] = true;
 	    que.push(State(s.x,s.y,s.cost + 1,(s.dir + 1) % 4,next));
 	  }
-	  if(!visited[s.y][s.x][(s.dir + 3) % 4]){
-	    vector<int> next = s.commands;
-	    next.push_back(0);
-	    visited[s.y][s.x][(s.dir + 3) % 4] = true;
+	  if(!visited[s.y][s.x][s.commands.size() + 1][(s.dir + 3) % 4]){
+	    vector<bool> next = s.commands;
+	    next.push_back(false);
+	    visited[s.y][s.x][s.commands.size() + 1][(s.dir + 3) % 4] = true;
 	    que.push(State(s.x,s.y,s.cost + 1,(s.dir + 3) % 4,next));
 	  }
 	}
 	else if(stage[dy][dx] == '.'
 		|| stage[dy][dx] == 'K'
 		|| stage[dy][dx] == 'M'){
-	  visited[dy][dx][s.dir] = true;
+	  if(visited[dy][dx][s.commands.size()][s.dir]) continue;
+	  visited[dy][dx][s.commands.size()][s.dir] = true;
 	  que.push(State(dx,dy,s.cost + 1,s.dir,s.commands));
 	}
       }
