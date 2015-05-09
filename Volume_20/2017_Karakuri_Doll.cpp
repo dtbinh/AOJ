@@ -79,7 +79,7 @@ int main(){
 
     queue<State> que;
     for(int bdir = 0; bdir < 4; bdir++){
-      // visited[sy][sx][sdir][sy][sx][bdir] = true;
+      visited[sy][sx][sdir][sy][sx][bdir] = true;
       que.push(State(sx,sy,sdir,sx,sy,bdir));
     }
 
@@ -125,9 +125,9 @@ int main(){
 	const int lr[] = {3,1}; // {left,right}
 	for(int i = 0; i < 2; i++){
 	  if(stage[ty[(s.backward_dir + lr[i]) % 4] + backward_dy][tx[(s.backward_dir + lr[i]) % 4] + backward_dx] != '#') continue;
-	  if(visited[forward_dy][forward_dx][(s.forward_dir + lr[i]) % 4][backward_dy][backward_dx][(s.backward_dir + lr[i]) % 4]) continue;
+	  if(visited[forward_dy][forward_dx][s.forward_dir][backward_dy][backward_dx][s.backward_dir]) continue;
 
-	  visited[forward_dy][forward_dx][(s.forward_dir + lr[i]) % 4][backward_dy][backward_dx][(s.backward_dir + lr[i]) % 4] = true;
+	  visited[forward_dy][forward_dx][s.forward_dir][backward_dy][backward_dx][s.backward_dir] = true;
 	  que.push(State(forward_dx,forward_dy,(s.forward_dir + lr[i]) % 4,
 			 backward_dx,backward_dy,(s.backward_dir + lr[i]) % 4));
 	}
