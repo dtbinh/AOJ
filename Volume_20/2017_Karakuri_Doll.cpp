@@ -43,15 +43,124 @@ public:
 };
 
 bool visited[17][65][4][17][65][4];
+char stage[20][70];
+
+bool two_doll_bfs(int sx,int sy,int sdir,int gx,int gy,int gdir){
+  queue<State> que;
+  memset(visited,false,sizeof(visited));
+
+  for(int bdir = 0; bdir < 4; bdir++){
+    que.push(State(sx,sy,sdir,sx,sy,bdir));
+  }
+  
+  while(!que.empty()){
+    State s = que.front();
+    que.pop();
+    
+    int tmp_forward_dx = s.forward_x;
+    int tmp_forward_dy = s.forward_y;
+    while(stage[tmp_forward_dy][tmp_forward_dx] != '#'){
+      tmp_forward_dx += tx[s.forward_dir];
+      tmp_forward_dy += ty[s.forward_dir];
+    }
+    tmp_forward_dx -= tx[s.forward_dir];
+    tmp_forward_dy -= ty[s.forward_dir];
+    
+    int forward_dx = tmp_forward_dx;
+    int forward_dy = tmp_forward_dy;
+    
+    int backward_dx = s.backward_x;
+    int backward_dy = s.backward_y;
+    
+    while(stage[backward_dy][backward_dx] != '#'){
+
+      if(visited[forward_dy][forward_dx][s.forward_dir][backward_dy][backward_dx][s.backward_dir]){
+	backward_dx += tx[(s.backward_dir + 2) % 4];
+	backward_dy += ty[(s.backward_dir + 2) % 4];
+	continue;
+      }
+
+      const int lr[] = {3,1}; // {left,right}
+      for(int i = 0; i < 2; i++){
+	if(stage[ty[(s.backward_dir + lr[i]) % 4] + backward_dy][tx[(s.backward_dir + lr[i]) % 4] + backward_dx] != '#') continue;
+	visited[forward_dy][forward_dx][s.forward_dir][backward_dy][backward_dx][s.backward_dir] = true;
+	que.push(State(forward_dx,forward_dy,(s.forward_dir + lr[i]) % 4,
+		       backward_dx,backward_dy,(s.backward_dir + lr[i]) % 4));
+      }
+      backward_dx += tx[(s.backward_dir + 2) % 4];
+      backward_dy += ty[(s.backward_dir + 2) % 4];
+    }
+  }
+  
+  bool flag = false;
+  for(int i = 0; i < 4; i++){
+    if(visited[gy][gx][i][gy][gx][gdir]){
+      flag = true;
+      break;
+    }
+  }
+  
+  return flag;
+}
+
+bool one_doll_bfs(int sx,int sy,int sdir,int gx,int gy,int gdir){
+  queue<State> que;
+  memset(visited,false,sizeof(visited));
+
+  const int backward_dx = sx;
+  const int backward_dy = sy;
+  const int backward_dir = 0;
+
+  que.push(State(sx,sy,sdir,backward_dx,backward_dy,backward_dir));
+  
+  while(!que.empty()){
+    State s = que.front();
+    que.pop();
+    
+    int tmp_forward_dx = s.forward_x;
+    int tmp_forward_dy = s.forward_y;
+
+    while(stage[tmp_forward_dy][tmp_forward_dx] != '#'){
+      tmp_forward_dx += tx[s.forward_dir];
+      tmp_forward_dy += ty[s.forward_dir];
+    }
+    tmp_forward_dx -= tx[s.forward_dir];
+    tmp_forward_dy -= ty[s.forward_dir];
+    
+    int forward_dx = tmp_forward_dx;
+    int forward_dy = tmp_forward_dy;
+    
+    if(visited[forward_dy][forward_dx][s.forward_dir][backward_dy][backward_dx][backward_dir]) continue;
+    visited[forward_dy][forward_dx][s.forward_dir][backward_dy][backward_dx][backward_dir] = true;
+
+    const int lr[] = {3,1}; // {left,right}
+    for(int i = 0; i < 2; i++){
+      que.push(State(forward_dx,forward_dy,(s.forward_dir + lr[i]) % 4,
+		     backward_dx,backward_dy,backward_dir));
+    }
+  }
+  
+  bool flag = false;
+  for(int i = 0; i < 4; i++){
+    if(visited[gy][gx][i][backward_dy][backward_dx][backward_dir]){
+      flag = true;
+      break;
+    }
+  }
+  
+  return flag;
+}
+
 
 int main(){
   int W,H;
   while(~scanf("%d %d",&W,&H)){
     if(W == 0 && H == 0) break;
-    char stage[20][70];
+    memset(stage,'#',sizeof(stage));
+
     int sx,sy,sdir;
     int gx,gy,gdir;
-    memset(visited,false,sizeof(visited));
+
     for(int y = 0; y < H; y++){
       char line[70];
       scanf("%s",line);
@@ -77,87 +186,17 @@ int main(){
       }
     }
 
-    queue<State> que;
-    for(int bdir = 0; bdir < 4; bdir++){
-      visited[sy][sx][sdir][sy][sx][bdir] = true;
-      que.push(State(sx,sy,sdir,sx,sy,bdir));
-    }
 
-    while(!que.empty()){
-      State s = que.front();
-      que.pop();
-
-      // printf("f1:%d %d %d\n",s.forward_x,s.forward_y,s.forward_dir);
-      // printf("b1:%d %d %d\n",s.backward_x,s.backward_y,s.backward_dir);
-
-      int tmp_forward_dx = s.forward_x;
-      int tmp_forward_dy = s.forward_y;
-      while(stage[tmp_forward_dy][tmp_forward_dx] != '#'){
-	tmp_forward_dx += tx[s.forward_dir];
-	tmp_forward_dy += ty[s.forward_dir];
+    if(one_doll_bfs(sx,sy,sdir,gx,gy,gdir)){
+      if(two_doll_bfs(sx,sy,sdir,gx,gy,gdir)){
+    	printf("He can accomplish his mission.\n");
       }
-      tmp_forward_dx -= tx[s.forward_dir];
-      tmp_forward_dy -= ty[s.forward_dir];
-
-      int forward_dx = tmp_forward_dx;
-      int forward_dy = tmp_forward_dy;
-
-      int backward_dx = s.backward_x;
-      int backward_dy = s.backward_y;
-
-      while(stage[backward_dy][backward_dx] != '#'){
-	// printf("f2:%d %d %d\n",tmp_forward_dx,tmp_forward_dy,s.forward_dir);
-	// printf("b2:%d %d %d\n",tmp_backward_dx,tmp_backward_dy,s.backward_dir);
-	
-	// if(forward_dx == gx && forward_dy == gy
-	//    && tmp_backward_dx == gx && tmp_backward_dy == gy){
-	//   cout << "YES" << endl;
-	//   break;
-	// }
-
-	// if(visited[forward_dy][forward_dx][s.forward_dir][backward_dy][backward_dx][s.backward_dir]){
-	//   backward_dx += tx[(s.backward_dir + 2) % 4];
-	//   backward_dy += ty[(s.backward_dir + 2) % 4];
-	//   continue;
-	// }
-	// visited[forward_dy][forward_dx][s.forward_dir][backward_dy][backward_dx][s.backward_dir] = true;
-
-	const int lr[] = {3,1}; // {left,right}
-	for(int i = 0; i < 2; i++){
-	  if(stage[ty[(s.backward_dir + lr[i]) % 4] + backward_dy][tx[(s.backward_dir + lr[i]) % 4] + backward_dx] != '#') continue;
-	  if(visited[forward_dy][forward_dx][s.forward_dir][backward_dy][backward_dx][s.backward_dir]) continue;
-
-	  visited[forward_dy][forward_dx][s.forward_dir][backward_dy][backward_dx][s.backward_dir] = true;
-	  que.push(State(forward_dx,forward_dy,(s.forward_dir + lr[i]) % 4,
-			 backward_dx,backward_dy,(s.backward_dir + lr[i]) % 4));
-	}
-	backward_dx += tx[(s.backward_dir + 2) % 4];
-	backward_dy += ty[(s.backward_dir + 2) % 4];
-      }
-      backward_dx -= tx[(s.backward_dir + 2) % 4];
-      backward_dy -= ty[(s.backward_dir + 2) % 4];
-      // visited[forward_dy][forward_dx][s.forward_dir][backward_dy][backward_dx][s.backward_dir] = true;
-    }
-
-    bool flag = false;
-    for(int i = 0; i < 4; i++){
-      if(visited[gy][gx][i][gy][gx][gdir]){
-	flag = true;
-	break;
+      else{
+    	printf("He cannot return to the kitchen.\n");
       }
     }
-    
-    printf("%s\n", flag ? "YES" : "NO");
-
-      // if(flag == (1<<2) - 1){
-    //   printf("He can accomplish his mission.\n");
-    // }
-    // else if(flag == (1<<0)){
-    //   printf("He cannot return to the kitchen.\n");
-    // }
-    // else{
-    //   printf("He cannot bring tea to his master.\n");
-    // }
-    cout << endl;
+    else{
+      printf("He cannot bring tea to his master.\n");
+    }
   }
 }
