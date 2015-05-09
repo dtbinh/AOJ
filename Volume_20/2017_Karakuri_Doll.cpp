@@ -50,7 +50,7 @@ int main(){
     if(W == 0 && H == 0) break;
     char stage[20][70];
     int sx,sy,sdir;
-    int gx,gy;
+    int gx,gy,gdir;
     memset(visited,false,sizeof(visited));
     for(int y = 0; y < H; y++){
       char line[70];
@@ -71,76 +71,85 @@ int main(){
     for(int i = 0; i < 4; i++){
       if(stage[(sy + ty[i]) % 4][(sx + tx[i]) % 4] == '.'){
 	sdir = i;
-	break;
+      }
+      if(stage[(gy + ty[i]) % 4][(gx + tx[i]) % 4] == '.'){
+	gdir = i;
       }
     }
 
     queue<State> que;
-    que.push(State(sx,sy,sdir,sx,sy,(sdir + 2) % 4));
+    for(int bdir = 0; bdir < 4; bdir++){
+      // visited[sy][sx][sdir][sy][sx][bdir] = true;
+      que.push(State(sx,sy,sdir,sx,sy,bdir));
+    }
 
     while(!que.empty()){
       State s = que.front();
       que.pop();
 
-      printf("f1:%d %d %d\n",s.forward_x,s.forward_y,s.forward_dir);
-      printf("b1:%d %d %d\n",s.backward_x,s.backward_y,s.backward_dir);
+      // printf("f1:%d %d %d\n",s.forward_x,s.forward_y,s.forward_dir);
+      // printf("b1:%d %d %d\n",s.backward_x,s.backward_y,s.backward_dir);
 
       int tmp_forward_dx = s.forward_x;
       int tmp_forward_dy = s.forward_y;
-      while(true){
+      while(stage[tmp_forward_dy][tmp_forward_dx] != '#'){
 	tmp_forward_dx += tx[s.forward_dir];
 	tmp_forward_dy += ty[s.forward_dir];
-	if(stage[tmp_forward_dy][tmp_forward_dx] == '#'){
-	  break;
-	}
       }
       tmp_forward_dx -= tx[s.forward_dir];
       tmp_forward_dy -= ty[s.forward_dir];
 
-      int tmp_backward_dx = s.backward_x;
-      int tmp_backward_dy = s.backward_y;
-      while(true){
-	tmp_backward_dx += tx[(s.backward_dir + 2) % 4];
-	tmp_backward_dy += ty[(s.backward_dir + 2) % 4];
-	if(stage[tmp_backward_dy][tmp_backward_dx] == '#'){
-	  break;
-	}
-      }
-      tmp_backward_dx -= tx[(s.backward_dir + 2) % 4];
-      tmp_backward_dy -= ty[(s.backward_dir + 2) % 4];
+      int forward_dx = tmp_forward_dx;
+      int forward_dy = tmp_forward_dy;
 
-      printf("f2:%d %d %d\n",tmp_forward_dx,tmp_forward_dy,s.forward_dir);
-      printf("b2:%d %d %d\n",tmp_backward_dx,tmp_backward_dy,s.backward_dir);
+      int backward_dx = s.backward_x;
+      int backward_dy = s.backward_y;
 
-      if(tmp_forward_dx == gx && tmp_forward_dy == gy
-	 && tmp_backward_dx == gx && tmp_backward_dy == gy){
-	cout << "YES" << endl;
-	break;
-      }
-
-      const int lr[] = {3,1}; // {left,right}
-      for(int i = 0; i < 2; i++){
-	int forward_dx = tx[(s.forward_dir + lr[i]) % 4] + tmp_forward_dx;
-	int forward_dy = ty[(s.forward_dir + lr[i]) % 4] + tmp_forward_dy;
-
-	int backward_dx = tx[((s.backward_dir + lr[i]) % 4 + 2) % 4] + tmp_backward_dx;
-	int backward_dy = ty[((s.backward_dir + lr[i]) % 4 + 2) % 4] + tmp_backward_dy;
-
-	if(forward_dy >= H || forward_dx >= W || forward_dy < 0 || forward_dx < 0) continue;
-	if(backward_dy >= H || backward_dx >= W || backward_dy < 0 || backward_dx < 0) continue;
+      while(stage[backward_dy][backward_dx] != '#'){
+	// printf("f2:%d %d %d\n",tmp_forward_dx,tmp_forward_dy,s.forward_dir);
+	// printf("b2:%d %d %d\n",tmp_backward_dx,tmp_backward_dy,s.backward_dir);
 	
-	if(stage[forward_dy][forward_dx] == '#') continue;
-	if(stage[backward_dy][backward_dx] == '#') continue;
-	if(visited[forward_dy][forward_dx][(s.forward_dir + lr[i]) % 4][backward_dy][backward_dx][(s.backward_dir + lr[i]) % 4]) continue;
+	// if(forward_dx == gx && forward_dy == gy
+	//    && tmp_backward_dx == gx && tmp_backward_dy == gy){
+	//   cout << "YES" << endl;
+	//   break;
+	// }
 
-	visited[forward_dy][forward_dx][(s.forward_dir + lr[i]) % 4][backward_dy][backward_dx][(s.backward_dir + lr[i]) % 4] = true;
+	// if(visited[forward_dy][forward_dx][s.forward_dir][backward_dy][backward_dx][s.backward_dir]){
+	//   backward_dx += tx[(s.backward_dir + 2) % 4];
+	//   backward_dy += ty[(s.backward_dir + 2) % 4];
+	//   continue;
+	// }
+	// visited[forward_dy][forward_dx][s.forward_dir][backward_dy][backward_dx][s.backward_dir] = true;
 
-	que.push(State(forward_dx,forward_dy,(s.forward_dir + lr[i]) % 4,
-		       backward_dx,backward_dy,(s.backward_dir + lr[i]) % 4));
+	const int lr[] = {3,1}; // {left,right}
+	for(int i = 0; i < 2; i++){
+	  if(stage[ty[(s.backward_dir + lr[i]) % 4] + backward_dy][tx[(s.backward_dir + lr[i]) % 4] + backward_dx] != '#') continue;
+	  if(visited[forward_dy][forward_dx][(s.forward_dir + lr[i]) % 4][backward_dy][backward_dx][(s.backward_dir + lr[i]) % 4]) continue;
+
+	  visited[forward_dy][forward_dx][(s.forward_dir + lr[i]) % 4][backward_dy][backward_dx][(s.backward_dir + lr[i]) % 4] = true;
+	  que.push(State(forward_dx,forward_dy,(s.forward_dir + lr[i]) % 4,
+			 backward_dx,backward_dy,(s.backward_dir + lr[i]) % 4));
+	}
+	backward_dx += tx[(s.backward_dir + 2) % 4];
+	backward_dy += ty[(s.backward_dir + 2) % 4];
       }
+      backward_dx -= tx[(s.backward_dir + 2) % 4];
+      backward_dy -= ty[(s.backward_dir + 2) % 4];
+      // visited[forward_dy][forward_dx][s.forward_dir][backward_dy][backward_dx][s.backward_dir] = true;
     }
 
-    // if(flag == (1<<2) - 1){
+    bool flag = false;
+    for(int i = 0; i < 4; i++){
+      if(visited[gy][gx][i][gy][gx][gdir]){
+	flag = true;
+	break;
+      }
+    }
+    
+    printf("%s\n", flag ? "YES" : "NO");
+
+      // if(flag == (1<<2) - 1){
     //   printf("He can accomplish his mission.\n");
     // }
     // else if(flag == (1<<0)){
