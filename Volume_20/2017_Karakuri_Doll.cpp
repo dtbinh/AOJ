@@ -26,8 +26,8 @@ typedef pair <int,int> P;
 
 static const double EPS = 1e-12;
 
-int tx[] = {+0,+1,+0,-1};
-int ty[] = {-1,+0,+1,+0};
+static const int tx[] = {+0,+1,+0,-1};
+static const int ty[] = {-1,+0,+1,+0};
 
 class State {
 public:
@@ -43,13 +43,14 @@ public:
 };
 
 bool visited[17][65][4][17][65][4];
-char stage[20][70];
+char stage[17][65];
 
 bool two_doll_bfs(int sx,int sy,int sdir,int gx,int gy,int gdir){
   queue<State> que;
   memset(visited,false,sizeof(visited));
 
   for(int bdir = 0; bdir < 4; bdir++){
+    visited[sy][sx][sdir][sy][sx][bdir] = true;
     que.push(State(sx,sy,sdir,sx,sy,bdir));
   }
   
@@ -151,18 +152,28 @@ bool one_doll_bfs(int sx,int sy,int sdir,int gx,int gy,int gdir){
   return flag;
 }
 
+void disp(int W,int H){
+  for(int y = 0; y < H; y++){
+    for(int x = 0; x < W; x++){
+      printf("%c",stage[y][x]);
+    }
+    printf("\n");
+  }
+  printf("\n");
+}
+
 
 int main(){
   int W,H;
   while(~scanf("%d %d",&W,&H)){
     if(W == 0 && H == 0) break;
-    memset(stage,'#',sizeof(stage));
+    // memset(stage,'\0',sizeof(stage));
 
     int sx,sy,sdir;
     int gx,gy,gdir;
 
     for(int y = 0; y < H; y++){
-      char line[70];
+      char line[128];
       scanf("%s",line);
       for(int x = 0; x < W; x++){
 	stage[y][x] = line[x];
@@ -178,14 +189,13 @@ int main(){
     }
 
     for(int i = 0; i < 4; i++){
-      if(stage[(sy + ty[i]) % 4][(sx + tx[i]) % 4] == '.'){
+      if(stage[sy + ty[i]][sx + tx[i]] == '.'){
 	sdir = i;
       }
-      if(stage[(gy + ty[i]) % 4][(gx + tx[i]) % 4] == '.'){
+      if(stage[gy + ty[i]][gx + tx[i]] == '.'){
 	gdir = i;
       }
     }
-
 
     if(one_doll_bfs(sx,sy,sdir,gx,gy,gdir)){
       if(two_doll_bfs(sx,sy,sdir,gx,gy,gdir)){
