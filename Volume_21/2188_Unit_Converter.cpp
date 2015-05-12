@@ -47,15 +47,95 @@ vector<string> split(string delim,string str){
   return res;
 }
 
-int main(){
+const static char unit_prefix_name[][12] = {
+  "yotta",
+  "zetta",
+  "exa",
+  "peta",
+  "tera",
+  "giga",
+  "mega",
+  "kilo",
+  "hecto",
+  "deca",
+  "deci",
+  "centi",
+  "milli",
+  "micro",
+  "nano",
+  "pico",
+  "femto",
+  "ato",
+  "zepto",
+  "yocto",
+};
 
+const static int unit_prefix_powers[] = {
+  24,
+  21,
+  18,
+  15,
+  12,
+  9,
+  6,
+  3,
+  2,
+  1,
+  -1,
+  -2,
+  -3,
+  -6,
+  -9,
+  -12,
+  -15,
+  -18,
+  -21,
+  -24
+};
+
+void conv(const string& original,const string& unit){
+  int power = 1;
+  for(int i = 0; i < sizeof(unit_prefix_name)/(sizeof(char)*12); i++){
+    if(string(unit_prefix_name[i]) == unit){
+      power = unit_prefix_powers[i];
+    }
+  }
+
+  int dot_pos = original.size();
+  for(int i = 0; i < original.size(); i++){
+    if(original[i] == '.'){
+      dot_pos = i;
+      break;
+    }
+  }
+  int first_number_pos = 0;
+  for(int i = 0; i < original.size(); i++){
+    if(original[i] != '.' && original[i] != '0'){
+      first_number_pos = i;
+      break;
+    }
+  }
+
+  cout << "dot_pos: " << dot_pos << endl;
+  cout << "fn: " << first_number_pos << endl;
+  cout << "pow: " <<power << endl;
+  cout << "result: " << (dot_pos - first_number_pos - (dot_pos > first_number_pos ? 1 : 0)) + power << endl;
+}
+
+int main(){
   string str;
   while(getline(cin,str)){
     int total_test_cases = atoi(str.c_str());
     for(int test_i = 0; test_i < total_test_cases; test_i++){
-      getline(cin,str);
-      vector<string> elements = split(" ",str);
-      printf("%s\n",elements[0].c_str());
+      string line;
+      getline(cin,line);
+      vector<string> elements = split(" ",line);
+      if(elements.size() == 3){
+	conv(elements[0],elements[1]);
+      }
+      else{
+	
+      }
     }
   }
 }
