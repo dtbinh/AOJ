@@ -93,10 +93,29 @@ const static int unit_prefix_powers[] = {
   -24
 };
 
-void conv(const string& original,const string& unit){
-  int power = 1;
+string normalize(const string& original){
+  bool flag = false;
+  string res = "";
+  for(int i = 0; i < original.size(); i++){
+    if(flag && original[i] != '.'){
+      res += original[i];
+      continue;
+    }
+    if(original[i] != '0' && original[i] != '.'){
+      flag = true;
+      res += original[i];
+      if(i + 1 < original.size()){
+	res += ".";
+      }
+    }
+  }
+  return res;
+}
+
+int compute_power(const string& original,const string& prefix){
+  int power = 0;
   for(int i = 0; i < sizeof(unit_prefix_name)/(sizeof(char)*12); i++){
-    if(string(unit_prefix_name[i]) == unit){
+    if(string(unit_prefix_name[i]) == prefix){
       power = unit_prefix_powers[i];
     }
   }
@@ -115,11 +134,12 @@ void conv(const string& original,const string& unit){
       break;
     }
   }
+  return (dot_pos - first_number_pos - (dot_pos > first_number_pos ? 1 : 0)) + power;
+}
 
-  cout << "dot_pos: " << dot_pos << endl;
-  cout << "fn: " << first_number_pos << endl;
-  cout << "pow: " <<power << endl;
-  cout << "result: " << (dot_pos - first_number_pos - (dot_pos > first_number_pos ? 1 : 0)) + power << endl;
+void conv(const string& original,const string& prefix,const string& unit){
+  int power = compute_power(original,prefix);
+  printf("%s * 10^%d %s\n",normalize(original).c_str(),power,unit.c_str());
 }
 
 int main(){
@@ -131,10 +151,10 @@ int main(){
       getline(cin,line);
       vector<string> elements = split(" ",line);
       if(elements.size() == 3){
-	conv(elements[0],elements[1]);
+	conv(elements[0],elements[1],elements[2]);
       }
       else{
-	
+	conv(elements[0],"",elements[1]);
       }
     }
   }
