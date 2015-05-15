@@ -35,8 +35,25 @@ int main(){
   int total_test_cases;
   while(~scanf("%d",&total_test_cases)){
     for(int test_i = 0; test_i < total_test_cases; test_i++){
-      string stage;
-      cin >> stage;
+      string tmp_stage;
+      cin >> tmp_stage;
+      vector<int> stage;
+      for(int i = 0; i < tmp_stage.size(); i++){
+	stage.push_back(tmp_stage[i] - '0');
+      }
+
+      int count = 0;
+      while(stage.size() >= 2){
+	stringstream ss;
+	ss << (stage[stage.size()-2] + stage[stage.size()-1]);
+	stage.pop_back();
+	stage.pop_back();
+	for(int i = 0; i < ss.str().size(); i++){
+	  stage.push_back(ss.str()[i] - '0');
+	}
+	count++;
+      }
+      printf("%s\n",count % 2 == 0 ? "Audrey wins." : "Fabre wins.");
     }
   }
 }
