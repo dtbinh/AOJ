@@ -80,6 +80,9 @@ int main(){
   note2idx["B"] = 11;
 
   while(~scanf("%d",&total_test_cases)){
+    for(int i = 0; i <= 50000; i++){
+      dp[i].clear();
+    }
     for(int test_i = 0; test_i < total_test_cases; test_i++){
       int num_of_steps;
       int song_length;
