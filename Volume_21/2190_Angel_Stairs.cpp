@@ -62,8 +62,6 @@ string idx2note[] = {
   "B"
 };
 
-map<int,bool> dp[50001];
-
 int main(){
   int total_test_cases;
   note2idx["C"] = 0;
@@ -80,10 +78,9 @@ int main(){
   note2idx["B"] = 11;
 
   while(~scanf("%d",&total_test_cases)){
-    for(int i = 0; i <= 50000; i++){
-      dp[i].clear();
-    }
     for(int test_i = 0; test_i < total_test_cases; test_i++){
+      map<int,bool> dp[50001];
+
       int num_of_steps;
       int song_length;
       scanf("%d %d",&num_of_steps,&song_length);
@@ -100,7 +97,7 @@ int main(){
 	song.push_back(note);
       }
 
-      priority_queue<State> que;
+      priority_queue<State,vector<State>,greater<State> > que;
       que.push(State(-1,-1,0));
 
       bool isok = false;
@@ -113,6 +110,10 @@ int main(){
 	  isok = true;
 	  break;
 	}
+	else if(s.note_pos == song_length - 1){
+	  continue;
+	}
+
 	for(int dist = -1; dist <= 2; dist++){
 	  if(dist == 0) continue;
 
