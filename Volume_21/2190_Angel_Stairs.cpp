@@ -33,6 +33,7 @@ static const int ty[] = {-1,0,1,0};
 
 map<string,int> note2idx;
 const static int idx2dist[] = {-1,1,2};
+const static int offset[] = {11,0,1};
 int dfs(int note_pos,int stair_pos,
 	const vector<int>& stair,const vector<int>& song){
 
@@ -52,10 +53,7 @@ int dfs(int note_pos,int stair_pos,
     if(next < 0) continue;
     if(next >= stair.size()) continue;
     
-    int offset = 0;
-    if(dist == -1) offset = 12 - 1;
-    if(dist == 2) offset = 1;
-    if(song[note_pos + 1] != (stair[next] + offset) % 12) continue;
+    if(song[note_pos + 1] != (stair[next] + offset[i]) % 12) continue;
     res |= dfs(note_pos + 1,next,stair,song);
   }
   return res;
@@ -78,7 +76,6 @@ int main(){
 
   while(~scanf("%d",&total_test_cases)){
     for(int test_i = 0; test_i < total_test_cases; test_i++){
-      map<int,bool> dp[50001];
       int num_of_steps;
       int song_length;
       scanf("%d %d",&num_of_steps,&song_length);
