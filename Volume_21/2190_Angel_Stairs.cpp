@@ -31,36 +31,35 @@ static const double EPS = 1e-8;
 static const int tx[] = {0,1,0,-1};
 static const int ty[] = {-1,0,1,0};
 
-class State {
-public:
-  int stair_pos;
-  int note_pos;
-  int cost;
-  State(int stair_pos,int note_pos,int cost) :
-    stair_pos(stair_pos),note_pos(note_pos), cost(cost) {}
-  bool operator<(const State& s) const {
-    return cost < s.cost;
-  }
-  bool operator>(const State& s) const {
-    return cost > s.cost;
-  }
-};
-
 map<string,int> note2idx;
-string idx2note[] = {
-  "C",
-  "C#",
-  "D",
-  "D#",
-  "E",
-  "F",
-  "F#",
-  "G",
-  "G#",
-  "A",
-  "A#",
-  "B"
-};
+const static int idx2dist[] = {-1,1,2};
+int dfs(int note_pos,int stair_pos,
+	const vector<int>& stair,const vector<int>& song){
+
+  if(note_pos == song.size() - 1
+     && stair_pos >= stair.size() - 2){
+    return true;
+  }
+  else if(note_pos == song.size() - 1){
+    return false;
+  }
+
+  bool res = false;
+  for(int i = 0; i < 3; i++){
+    int dist = idx2dist[i];
+    
+    int next = stair_pos + dist;
+    if(next < 0) continue;
+    if(next >= stair.size()) continue;
+    
+    int offset = 0;
+    if(dist == -1) offset = 12 - 1;
+    if(dist == 2) offset = 1;
+    if(song[note_pos + 1] != (stair[next] + offset) % 12) continue;
+    res |= dfs(note_pos + 1,next,stair,song);
+  }
+  return res;
+}
 
 int main(){
   int total_test_cases;
@@ -80,7 +79,6 @@ int main(){
   while(~scanf("%d",&total_test_cases)){
     for(int test_i = 0; test_i < total_test_cases; test_i++){
       map<int,bool> dp[50001];
-
       int num_of_steps;
       int song_length;
       scanf("%d %d",&num_of_steps,&song_length);
@@ -97,42 +95,7 @@ int main(){
 	song.push_back(note2idx[note]);
       }
 
-      priority_queue<State,vector<State>,greater<State> > que;
-      que.push(State(-1,-1,0));
-
-      bool isok = false;
-
-      const int idx2dist[] = {-1,1,2};
-      while(!que.empty()){
-	State s = que.top();
-	que.pop();
-
-	if(s.note_pos == song_length - 1
-	   && s.stair_pos >= num_of_steps - 2){
-	  isok = true;
-	  break;
-	}
-	else if(s.note_pos == song_length - 1){
-	  continue;
-	}
-
-	for(int i = 0; i < 3; i++){
-	  int dist = idx2dist[i];
-
-	  int next = s.stair_pos + dist;
-	  if(next < 0) continue;
-	  if(next >= num_of_steps) continue;
-
-	  int offset = 0;
-	  if(dist == -1) offset = 12 - 1;
-	  if(dist == 2) offset = 1;
-	  if(song[s.note_pos + 1] != (stair[next] + offset) % 12) continue;
-	  // if(dp[s.note_pos + 1].find(next) != dp[s.note_pos + 1].end()) continue;
-	  // dp[s.note_pos + 1][next] = true;
-	  que.push(State(next,s.note_pos + 1,s.cost + 1));
-	}
-      }
-      printf("%s\n",isok ? "Yes" : "No");
+      printf("%s\n",dfs(-1,-1,stair,song) ? "Yes" : "No");
     }
   }
 }
