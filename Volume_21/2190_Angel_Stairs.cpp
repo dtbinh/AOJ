@@ -52,12 +52,8 @@ int dfs(int note_pos,int stair_pos,
 
   bool res = false;
   for(int i = 0; i < 3; i++){
-    int dist = idx2dist[i];
-    
-    int next = stair_pos + dist;
-    if(next < 0) continue;
-    if(next >= stair.size()) continue;
-    
+    int next = stair_pos + idx2dist[i];
+    if(next < 0 || next >= stair.size()) continue;
     if(song[note_pos + 1] != (stair[next] + offset[i]) % 12) continue;
     res |= dfs(note_pos + 1,next,stair,song);
   }
