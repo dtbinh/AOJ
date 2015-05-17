@@ -34,8 +34,13 @@ static const int ty[] = {-1,0,1,0};
 map<string,int> note2idx;
 const static int idx2dist[] = {-1,1,2};
 const static int offset[] = {11,0,1};
+
 int dfs(int note_pos,int stair_pos,
 	const vector<int>& stair,const vector<int>& song){
+
+  if(stair_pos + 2 * (song.size() - note_pos) < stair.size() - 2){
+    return false;
+  }
 
   if(note_pos == song.size() - 1
      && stair_pos >= stair.size() - 2){
