@@ -84,23 +84,25 @@ int main(){
       int num_of_steps;
       int song_length;
       scanf("%d %d",&num_of_steps,&song_length);
-      vector<string> stair;
-      vector<string> song;
+      vector<int> stair;
+      vector<int> song;
       for(int i = 0; i < num_of_steps; i++){
 	string note;
 	cin >> note;
-	stair.push_back(note);
+	stair.push_back(note2idx[note]);
       }
       for(int i = 0; i < song_length; i++){
 	string note;
 	cin >> note;
-	song.push_back(note);
+	song.push_back(note2idx[note]);
       }
 
       priority_queue<State,vector<State>,greater<State> > que;
       que.push(State(-1,-1,0));
 
       bool isok = false;
+
+      const int idx2dist[] = {-1,1,2};
       while(!que.empty()){
 	State s = que.top();
 	que.pop();
@@ -114,8 +116,8 @@ int main(){
 	  continue;
 	}
 
-	for(int dist = -1; dist <= 2; dist++){
-	  if(dist == 0) continue;
+	for(int i = 0; i < 3; i++){
+	  int dist = idx2dist[i];
 
 	  int next = s.stair_pos + dist;
 	  if(next < 0) continue;
@@ -124,9 +126,9 @@ int main(){
 	  int offset = 0;
 	  if(dist == -1) offset = 12 - 1;
 	  if(dist == 2) offset = 1;
-	  if(song[s.note_pos + 1] != idx2note[(note2idx[stair[next]] + offset) % 12]) continue;
-	  if(dp[s.note_pos + 1].find(next) != dp[s.note_pos + 1].end()) continue;
-	  dp[s.note_pos + 1][next] = true;
+	  if(song[s.note_pos + 1] != (stair[next] + offset) % 12) continue;
+	  // if(dp[s.note_pos + 1].find(next) != dp[s.note_pos + 1].end()) continue;
+	  // dp[s.note_pos + 1][next] = true;
 	  que.push(State(next,s.note_pos + 1,s.cost + 1));
 	}
       }
