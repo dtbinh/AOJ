@@ -32,30 +32,22 @@ static const int tx[] = {0,1,0,-1};
 static const int ty[] = {-1,0,1,0};
 
 map<string,int> note2idx;
-const static int idx2dist[] = {-1,1,2};
+const static int idx2dist[] = {1,-1,-2};
 const static int offset[] = {11,0,1};
+vector<int> stair;
+vector<int> song;
 
-int dfs(int note_pos,int stair_pos,
-	const vector<int>& stair,const vector<int>& song){
-
-  if(stair_pos + 2 * (song.size() - note_pos) < stair.size() - 2){
-    return false;
-  }
-
-  if(note_pos == song.size() - 1
-     && stair_pos >= stair.size() - 2){
+bool dfs(int note_pos,int stair_pos){
+  if(note_pos == -1 && stair_pos == -1){
     return true;
   }
-  else if(note_pos == song.size() - 1){
-    return false;
-  }
+  else if(stair_pos < 0 || note_pos < 0) return false;
 
   bool res = false;
   for(int i = 0; i < 3; i++){
+    if(song[note_pos] != (stair[stair_pos] + offset[i]) % 12) continue;
     int next = stair_pos + idx2dist[i];
-    if(next < 0 || next >= stair.size()) continue;
-    if(song[note_pos + 1] != (stair[next] + offset[i]) % 12) continue;
-    res |= dfs(note_pos + 1,next,stair,song);
+    res |= dfs(note_pos - 1,next);
   }
   return res;
 }
@@ -77,11 +69,12 @@ int main(){
 
   while(~scanf("%d",&total_test_cases)){
     for(int test_i = 0; test_i < total_test_cases; test_i++){
+      stair.clear();
+      song.clear();
+
       int num_of_steps;
       int song_length;
       scanf("%d %d",&num_of_steps,&song_length);
-      vector<int> stair;
-      vector<int> song;
       for(int i = 0; i < num_of_steps; i++){
 	string note;
 	cin >> note;
@@ -93,7 +86,9 @@ int main(){
 	song.push_back(note2idx[note]);
       }
 
-      printf("%s\n",dfs(-1,-1,stair,song) ? "Yes" : "No");
+      printf("%s\n",(dfs(song.size()-1,stair.size()-2)
+		     || dfs(song.size()-1,stair.size()-1)) 
+	     ? "Yes" : "No");
     }
   }
 }
