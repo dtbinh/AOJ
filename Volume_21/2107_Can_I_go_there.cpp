@@ -38,22 +38,22 @@ struct State {
     : from(f),to(t) {}
 };
 
-void matrix_pow(const int A[101][101],const int B[101][101],
-		int C[101][101],int length){
-  int tmp[101][101] = {};
+void matrix_pow(const bool A[101][101],const bool B[101][101],
+		bool C[101][101],int length){
+  bool tmp[101][101] = {};
   for(int i = 0; i < length; i++){
     for(int j = 0; j < length; j++){
-      int sum = 0;
+      bool sum = false;
       for(int k = 0; k < length; k++){
-	sum += A[i][k] * B[k][j];
+	sum |= (A[i][k] && B[k][j]);
       }
       tmp[i][j] = sum;
     }
   }
-  memcpy(C,tmp,sizeof(int)*101*101);
+  memcpy(C,tmp,sizeof(bool)*101*101);
 }
 
-void fast_pow(int n,int length,int A[101][101],int C[101][101]) {
+void fast_pow(int n,int length,bool A[101][101],bool C[101][101]) {
   for(int i = 0; i < length; i++){
     C[i][i] = 1;
   }
@@ -64,16 +64,6 @@ void fast_pow(int n,int length,int A[101][101],int C[101][101]) {
     matrix_pow(A,A,A,length);
     n >>= 1;
   }
-}
-
-void disp(int matrix[101][101]){
-  for(int y = 0; y < 10; y++){
-    for(int x = 0; x < 10; x++){
-      printf("%d ",matrix[y][x]);
-    }
-    printf("\n");
-  }
-  printf("\n");
 }
 
 int main(){
@@ -103,27 +93,26 @@ int main(){
       }
     }
 
-    int init_matrix[101][101] = {};
+    bool init_matrix[101][101] = {};
     for(int y = 0; y < states.size(); y++){
       for(int x = 0; x < states.size(); x++){
 	if(states[y].to == states[x].from
 	   && states[y].from != states[x].to){
-	  init_matrix[y][x] = 1;
+	  init_matrix[y][x] = true;
 	}
       }
     }
 
-    int result_matrix[101][101] = {};
+    bool result_matrix[101][101] = {};
     fast_pow(total_steps,states.size(),init_matrix,result_matrix);
 
     bool isok = false;
     for(int i = 0; i < states.size(); i++){
-      if(states[i].to == total_stations - 1 && result_matrix[0][i] > 0){
+      if(states[i].to == total_stations - 1 && result_matrix[0][i]){
 	isok = true;
 	break;
       }
     }
-    // disp(result_matrix);
     printf("%s\n",isok ? "yes" : "no");
   }
 }
