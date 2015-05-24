@@ -66,9 +66,9 @@ int main(){
 	  edges[staff_i].push_back(staff_j);
 	}
       }
-      
-      //      for(int round = 0; round < 100000; round++){
-      while(true){
+
+      bool isok = false;
+      for(int round = 0; round < 100000; round++){
 	queue<int> next;
 	bool visited[1001] = {};
 	while(!que.empty()){
@@ -87,16 +87,23 @@ int main(){
 	    }
 	  }
 	}
-	if(next.empty()) break;
+	if(next.empty()){
+	  isok = true;
+	  break;
+	}
 	que = next;
       }
       
       int res = 0;
       for(int i = 0; i < total_staff; i++){
-	cout << latest_speech_finished_time[i] << endl;
 	res = max(res,latest_speech_finished_time[i]);
       }
-      printf("%d\n",res);
+      if(isok){
+	printf("%d\n",res);
+      }
+      else{
+	printf("You're always welcome!\n");
+      }
     }
   }
 }
