@@ -67,27 +67,33 @@ int main(){
 	}
       }
       
-      for(int round = 0; round < 100000; round++){
+      //      for(int round = 0; round < 100000; round++){
+      while(true){
 	queue<int> next;
+	bool visited[1001] = {};
 	while(!que.empty()){
 	  int staff_i = que.front();
 	  que.pop();
 	  for(int i = 0; i < edges[staff_i].size(); i++){
 	    int staff_j = edges[staff_i][i];
 	    if(latest_speech_finished_time[staff_j] == -1 
-	       || (latest_speech_finished_time[staff_i] + prohibited_duration
-		   <= latest_speech_finished_time[staff_j])){
+	       || (latest_speech_finished_time[staff_j] + prohibited_duration
+		   <= latest_speech_finished_time[staff_i])){
+	      if(visited[staff_j]) continue;
 	      next.push(staff_j);
+	      visited[staff_j] = true;
 	      latest_speech_finished_time[staff_j]
 		= latest_speech_finished_time[staff_i] + speech_duration;
 	    }
 	  }
 	}
+	if(next.empty()) break;
 	que = next;
       }
       
       int res = 0;
       for(int i = 0; i < total_staff; i++){
+	cout << latest_speech_finished_time[i] << endl;
 	res = max(res,latest_speech_finished_time[i]);
       }
       printf("%d\n",res);
