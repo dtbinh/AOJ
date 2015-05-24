@@ -79,7 +79,7 @@ int main(){
 		   <= latest_speech_finished_time[staff_j])){
 	      next.push(staff_j);
 	      latest_speech_finished_time[staff_j]
-		= latest_speech_finished_time[staff_i] + 2 * speech_duration;
+		= latest_speech_finished_time[staff_i] + speech_duration;
 	    }
 	  }
 	}
